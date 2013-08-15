@@ -515,6 +515,16 @@ function renderCaseSnaps(gid, sid, tid){
           })
 }
 
+function showComment(){
+    $("#comDiv").dialog({
+                        title: "Comments for Cases:",
+                        height: 350,
+                        width: 615,
+                        resizable:false,
+                        modal: true
+                      });
+}
+
 function createDetailTable(div, ids){
     var $div_detail = $("#"+div);
     var $tb = $('<table>').attr('id', ids).attr('class','table table-striped table-hover').attr('style','table-layout:fixed;word-wrap:break-word;');
@@ -592,15 +602,9 @@ function renderSnapshotDiv(gid, sid) {
 
 function collectID(ctid){
     var key = _appglobal.collectIDs['tids'].indexOf(ctid);
-    if (key === -1){
-      _appglobal.collectIDs['tids'].push(ctid);
-    }
-    else if (key === 0){
-      _appglobal.collectIDs['tids'].splice(0, 1);
-    }
-    else{
-      _appglobal.collectIDs['tids'].splice(key, 1);
-    }
+    if (key === -1){_appglobal.collectIDs['tids'].push(ctid);}
+    else if (key === 0){_appglobal.collectIDs['tids'].splice(0, 1);}
+    else {_appglobal.collectIDs['tids'].splice(key, 1);}
 }
 
 function keepCheckStatus(ids){
@@ -609,6 +613,23 @@ function keepCheckStatus(ids){
             $("table#"+ids+" input#checkbox_"+_appglobal.collectIDs['tids'][i]+"").attr('checked', true);  
         }
     }
+}
+
+function generateComments(comResult){
+    if(comResult !== undefined){
+         if (comResult['endsession'] === 0){var sessionCom = "";}
+         else {var sessionCom = " :: Yes";}
+         if (comResult['commentinfo'] !== undefined && comResult['issuetype'] !== undefined && comResult['caseresult'] !== undefined){
+             var hintInfo = comResult['commentinfo'];
+             var showComment = ""+comResult['caseresult']+" :: "+comResult['issuetype']+""+sessionCom+"";}
+         else{
+             var showComment = "";
+             var hintInfo = "";}
+    }
+    else{
+         var showComment = "";
+         var hintInfo = "";}
+    return {'showComment': showComment, 'hintInfo': hintInfo}
 }
 
 function fillDetailTable(gid, sid, data, ids, tag) {
@@ -625,25 +646,7 @@ function fillDetailTable(gid, sid, data, ids, tag) {
           var comResult = citem['comments'];
           if(tag !== 'total' && tag !== cresult) continue;
           var trId = "tr_"+ctid;
-          
-          if(comResult !== undefined){
-             if(comResult['endsession'] === 0)
-                 {var sessionCom = "";}
-             else
-                 {var sessionCom = " :: Yes";}
-
-             if(comResult['commentinfo'] !== undefined && comResult['issuetype'] !== undefined && comResult['caseresult'] !== undefined){
-                 var hintInfo = comResult['commentinfo'];
-                 var showComment = ""+comResult['caseresult']+" :: "+comResult['issuetype']+""+sessionCom+"";
-             }
-             else{             
-                 var showComment = "";
-                 var hintInfo = "";}
-          }
-          else{
-             var showComment = "";
-             var hintInfo = "";
-          }
+          var fillCom = generateComments(comResult);
           if(cresult === 'fail'){
               tablerows += "<tr id=\""+trId+"\">"+
                                         "<td><input id=\"checkbox_"+ctid+"\" type=\"checkbox\" onclick=\"collectID('"+ctid+"')\"></input></td>"+
@@ -653,26 +656,23 @@ function fillDetailTable(gid, sid, data, ids, tag) {
                                         "<td><font color=\"red\">"+cresult+"<font></td>"+
                                         "<td><a href=\""+storeBaseURL+"/log/"+clog+"\">log</a></td>"+
                                         "<td><a href=\"javascript:showHistoryDiv('"+gid+"','"+sid+"','"+ctid+"');\">image</a></td>"+
-                                        "<td>"+                                      
-                                        "<span id=\"span_"+ctid+"\" onmouseover=\"showHint('"+ctid+"')\" onmouseout=\"hideHint('"+ctid+"')\">"+showComment+"</span>"+
-                                        "<br><div id=\"hint_"+ctid+"\" style=\"display:none\">"+hintInfo+"</div>"+
+                                        "<td><span id=\"span_"+ctid+"\" onmouseover=\"showHint('"+ctid+"')\" onmouseout=\"hideHint('"+ctid+"')\">"+fillCom['showComment']+"</span>"+
+                                        "<br><div id=\"hint_"+ctid+"\" style=\"display:none\">"+fillCom['hintInfo']+"</div>"+
                                         "</td></tr>";                                                 
-         } else if (cresult === 'error') {
-                tablerows += "<tr id=\""+trId+"\">"+
-                                     "<td><input id=\"checkbox_"+ctid+"\" type=\"checkbox\" onclick=\"collectID('"+ctid+"')\"></input></td>"+
-                                     "<td>"+ctid+"</td>"+
-                                     "<td>"+cname+"</td>"+
-                                     "<td>"+ctime+"</td>"+
-                                     "<td><font color=\"red\">"+cresult+"<font></td>"+
-                                     "<td></td>"+
-                                     "<td></td>"+
-                                     "<td>"+
-                                     "<span id=\"span_"+ctid+"\" onmouseover=\"showHint('"+ctid+"')\" onmouseout=\"hideHint('"+ctid+"')\">"+showComment+"</span>"+
-                                     "<br><div id=\"hint_"+ctid+"\" style=\"display:none\">"+hintInfo+"</div>"+
-                                     "</td></tr>";
-         } else if (cresult === 'running' || cresult === 'pass'){
-                 if (cresult == 'running'){
-                    tablerows += "<tr id=\""+trId+"\">"+
+          } else if (cresult === 'error'){
+              tablerows += "<tr id=\""+trId+"\">"+
+                                       "<td><input id=\"checkbox_"+ctid+"\" type=\"checkbox\" onclick=\"collectID('"+ctid+"')\"></input></td>"+
+                                       "<td>"+ctid+"</td>"+
+                                       "<td>"+cname+"</td>"+
+                                       "<td>"+ctime+"</td>"+
+                                       "<td><font color=\"red\">"+cresult+"<font></td>"+
+                                       "<td></td>"+
+                                       "<td></td>"+
+                                       "<td><span id=\"span_"+ctid+"\" onmouseover=\"showHint('"+ctid+"')\" onmouseout=\"hideHint('"+ctid+"')\">"+fillCom['showComment']+"</span>"+
+                                       "<br><div id=\"hint_"+ctid+"\" style=\"display:none\">"+fillCom['hintInfo']+"</div>"+
+                                       "</td></tr>";
+          } else if (cresult === 'running'){
+              tablerows += "<tr id=\""+trId+"\">"+
                                         "<td></td>"+
                                         "<td>"+ctid+"</td>"+
                                         "<td>"+cname+"</td>"+
@@ -680,13 +680,10 @@ function fillDetailTable(gid, sid, data, ids, tag) {
                                         "<td>N/A</td>"+
                                         "<td></td>"+
                                         "<td></td>"+
-                                        "<td>"+
-                                        "<span id=\"span_"+ctid+"\" onmouseover=\"showHint('"+ctid+"')\" onmouseout=\"hideHint('"+ctid+"')\">"+showComment+"</span>"+
-                                        "<br><div id=\"hint_"+ctid+"\" style=\"display:none\">"+hintInfo+"</div>"+
-                                        "</td>"+
+                                        "<td></td>"+
                                         "</tr>";     
-                 } else {    
-                    tablerows += "<tr id=\""+trId+"\">"+
+          } else if (cresult === 'pass'){    
+              tablerows += "<tr id=\""+trId+"\">"+
                                         "<td></td>"+
                                         "<td>"+ctid+"</td>"+
                                         "<td>"+cname+"</td>"+
@@ -696,8 +693,7 @@ function fillDetailTable(gid, sid, data, ids, tag) {
                                         "<td></td>"+
                                         "<td></td>"+
                                         "</tr>";
-                 }    
-          }
+          }    
     }
     detail_table.append(tablerows);
     keepCheckStatus(ids);
@@ -729,101 +725,77 @@ function fillCommentDiv(gid, sid){
                                "<option id=\"UiFreeze\" name=\"issuetype\" value=\"UIFreeze\">UIFreeze</option>"+
                                "<option id=\"Others\" name=\"issuetype\" value=\"Others\">Others</option>"+
                             "</select>"+
-                        "<label>Case Result</label>"+
-                        "<select class=\"span3\">"+
-                          "<option value=\"na\" name=\"caseresult\" selected=\"\">Choose One:</option>"+
-                          "<option id=\"Fail\" name=\"caseresult\" value=\"Fail\">Fail</option>"+
-                          "<option id=\"Block\" name=\"caseresult\" value=\"Block\">Block</option>"+
-                        "</select>"+
-                        "<label class=\"checkbox\" for=\"endsession\">"+
-                        "<span>Session ends here?</span><input id=\"endsession\" type=\"checkbox\">"+
-                        "</label><br>"+
-                        "<input id=\"btnc\" onclick=\"submitUpdate('clear')\" type=\"button\" class=\"pull-right\" value=\"Clear\"></input>"+
-                        "<input id=\"btn\" onclick=\"submitUpdate('submit')\" type=\"button\" class=\"pull-right\" value=\"Commit\"></input>"+
-                      "</div>"+
-                   "</div></form></div>";
+                           "<label>Case Result</label>"+
+                           "<select class=\"span3\">"+
+                              "<option value=\"na\" name=\"caseresult\" selected=\"\">Choose One:</option>"+
+                              "<option id=\"Fail\" name=\"caseresult\" value=\"Fail\">Fail</option>"+
+                              "<option id=\"Block\" name=\"caseresult\" value=\"Block\">Block</option>"+
+                           "</select>"+
+                           "<label class=\"checkbox\" for=\"endsession\">"+
+                           "<span>Session ends here?</span><input id=\"endsession\" type=\"checkbox\">"+
+                           "</label><br>"+
+                           "<input id=\"btnc\" onclick=\"submitUpdate('clear')\" type=\"button\" class=\"pull-right\" value=\"Clear\"></input>"+
+                           "<input id=\"btn\" onclick=\"submitUpdate('submit')\" type=\"button\" class=\"pull-right\" value=\"Commit\"></input>"+
+                         "</div>"+
+                     "</div></form></div>";
     return commentDiv;
 }
 
 function submitUpdate(tag){
     if (_appglobal.collectIDs['tids'].length === 0){
-      alert("No case selected!!");
-      _appglobal.collectIDs['tids'] = [];
-      $("#comDiv").dialog('close');
-      return
+        alert("No case selected!!");
+        _appglobal.collectIDs['tids'] = [];
+        $("#comDiv").dialog('close');
+        return
     }
+    var $hintInfo = '';
+    var $showComment = '';
     var comResult = {};
+
     if (tag === 'submit'){
-      $("option[name='issuetype']").each(function(i,obj){if(obj.selected){comResult['issuetype']=obj.value;}});
-      $("option[name='caseresult']").each(function(i,obj){if(obj.selected){comResult['caseresult']=obj.value;}});
-      $("input#endsession").each(function(i,obj){if(obj.checked){comResult['endsession'] = 1;}
-                                                 else{comResult['endsession'] = 0;}});
-      comResult['commentinfo'] = $("textarea[name='commentinfo']").val();
-      comResult['tids'] = _appglobal.collectIDs['tids'];
+        $("option[name='issuetype']").each(function(i,obj){if(obj.selected){comResult['issuetype']=obj.value;}});
+        $("option[name='caseresult']").each(function(i,obj){if(obj.selected){comResult['caseresult']=obj.value;}});
+        $("input#endsession").each(function(i,obj){if(obj.checked){comResult['endsession'] = 1;}
+                                                   else{comResult['endsession'] = 0;}});
+        comResult['commentinfo'] = $("textarea[name='commentinfo']").val();
+        comResult['tids'] = _appglobal.collectIDs['tids'];
+        if (comResult['endsession'] === 0){var sessionCom = "";}
+        else {var sessionCom = " :: Yes";}
+        $hintInfo = comResult['commentinfo'];
+        $showComment = ""+comResult['caseresult']+" :: "+comResult['issuetype']+""+sessionCom+"";
 
-      if (comResult['issuetype'] === 'na' || comResult['caseresult'] === 'na' || comResult['commentinfo'] === ''){
-        alert("IssueType, CaseResult and Comments are all expected to be provided!");
-        return
-      }
-      if (comResult['tids'].length > 1 && comResult['endsession'] === 1){
-        alert("Session end can only be assigned to ONE case!");
-        return
-      }
-
-      if (comResult['endsession'] === 0){var sessionCom = "";}
-      else{var sessionCom = " :: Yes";}
-      var $hintInfo = comResult['commentinfo'];
-      var $showComment = ""+comResult['caseresult']+" :: "+comResult['issuetype']+""+sessionCom+"";
-      for (var i = 0; i < _appglobal.collectIDs['tids'].length; i++){
-          $("span#span_"+_appglobal.collectIDs['tids'][i]).html("");
-          $("span#span_"+_appglobal.collectIDs['tids'][i]).append($showComment);
-          $("div#hint_"+_appglobal.collectIDs['tids'][i]).html("");
-          $("div#hint_"+_appglobal.collectIDs['tids'][i]).append($hintInfo);
-      }
-      clearCheckStatus();
-
-      invokeWebApiEx("/group/"+_appglobal.gid+"/test/"+_appglobal.sid+"/case/00000/update",
-                     prepareData({'comments':comResult}),
-                     afterCommit);
+        if (comResult['issuetype'] === 'na' || comResult['caseresult'] === 'na' || comResult['commentinfo'] === ''){
+          alert("IssueType, CaseResult and Comments are all expected to be provided!");
+          return
+        }
+        if (comResult['tids'].length > 1 && comResult['endsession'] === 1){
+          alert("Session end can only be assigned to ONE case!");
+          return
+        }
     }
     else if (tag === 'clear'){
-      comResult['tids'] = _appglobal.collectIDs['tids'];
-      for (var i = 0; i < _appglobal.collectIDs['tids'].length; i++){
-          var $hintInfo = "";
-          var $showComment = "";
-          $("span#span_"+_appglobal.collectIDs['tids'][i]).html("");
-          $("span#span_"+_appglobal.collectIDs['tids'][i]).append($showComment);
-          $("div#hint_"+_appglobal.collectIDs['tids'][i]).html("");
-          $("div#hint_"+_appglobal.collectIDs['tids'][i]).append($hintInfo);
-      }
-      clearCheckStatus();
-
-      comResult['endsession'] = 0;
-      invokeWebApiEx("/group/"+_appglobal.gid+"/test/"+_appglobal.sid+"/case/00000/update",
-                 prepareData({'comments': comResult}),
-                 afterCommit);
+        comResult['tids'] = _appglobal.collectIDs['tids'];
+        comResult['endsession'] = 0;
+        $hintInfo = "";
+        $showComment = "";
     }
+
+    for (var i = 0; i < _appglobal.collectIDs['tids'].length; i++){
+        $("span#span_"+_appglobal.collectIDs['tids'][i]).html("");
+        $("span#span_"+_appglobal.collectIDs['tids'][i]).append($showComment);
+        $("div#hint_"+_appglobal.collectIDs['tids'][i]).html("");
+        $("div#hint_"+_appglobal.collectIDs['tids'][i]).append($hintInfo);
+    }
+    clearCheckStatus();
+    invokeWebApiEx("/group/"+_appglobal.gid+"/test/"+_appglobal.sid+"/case/00000/update",
+                   prepareData({'comments': comResult}),
+                   function(data){
+                          var ret = data['error'];
+                          if (ret !== undefined){alert(ret['msg']);}
+                          else{alert("Commit successfully!");}
+                   });
+    
     $("#comDiv").dialog('close');
-}
-
-function showComment(){
-    $("#comDiv").dialog({
-                        title: "Comments for Cases:",
-                        height: 350,
-                        width: 615,
-                        resizable:false,
-                        modal: true
-                      });
-}
-
-function afterCommit(data){
-    var ret = data['error'];
-    if (ret !== undefined){
-        alert(ret['msg']);
-    }
-    else{
-        alert("Commit successfully!");
-    }
 }
 
 function pollSessionStatus(gid, sid) {
