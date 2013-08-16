@@ -527,21 +527,39 @@ function showComment(){
 
 function createDetailTable(div, ids){
     var $div_detail = $("#"+div);
-    var $tb = $('<table>').attr('id', ids).attr('class','table table-striped table-hover').attr('style','table-layout:fixed;word-wrap:break-word;');
-    var $th = '<thead><tr>'+
-              '<th align="left" width="3%"></th>'+
-              '<th align="left" width="6%">Tid</th>'+
-              '<th align="left" width="31%">Testcase</th>'+
-              '<th align="left" width="17%">Start Time</th>'+
-              '<th align="left" width="7%">Result</th>'+
-              '<th align="left" width="5%">Log</th>'+
-              '<th align="left" width="7%">Image</th>'+
-              '<th align="left" width="24%"><a href="javascript:showComment()">Comments</th>'+
-              '</tr></thead>';
-    var $tbody = '<tbody></tbody>';
-    $tb.append($th);
-    $tb.append($tbody);
-    $div_detail.html($tb);
+    //var tplfunc = _template(tpl_createDetailTable);
+    var tplfunc = _.template("<table id=<%= ids %> class=<%= classes %> style=<%= styles %>>
+                                <thead>
+                                    <tr>
+                                        <% _.each(ths, function(widths, titles){%>  
+                                                        <th align=\"left\" width=<%= widths %>><%= titles %></th>
+                                                 <%}); %>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>");
+    var tpldata = {'ids': ids, 
+                   'classes': 'table table-striped table-hover', 
+                   'style': 'table-layout:fixed;word-wrap:break-word;',
+                   'ths': [['3%', ''], ['6%', 'Tid'], ['31%', 'Testcase'], ['17%', 'Start Time'], ['7%', 'Result'], ['5%', 'Log'], ['7%', 'Image'], ['24%', 'Comments']]
+                  };
+    $div_detail.html(tplfunc(tpldata));
+    // var $tb = $('<table>').attr('id', ids).attr('class','table table-striped table-hover').attr('style','table-layout:fixed;word-wrap:break-word;');
+    // var $th = '<thead><tr>'+
+    //           '<th align="left" width="3%"></th>'+
+    //           '<th align="left" width="6%">Tid</th>'+
+    //           '<th align="left" width="31%">Testcase</th>'+
+    //           '<th align="left" width="17%">Start Time</th>'+
+    //           '<th align="left" width="7%">Result</th>'+
+    //           '<th align="left" width="5%">Log</th>'+
+    //           '<th align="left" width="7%">Image</th>'+
+    //           '<th align="left" width="24%"><a href="javascript:showComment()">Comments</th>'+
+    //           '</tr></thead>';
+    // var $tbody = '<tbody></tbody>';
+    // $tb.append($th);
+    // $tb.append($tbody);
+    //$div_detail.html($tb);
 }
 
 var ws = undefined;
