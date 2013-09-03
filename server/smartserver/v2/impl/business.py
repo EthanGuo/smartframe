@@ -44,6 +44,11 @@ def counter(keyname):
 #         return {'results': 'error', 'data':{'code': '02'}, 'msg': 'Incorrect UserName/Password or unverified email!'}
         
 def doAccountRegister(data):
+    db.user.username = data['username']
+    db.user.password = data['password']
+
+    db.users.add(db.user)
+
     if len(db.users.findByName(data['username'])) == 0 & len(db.users.findByEmail(data['info']['email'])) == 0:
         m = hashlib.md5()
         m.update(data['password'])

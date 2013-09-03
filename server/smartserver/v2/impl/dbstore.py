@@ -9,6 +9,7 @@ class DataStore(object):
 
         print 'init db store class!!!'
 
-        self.users = user()
+        self.users = modify()
+        self.user = user()
 
 db = DataStore()

@@ -19,28 +19,26 @@ class userinfo(EmbeddedDocument):
     company = StringField()
     email = StringField()
 
-class users(DynamicDocument):
+class user(DynamicDocument):
     username = StringField()
     uid = StringField()
     password = StringField()
     appid = StringField()
     info = EmbeddedDocumentField(userinfo)
 
-class user(users, userinfo):
+class modify(user):
 
     def __init__(self):
         self.connector = connector()
         
-    def doInsert(self, doc):
-        info = userinfo(phone=doc['info'].get('phone'), company=doc['info'].get('company'), email=doc['info'].get('email'))
-        u = users(username=doc['username'], uid=doc['uid'], password=doc['password'], appid=doc['appid'], info=info)
-        u.save()
+    def add(self, obj):
+        obj.save()
 
     def findByName(self, name):
-        return list(users.objects(username=name))
+        return list(user.objects(username=name))
 
     def findByEmail(self, email):
-        return list(users.objects(info__email=email))
+        return list(user.objects(info__email=email))
 
 
 
