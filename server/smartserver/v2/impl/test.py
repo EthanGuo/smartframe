@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from business import *
+from account import *
 
 def doAccountBasicActionBeforeLogin(data):
     if data['action'] == 'register':
@@ -26,6 +26,9 @@ def doAccountGetAction(uid, data):
         return doAccountGetInfo(uid, data['data'])
     elif data['action'] == 'list':
         return doAccountGetList(uid, data['data'])
+
+
+
 
 def doGroupBasicAction(data):
     if data['action'] == 'create':
