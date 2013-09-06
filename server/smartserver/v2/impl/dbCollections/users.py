@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from mongoengine import *
-from connector import *
-
+from connector import connector
 from counter import *
 
 import hashlib
@@ -51,7 +50,5 @@ class users(DynamicDocument):
     def findByEmail(self, email):
         return list(users.objects(info__email=email))
 
-
-Connector("users")
 
 

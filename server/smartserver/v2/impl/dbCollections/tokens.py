@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from mongoengine import *
-from connector import *
+from connector import connector
 
 import hashlib
 import time
@@ -34,5 +34,3 @@ class tokens(DynamicDocument):
         self.info = info
         self.save()
         return self.token
-
-Connector("tokens")

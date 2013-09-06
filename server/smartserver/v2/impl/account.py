@@ -7,8 +7,8 @@ from dbCollections.tokens import *
 from ..sendmail import *
 
 def createToken(data, uid):
-    new_token = tokens()
-    return new_token.add(data['appid'], uid)
+    token = tokens()
+    return token.add(data['appid'], uid)
         
 def doAccountRegister(data):
     user = users()
@@ -19,8 +19,6 @@ def doAccountRegister(data):
         return {'results': 'ok', 'data': {'token': token, 'uid': uid}, 'msg': ''}
     else:
         return {'results': 'error', 'data': {'code': '04'}, 'msg': 'An account with same email or username already registered!'}
-
-
 
 
 
