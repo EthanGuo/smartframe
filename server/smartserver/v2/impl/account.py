@@ -8,19 +8,18 @@ from ..sendmail import *
 
 def createToken(data, uid):
     token = tokens()
-    return token.add(data['appid'], uid)
+    data['uid'] = uid
+    return token.add(data)
         
 def doAccountRegister(data):
     user = users()
-    if len(user.findByName(data['username'])) == 0 & len(user.findByEmail(data['email'])) == 0: 
-        uid = user.add(data['appid'], data['username'], data['password'], False, data['email'], data.get('phone'), data.get('company'))
+    if (len(user.findByName(data['username'])) == 0) & (len(user.findByEmail(data['info']['email'])) == 0): 
+        uid = user.add(data)
         token = createToken(data, uid)
-        sendVerifyMail(data['email'], data['username'], token)
+        sendVerifyMail(data['info']['email'], data['username'], token)
         return {'results': 'ok', 'data': {'token': token, 'uid': uid}, 'msg': ''}
     else:
         return {'results': 'error', 'data': {'code': '04'}, 'msg': 'An account with same email or username already registered!'}
-
-
 
 
 # def doAccountLogin(data):

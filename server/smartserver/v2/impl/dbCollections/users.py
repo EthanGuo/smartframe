@@ -6,13 +6,14 @@ from connector import connector
 from counter import *
 
 import hashlib
+import json
 
 class userinfo(EmbeddedDocument):
     phone = StringField()
     company = StringField()
     email = StringField(required=True)
 
-class users(DynamicDocument):
+class users(Document):
 
     username = StringField(required=True, unique=True)
     uid = StringField(required=True)
@@ -35,14 +36,11 @@ class users(DynamicDocument):
         uid = m.hexdigest()
         return uid, pswd
 
-    def add(self, appid, username, password, active, email, phone='', company=''):
-        self.uid, self.password = self.__encrypte(password)
-        self.appid = appid
-        self.username = username
-        self.active = active
-        self.info = userinfo(phone=phone, company=company, email=email)
-        self.save()
-        return self.uid
+    def add(self, data):
+        data['uid'], data['password'] = self.__encrypte(data['password'])
+        data['active'] = True if data.get('active') else False
+        self.from_json(json.dumps(data)).save()
+        return data['uid']
 
     def findByName(self, username):
         return list(users.objects(username=username))

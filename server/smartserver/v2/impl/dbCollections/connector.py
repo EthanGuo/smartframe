@@ -4,7 +4,7 @@
 from mongoengine import *
 
 class Connector(object):
-    def __init__(self, db='smartServer-refactor'):
+    def __init__(self, db='smartServer-eth'):
 
         print 'init connection to db!!!'
 

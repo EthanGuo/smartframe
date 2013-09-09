@@ -4,7 +4,7 @@
 from mongoengine import *
 from connector import connector
 
-class counter(DynamicDocument):
+class counter(Document):
     tag = StringField()
     next = IntField()
 

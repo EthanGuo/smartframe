@@ -7,6 +7,7 @@ from connector import connector
 import hashlib
 import time
 import uuid
+import json
 
 TOKEN_EXPIRES = {'01': 30*24*3600,
                  '02': 7*24*3600,
@@ -14,7 +15,7 @@ TOKEN_EXPIRES = {'01': 30*24*3600,
                  '04': 24*3600
                  }
 
-class tokens(DynamicDocument):
+class tokens(Document):
     uid = StringField(required=True)
     token = StringField(required=True)
     appid = StringField(required=True)
@@ -26,11 +27,8 @@ class tokens(DynamicDocument):
         m.update(str(uuid.uuid1()))
         return m.hexdigest()
 
-    def add(self, appid, uid, info={}):
-        self.appid = appid
-        self.uid = uid
-        self.token = self.__generate()
-        self.expires = (time.time() + TOKEN_EXPIRES[appid])
-        self.info = info
-        self.save()
-        return self.token
+    def add(self, data):
+        data['token'] = self.__generate()
+        data['expires'] = (time.time() + TOKEN_EXPIRES[data['appid']])
+        self.from_json(json.dumps(data)).save()
+        return data['token']
