@@ -32,7 +32,7 @@ def sendVerifyMail(receiver, user, token):
     print '+++++'+receiver
     msg = 'Hi,%s,\r\n\r\n' % (user)
     msg = msg + 'This mail sent out by smartAT, do not reply to it directly.\r\n'
-    msg = msg + 'Your account \"%s\" has been created alreday.\r\n' % (user)
+    msg = msg + 'Your account \"%s\" has been created already.\r\n' % (user)
     msg = msg + 'Please verify your email via the url as below.\r\n'
     msg = msg + 'http://ats.borqs.com/smartserver/verify.html?token=%s\r\n' % (token)
     msg = msg + '\r\n\r\n'
@@ -60,7 +60,7 @@ def sendForgotPasswdMail(receiver, passwd, token):
 
     msg = 'Hi,%s,\r\n\r\n' % (receiver)
     msg = msg + 'This mail sent out by smartAT, do not reply to it directly.\r\n'
-    msg = msg + 'Your password of account \"%s\" has been reset alreday.\r\n' % (receiver)
+    msg = msg + 'Your password of account \"%s\" has been reset already.\r\n' % (receiver)
     msg = msg + 'The new password: ' + passwd + ' \r\n'
     msg = msg + 'Please login SmartAT and change new one for your own.\r\n'
     msg = msg + '\r\n\r\n'

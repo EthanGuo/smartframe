@@ -43,4 +43,4 @@ class users(Document):
         return data['uid']
 
     def find(self, **kwargs):
-        return list(users.objects(**kwargs))
+        return users.objects(**kwargs)
