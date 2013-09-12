@@ -42,11 +42,5 @@ class users(Document):
         self.from_json(json.dumps(data)).save()
         return data['uid']
 
-    def findByName(self, username):
-        return list(users.objects(username=username))
-
-    def findByEmail(self, email):
-        return list(users.objects(info__email=email))
-
-
-
+    def find(self, **kwargs):
+        return list(users.objects(**kwargs))

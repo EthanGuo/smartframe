@@ -6,6 +6,14 @@ from dbCollections.users import *
 from dbCollections.tokens import *
 from ..sendmail import *
 
+from random import choice
+import hashlib
+import string
+
+def returnModule(status, data, msg=''):
+    result = {'results': status, 'data': data, 'msg': msg}
+    return result
+
 def createToken(data, uid):
     token = tokens()
     data['uid'] = uid
@@ -13,30 +21,38 @@ def createToken(data, uid):
         
 def doAccountRegister(data):
     user = users()
-    if (len(user.findByName(data['username'])) == 0) & (len(user.findByEmail(data['info']['email'])) == 0): 
+    if (len(user.find(username=data['username'])) == 0) & (len(user.find(info__email=data['info']['email'])) == 0): 
         uid = user.add(data)
         token = createToken(data, uid)
         sendVerifyMail(data['info']['email'], data['username'], token)
-        return {'results': 'ok', 'data': {'token': token, 'uid': uid}, 'msg': ''}
+        return returnModule('ok', {'token': token, 'uid': uid})
     else:
-        return {'results': 'error', 'data': {'code': '04'}, 'msg': 'An account with same email or username already registered!'}
+        return returnModule('error', {'code': '04'}, 'An account with same email or username already registered!')
 
+def doAccountLogin(data):
+    user = users()
+    if '@' in data['username']:
+        result = user.find(info__email=data['username'], password=data['password'], active=True)
+    else:
+        result = user.find(username=data['username'], password=data['password'])
+    if len(result) != 0:
+        token = createToken(data ,result[0]['uid'])
+        return returnModule('ok', {'token': token, 'uid': result[0]['uid']})
+    else:
+        return returnModule('error', {'code': '02'}, 'Incorrect UserName/Password or unverified email!')
 
-# def doAccountLogin(data):
-#     if '@' in data['username']:
-#         spec = {'info.email': data['username'], 'password': data['password'], 'active': True}
-#     else:
-#         spec = {'username': data['username'], 'password': data['password']}
-
-#     fields = {'_id': 0, 'uid': 1}
-#     result = store.doFind('users', spec, fields)
-    
-#     if len(result) != 0:
-#         token = generateToken()
-#         doc = {'appid': data['appid'], 'uid': result[0]['uid'],
-#                'info': {}, 'token': token, 'expires': (time.time() + TOKEN_EXPIRES[data['appid']])}
-        
-#         store.doInsert('tokens', doc)
-#         return {'results': 'ok', 'data': {'token': token, 'uid': result[0]['uid']}, 'msg': ''}
-#     else:
-#         return {'results': 'error', 'data':{'code': '02'}, 'msg': 'Incorrect UserName/Password or unverified email!'}
+def doAccountForgotPasswd(data):
+    user = users()
+    result = user.find(info__email=data['email'], active=True)
+    if len(result) != 0:
+        newpassword = ''.join([choice(string.ascii_letters+string.digits) for i in range(8)])
+        m = hashlib.md5()
+        m.update(newpassword)
+        ###########################
+        user.update(m.hexdigest())
+        ###########################
+        token = createToken({'appid': '03'}, result[0]['uid'])
+        sendForgotPasswdMail(data['email'], newpassword, token)
+        return returnModule('ok', {'token': token, 'uid': result[0]['uid'], 'password': newpassword})
+    else:
+        return returnModule('error', {'code': '04'}, 'Invalid or unverified email!')
