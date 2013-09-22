@@ -3,13 +3,12 @@
 
 from account import *
 
+key_func = {'register': doAccountRegister,
+            'login': doAccountLogin,
+            'forgotpasswd': doAccountForgotPasswd}
+
 def doAccountBasicActionBeforeLogin(data):
-    if data['action'] == 'register':
-        return doAccountRegister(data['data'])
-    if data['action'] == 'login':
-       return doAccountLogin(data['data'])
-    if data['action'] == 'forgotpasswd':
-        return doAccountForgotPasswd(data['data'])
+    return key_func[data['action']](data['data'])
 
 def doAccountBasicActionAfterLogin(uid, data):
     if data['action'] == 'changepasswd':
