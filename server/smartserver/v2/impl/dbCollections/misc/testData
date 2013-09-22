@@ -1,9 +1,0 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-import users
-
-userDoc = {'uid': '00000000', 'appid': '01', 'username':'GUO', 
-           'password': '00000000', 'active': False, 'info': {'phone': '15811146906', 'company': 'borqs'}}
-
-users.doInsert(userDoc)
