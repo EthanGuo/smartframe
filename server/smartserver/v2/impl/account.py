@@ -121,10 +121,23 @@ def accountLogout(userid,data):
 def accountUpdate():
     pass
 
-def doAccountGetInfo():
-    pass
+def accountGetInfo(uid):
+    '''
+       Get related info of A account
+    '''
+    result = list(user.objects(uid=uid))
+    if len(result) == 0:
+        rmsg, rdata = 'Invalid User ID!!', {'code': '04'}
+    else:
+        for user in result:
+            rdata = {'uid': uid, 'username': user['username'], 'info': user['info']}
+        rmsg = ''
+    return resultWrapper(rmsg, rdata)
 
-def doAccountGetList(uid):
+def accountGetList(uid):
+    '''
+       Get all the users of smartServer.
+    '''
     if len(list(user.objects())) == 0:
         rmsg, rdata = 'no user found!', {'code': '04'}
     else:

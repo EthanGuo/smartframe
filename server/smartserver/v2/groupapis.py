@@ -6,19 +6,19 @@ monkey.patch_all()
 from gevent.pywsgi import WSGIServer
 
 from bottle import request, response, Bottle, HTTPResponse
-
+#from .plugins import LoginPlugin, ContentTypePlugin
 from .impl.test import *
 
 appweb = Bottle()
-"""
-contenttype_plugin = ContentTypePlugin()
-appweb.install(contenttype_plugin)
 
-login_plugin = LoginPlugin(getuserid=getUserId,
-                           request_token_param="token",
-                           login=True)  # login is required by default
-appweb.install(login_plugin)
-"""
+# contenttype_plugin = ContentTypePlugin()
+# appweb.install(contenttype_plugin)
+
+# login_plugin = LoginPlugin(getuserid=getUserId,
+#                            request_token_param="token",
+#                            login=True)  # login is required by default
+# appweb.install(login_plugin)
+
 
 @appweb.hook("after_request")
 def crossDomainHook():

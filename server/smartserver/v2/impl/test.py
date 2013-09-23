@@ -12,8 +12,8 @@ func_match = {'register': accountRegister,
             'invite': accountInvite,
             'logout': accountLogout,
             #accountWithUid
-            'info': doAccountGetInfo,
-            'list': doAccountGetList
+            'info': accountGetInfo,
+            'list': accountGetList
             #doAccountGetAction
             }
 
@@ -29,7 +29,7 @@ def accountWithUid(uid, data):
     '''
     return func_match.get(data['subc'])(uid, data['data'])
 
-def doAccountGetAction(uid):
+def getAccountInfo(uid):
     '''
        Implement account info/list here.
     '''
