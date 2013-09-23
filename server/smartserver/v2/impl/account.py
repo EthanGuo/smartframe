@@ -5,7 +5,7 @@ import hashlib
 import uuid
 import string
 from random import choice
-from sendmail import *
+from ..sendmail import *
 from dbSchema import user,usetoken
 import json
 
@@ -117,3 +117,19 @@ def accountLogout(userid,data):
     else:
         rmsg, rdata = 'delete token fail!', {'code': '03'}
     return resultWrapper(rmsg, rdata)
+
+def accountUpdate():
+    pass
+
+def doAccountGetInfo():
+    pass
+
+def doAccountGetList(uid):
+    if len(list(user.objects())) == 0:
+        rmsg, rdata = 'no user found!', {'code': '04'}
+    else:
+        rmsg = ''
+        users = [{'uid': d['uid'], 'username': d['username']} for d in list(user.objects())]
+        rdata = {'count': len(users), 'users': users}
+    return resultWrapper(rmsg, rdata)
+

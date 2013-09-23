@@ -23,3 +23,6 @@ if ru.path.find("/") == 0:
     REDIS_DB = int(ru.path[1:])
 else:
     REDIS_DB = 0
+
+PORT = 27017
+DB_NAME = 'smartServer-eth'

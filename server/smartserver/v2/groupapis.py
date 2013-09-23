@@ -3,9 +3,9 @@
 
 from gevent import monkey
 monkey.patch_all()
+from gevent.pywsgi import WSGIServer
 
 from bottle import request, response, Bottle, HTTPResponse
-from gevent.pywsgi import WSGIServer
 
 from .impl.test import *
 

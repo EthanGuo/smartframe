@@ -6,10 +6,16 @@ from account import *
 func_match = {'register': accountRegister,
             'login': accountLogin,
             'forgotpasswd': accountForgotPasswd,
+            #accountWithOutUid
             'changepasswd': accountChangepasswd,
             'update': accountUpdate,
             'invite': accountInvite,
-            'logout': accountLogout}
+            'logout': accountLogout,
+            #accountWithUid
+            'info': doAccountGetInfo,
+            'list': doAccountGetList
+            #doAccountGetAction
+            }
 
 def accountWithOutUid(data):
     '''
@@ -23,12 +29,12 @@ def accountWithUid(uid, data):
     '''
     return func_match.get(data['subc'])(uid, data['data'])
 
+def doAccountGetAction(uid):
+    '''
+       Implement account info/list here.
+    '''
+    return func_match.get(data['subc'])(uid)
 
-def doAccountGetAction(uid, data):
-    if data['action'] == 'info':
-        return doAccountGetInfo(uid, data['data'])
-    elif data['action'] == 'list':
-        return doAccountGetList(uid, data['data'])
 
 # def doGroupBasicAction(data):
 #     if data['action'] == 'create':
