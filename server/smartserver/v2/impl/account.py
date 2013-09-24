@@ -66,7 +66,7 @@ def accountRegister(data):
     """
     userInst = user().from_json(json.dumps(data))
     # If both username and email have not been registered, create a new user, generate a token, send a mail then return, or return error.
-    if (len(list(user.objects(username = userInst.username))) == 0) & (len(list(user.objects(info__email = userInst.info.email))) == 0)
+    if (len(list(user.objects(username = userInst.username))) == 0) & (len(list(user.objects(info__email = userInst.info.email))) == 0):
         m = hashlib.md5()
         m.update(data['password'])
         userInst.password = m.hexdigest()
