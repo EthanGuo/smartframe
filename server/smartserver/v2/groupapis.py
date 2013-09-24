@@ -1,43 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from gevent import monkey
-monkey.patch_all()
 from gevent.pywsgi import WSGIServer
-
 from bottle import request, response, Bottle, HTTPResponse
-#from .plugins import LoginPlugin, ContentTypePlugin
-from .impl.test import *
+from .impl.mapping import *
 
 appweb = Bottle()
-
-# contenttype_plugin = ContentTypePlugin()
-# appweb.install(contenttype_plugin)
-
-# login_plugin = LoginPlugin(getuserid=getUserId,
-#                            request_token_param="token",
-#                            login=True)  # login is required by default
-# appweb.install(login_plugin)
-
-
-@appweb.hook("after_request")
-def crossDomainHook():
-    response.headers["Access-Control-Allow-Origin"] = "*"
-
-@appweb.error(405)
-def method_not_allowed(res):
-    if request.method == 'OPTIONS':
-        new_res = HTTPResponse()
-        new_res.set_header('Access-Control-Allow-Origin', '*')
-        new_res.headers[
-            "Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE"
-        if request.headers.get("Access-Control-Request-Headers"):
-            new_res.headers["Access-Control-Allow-Headers"] = request.headers[
-                "Access-Control-Request-Headers"]
-        return new_res
-    res.headers['Allow'] += ', OPTIONS'
-    return request.app.default_error_handler(res)
-
 
 @appweb.route('/account', method='POST', content_type='application/json', login=False)
 def doAccountWithOutUid():
@@ -76,7 +44,7 @@ def doAccountWithUid(uid):
     |       |logout        |{'token':(string)token}
     -----------------------------------------------------------------------------------------
     """
-    return accountWithUid(uid, request.json)
+    return accountWithUid(request.json, uid)
 
 @appweb.route('/user/<uid>', method='GET')
 def doGetAccountInfo(uid):
@@ -94,7 +62,7 @@ def doGetAccountInfo(uid):
     |       |info          |null  |{'username':(string)username,'inGroups':[{'gid':gid1,'groupname':(string)name1},{'gid':gid2,'groupname':(string)name2},...],'info':{'email':(string)email, 'telephone':(string)telephone, 'company':(string)company}}
     -----------------------------------------------------------------------------------------
     """
-    return getAccountInfo(uid)
+    return getAccountInfo(data, uid)
 
 
 if __name__ == '__main__':

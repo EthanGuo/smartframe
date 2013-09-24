@@ -17,22 +17,34 @@ func_match = {'register': accountRegister,
             #doAccountGetAction
             }
 
+def data_checker(func):
+    #Data should be in the format of {'subc': subc, 'data': {}}
+    def wrapper(*args):
+        if (args[0].get('subc', 0) != 0) & (args[0].get('data', 0) != 0):
+            return func(args)
+        else:
+            return resultWrapper('Bad request', {'code': '04'}, 'error')
+    return wrapper
+
+@data_checker
 def accountWithOutUid(data):
-    '''
+    """
        Implement account register/forgotpasswd/login here.
-    '''
+    """
     return func_match.get(data['subc'])(data['data'])
 
-def accountWithUid(uid, data):
-    '''
+@data_checker
+def accountWithUid(data, uid):
+    """
        Implement account changepasswd/update/invite/logout here.
-    '''
+    """
     return func_match.get(data['subc'])(uid, data['data'])
 
-def getAccountInfo(uid):
-    '''
+@data_checker
+def getAccountInfo(data, uid):
+    """
        Implement account info/list here.
-    '''
+    """
     return func_match.get(data['subc'])(uid)
 
 
