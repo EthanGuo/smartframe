@@ -19,8 +19,8 @@ func_match = {'register': accountRegister,
 
 def data_checker(func):
     #Data should be in the format of {'subc': subc, 'data': {}}
-    def wrapper(*args):
-        if (args[0].get('subc', 0) != 0) & (args[0].get('data', 0) != 0):
+    def wrapper(args):
+        if (args.get('subc', 0) != 0) & (args.get('data', 0) != 0):
             return func(args)
         else:
             return resultWrapper('Bad request', {'code': '04'}, 'error')
@@ -33,14 +33,12 @@ def accountWithOutUid(data):
     """
     return func_match.get(data['subc'])(data['data'])
 
-@data_checker
 def accountWithUid(data, uid):
     """
        Implement account changepasswd/update/invite/logout here.
     """
     return func_match.get(data['subc'])(uid, data['data'])
 
-@data_checker
 def getAccountInfo(data, uid):
     """
        Implement account info/list here.

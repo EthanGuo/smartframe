@@ -25,4 +25,4 @@ else:
     REDIS_DB = 0
 
 PORT = 27017
-DB_NAME = 'smartServer-eth'
+DB_NAME = 'smartServer_eth'

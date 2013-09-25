@@ -2,10 +2,16 @@
 # -*- coding: utf-8 -*-
 
 from gevent.pywsgi import WSGIServer
-from bottle import request, response, Bottle, HTTPResponse
-from .impl.mapping import *
+from bottle import request, response, Bottle
+from plugins import LoginPlugin
+from impl.mapping import *
 
 appweb = Bottle()
+
+# login_plugin = LoginPlugin(getuserid=getUserId,
+#                            request_token_param="token",
+#                            login=True)  # login is required by default
+# appweb.install(login_plugin)
 
 @appweb.route('/account', method='POST', content_type='application/json', login=False)
 def doAccountWithOutUid():
@@ -19,9 +25,9 @@ def doAccountWithOutUid():
              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ---------------------------------------------------------------------------------------
     |support|subc          |data
-    |       |register      |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
+    |       |register      |{'username':(string)username, 'password':(string)password, 'tokenType':(string)tokenType,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
     |       |forgotpasswd  |{'email':(string)mailaddress}
-    |       |login         |{'appid':(int)appid, 'username':(string)username, 'password':(string)password}
+    |       |login         |{'tokenType':(string)tokenType, 'username':(string)username, 'password':(string)password}
     ---------------------------------------------------------------------------------------
     """
     return accountWithOutUid(request.json)

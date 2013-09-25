@@ -6,7 +6,7 @@ import uuid
 import string
 from random import choice
 from ..sendmail import *
-from dbSchema import user,usetoken
+from db import user,usetoken
 import json
 
 TOKEN_EXPIRES = {'01': 30*24*3600,
@@ -15,14 +15,14 @@ TOKEN_EXPIRES = {'01': 30*24*3600,
                  '04': 24*3600
                  }
 
-def createToken(appid, uid):
+def createToken(tokenType, uid):
     """
     Create a token, add it to mongodb, return the token generated.
     """
     m = hashlib.md5()
     m.update(str(uuid.uuid1()))
     token = m.hexdigest()
-    data = {'token':token,'appid':appid,'uid':uid,'expires':TOKEN_EXPIRES[appid]}
+    data = {'token':token,'tokenType':tokenType,'uid':uid,'expires':TOKEN_EXPIRES[tokenType]}
     tokenInst = usetoken().from_json(json.dumps(data))
     tokenInst.save()
     return token
@@ -38,41 +38,39 @@ def resultWrapper(msg, data, status):
 
 def accountLogin(data):
     """
-    params, data: {'appid':(int)appid, 'username':(string)username, 'password':(string)password}
+    params, data: {'tokenType':(int)tokenType, 'username':(string)username, 'password':(string)password}
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
     #Check whether data['username'] is username or email address.
-    if '@' in data['username']:
-        data = {'appid': data['appid'], 'password': data['password'], 'info':{'email': data['username']}}
-    userInst = user().from_json(json.dumps(data))
     #Find user by email/password or username/password
-    if userInst.info.email != None:
+    if '@' in data['username']:
+        data = {'tokenType': data['tokenType'], 'password': data['password'], 'info':{'email': data['username']}}
+        userInst = user().from_json(json.dumps(data))
         result = list(user.objects(info__email = userInst.info.email,password = userInst.password))
     else:
+        userInst = user().from_json(json.dumps(data))
         result = list(user.objects(username = userInst.username,password = userInst.password))
     #If user exists, create a token for it and return, or return error.
     if len(result) != 0:
         useraccount = result[0]
-        ret = createToken(appid = data['appid'], uid = useraccount.uid)
+        ret = createToken(tokenType = useraccount.tokenType, uid = useraccount.uid)
         rmsg, rdata, rstatus = '', {'token': ret, 'uid': useraccount.uid}, 'ok'
     else:
-        rmsg, rdata, rstatus = 'Incorrect UserName/Password or unverified email!', {'code': '02'}, 'error'
+        rmsg, rdata, rstatus = 'Incorrect UserName/Password!', {'code': '02'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
 
 def accountRegister(data):
     """
-    params, data: {'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
+    params, data: {'username':(string)username, 'password':(string)password, 'tokenType':(string)tokenType,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
     userInst = user().from_json(json.dumps(data))
     # If both username and email have not been registered, create a new user, generate a token, send a mail then return, or return error.
     if (len(list(user.objects(username = userInst.username))) == 0) & (len(list(user.objects(info__email = userInst.info.email))) == 0):
-        m = hashlib.md5()
-        m.update(data['password'])
-        userInst.password = m.hexdigest()
+        #Password should be encryped already.
         userInst.save()
-        ret = createToken(appid = data['appid'], uid = userInst.uid)
-        sendVerifyMail(data['info']['email'], data['username'], ret)
+        ret = createToken(tokenType = userInst.tokenType, uid = userInst.uid)
+        #sendVerifyMail(userInst.info.email, userInst.username, ret)
         rmsg, rdata, rstatus = '', {'token': ret, 'uid': userInst.uid}, 'ok'
     else:
         rmsg, rdata, rstatus = 'An account with same email or username already registered!', {'code': '04'}, 'error'
@@ -81,65 +79,51 @@ def accountRegister(data):
 def accountForgotPasswd(data):
     """
     params, data: {'email':(string)mailaddress}
-    return, data: {'token':(string)token, 'uid':(int)uid}
+    return, data: {}
     """    
-    userInst = user().from_json(json.dumps(data))
     # Find user by email, if user exists, update its password, generate a token, then send mail to it, or return error.
-    result = list(user.objects(info__email = userInst.info.email))
+    result = list(user.objects(info__email = data['email']))
     if len(result) == 1:
         newpassword = ''.join([choice(string.ascii_letters + string.digits) for i in range(8)])
         m = hashlib.md5()
         m.update(newpassword)
         m.hexdigest()
         useraccount = result[0]
-        res = user.objects(uid = useraccount.uid).update_one(set__password = m.hexdigest())
+        user.objects(uid = useraccount.uid).update_one(set__password = m.hexdigest())
         useraccount.reload()
-        #If update failed, return error, or generate a token, then send mail to it.
-        if res == False:
-            rmsg, rdata, rstatus = 'Reset passwod unsucessfully!!!', {'code': '04'}, 'error'
-        else:
-           ret = createToken(appid = '03', uid = useraccount.uid)
-           useraccount.token = ret
-           sendForgotPasswdMail(userInst.info.email, newpassword, ret)
-           rmsg, rdata, rstatus = '', useraccount, 'ok' 
+        #Generate a token, then send mail to it.
+        ret = createToken(tokenType = '03', uid = useraccount.uid)
+        #sendForgotPasswdMail(data['email'], newpassword, ret)
+        rmsg, rdata, rstatus = '', {}, 'ok' 
     else:
-        rmsg, rdata, rstatus = 'Invalid or unverified email!', {'code': '04'}, 'error'
+        rmsg, rdata, rstatus = 'Invalid email!', {'code': '04'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
 
 def accountChangepasswd(uid,data):
     """
     params, data: {'token':(string)token,'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword}
-    return, data: {'uid':(int)uid}
+    return, data: {}
     """  
-    m = hashlib.md5()
-    m.update(data['oldpassword'])
-    oldpassword = m.hexdigest()
+    #oldpassword/newpassword should be encrypted already.
     #Find user by user uid and oldpassword
-    result = list(user.objects(uid = uid, password = oldpassword))
+    result = list(user.objects(uid = uid, password = data['oldpassword']))
     #If user exist, update its password, or return error
     if len(result) == 1:
-        m = hashlib.md5()
-        m.update(data['newpassword'])
-        user.objects(uid = userid).update_one(set__password = m.hexdigest())
-        rmsg, rdata, rstatus = '', {'uid': userid}, 'ok'
+        user.objects(uid = uid).update_one(set__password = data['newpassword'])
+        result[0].reload()
+        rmsg, rdata, rstatus = '', {}, 'ok'
     else:
         rmsg, rdata, rstatus = 'Incorrect original password!', {'code': '03'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
 
 def accountInvite(uid,data):
     """
-    params, data: {'token':(string)token, 'email':(string)email, 'appid':(string)appid, 'username':(string)username, 'groupname':(string)groupname}
-    return, data: {'uid':(int)uid, 'token':(string)token}
+    params, data: {'token':(string)token, 'email':(string)email, 'tokenType':(string)tokenType, 'username':(string)username}
+    return, data: {}
     """ 
-    userInst = user().from_json(json.dumps(data))
-    #Generate a token for invited user.
-    usertoken = createToken(appid = userInst.appid, uid = uid)
-    #If token is generated successfully, send a mail to the invited user, or return error.
-    if usertoken != None:
-        sendInviteMail(userInst.info.email, userInst.username,userInst.groupname, usertoken)
-        rmsg, rdata, rstatus = '', {'uid': uid, 'token': token}, 'ok'
-    else:
-        rmsg, rdata, rstatus = 'Create token fail!', {'code': '03'}, 'error'
+    #Send a mail to the invited user, or return error.
+    #sendInviteMail(data['email'], data['username'])
+    rmsg, rdata, rstatus = '', {}, 'ok'
     return resultWrapper(rmsg, rdata, rstatus)
 
 def accountLogout(uid,data):
@@ -148,11 +132,8 @@ def accountLogout(uid,data):
     return, data: {}
     """ 
     #Remove the token then return
-    result = usetoken.objects(uid = uid).update_one(unset__token = data['token'])
-    if result == True:
-        rmsg, rdata, rstatus = '', {}, 'ok'
-    else:
-        rmsg, rdata, rstatus = 'delete token fail!', {'code': '03'}, 'error'
+    usetoken.objects(uid = uid).update_one(unset__token = data['token'])
+    rmsg, rdata, rstatus = '', {}, 'ok'
     return resultWrapper(rmsg, rdata, rstatus)
 
 def accountUpdate():
