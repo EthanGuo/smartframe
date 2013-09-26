@@ -12,7 +12,7 @@ contenttype_plugin = ContentTypePlugin()
 appweb.install(contenttype_plugin)
 
 dataformat_plugin = DataFormatPlugin()
-appwe.install(dataformat_plugin)
+appweb.install(dataformat_plugin)
 
 
 @appweb.route('/account', method='POST', content_type='application/json', data_format=['subc', 'data'])
