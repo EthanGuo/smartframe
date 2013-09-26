@@ -27,9 +27,9 @@ def doAccountWithOutUid():
              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ---------------------------------------------------------------------------------------
     |support|subc          |data
-    |       |register      |{'username':(string)username, 'password':(string)password, 'tokenType':(string)tokenType,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
+    |       |register      |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
     |       |forgotpasswd  |{'email':(string)mailaddress}
-    |       |login         |{'tokenType':(string)tokenType, 'username':(string)username, 'password':(string)password}
+    |       |login         |{'appid':(string)appid, 'username':(string)username, 'password':(string)password}
     ---------------------------------------------------------------------------------------
     """
     return accountWithOutUid(request.json)

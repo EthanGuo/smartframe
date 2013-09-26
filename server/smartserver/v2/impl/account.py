@@ -15,14 +15,14 @@ TOKEN_EXPIRES = {'01': 30*24*3600,
                  '04': 24*3600
                  }
 
-def createToken(tokenType, uid):
+def createToken(appid, uid):
     """
     Create a token, add it to mongodb, return the token generated.
     """
     m = hashlib.md5()
     m.update(str(uuid.uuid1()))
     token = m.hexdigest()
-    data = {'token':token,'tokenType':tokenType,'uid':uid,'expires':TOKEN_EXPIRES[tokenType]}
+    data = {'token':token,'appid':appid,'uid':uid,'expires':TOKEN_EXPIRES[appid]}
     tokenInst = usetoken().from_json(json.dumps(data))
     tokenInst.save()
     return token
@@ -38,13 +38,13 @@ def resultWrapper(msg, data, status):
 
 def accountLogin(data):
     """
-    params, data: {'tokenType':(int)tokenType, 'username':(string)username, 'password':(string)password}
+    params, data: {'appid':(int)appid, 'username':(string)username, 'password':(string)password}
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
     #Check whether data['username'] is username or email address.
     #Find user by email/password or username/password
     if '@' in data['username']:
-        data = {'tokenType': data['tokenType'], 'password': data['password'], 'info':{'email': data['username']}}
+        data = {'appid': data['appid'], 'password': data['password'], 'info':{'email': data['username']}}
         userInst = user().from_json(json.dumps(data))
         result = list(user.objects(info__email = userInst.info.email,password = userInst.password))
     else:
@@ -53,7 +53,7 @@ def accountLogin(data):
     #If user exists, create a token for it and return, or return error.
     if len(result) != 0:
         useraccount = result[0]
-        ret = createToken(tokenType = useraccount.tokenType, uid = useraccount.uid)
+        ret = createToken(appid = useraccount.appid, uid = useraccount.uid)
         rmsg, rdata, rstatus = '', {'token': ret, 'uid': useraccount.uid}, 'ok'
     else:
         rmsg, rdata, rstatus = 'Incorrect UserName/Password!', {'code': '02'}, 'error'
@@ -61,7 +61,7 @@ def accountLogin(data):
 
 def accountRegister(data):
     """
-    params, data: {'username':(string)username, 'password':(string)password, 'tokenType':(string)tokenType,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
+    params, data: {'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
     userInst = user().from_json(json.dumps(data))
@@ -69,7 +69,7 @@ def accountRegister(data):
     if (len(list(user.objects(username = userInst.username))) == 0) & (len(list(user.objects(info__email = userInst.info.email))) == 0):
         #Password should be encryped already.
         userInst.save()
-        ret = createToken(tokenType = userInst.tokenType, uid = userInst.uid)
+        ret = createToken(appid = userInst.appid, uid = userInst.uid)
         #sendVerifyMail(userInst.info.email, userInst.username, ret)
         rmsg, rdata, rstatus = '', {'token': ret, 'uid': userInst.uid}, 'ok'
     else:
@@ -92,7 +92,7 @@ def accountForgotPasswd(data):
         user.objects(uid = useraccount.uid).update_one(set__password = m.hexdigest())
         useraccount.reload()
         #Generate a token, then send mail to it.
-        ret = createToken(tokenType = '03', uid = useraccount.uid)
+        ret = createToken(appid = '03', uid = useraccount.uid)
         #sendForgotPasswdMail(data['email'], newpassword, ret)
         rmsg, rdata, rstatus = '', {}, 'ok' 
     else:
@@ -118,7 +118,7 @@ def accountChangepasswd(uid,data):
 
 def accountInvite(uid,data):
     """
-    params, data: {'token':(string)token, 'email':(string)email, 'tokenType':(string)tokenType, 'username':(string)username, 'gid':(string)groupid}
+    params, data: {'token':(string)token, 'email':(string)email, 'appid':(string)appid, 'username':(string)username, 'gid':(string)groupid}
     return, data: {}
     """ 
     #Send a mail to the invited user, or return error.

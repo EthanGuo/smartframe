@@ -18,7 +18,7 @@ class user(Document):
     info = EmbeddedDocumentField(userinfo)
     active = BooleanField()
     uid = SequenceField()
-    tokenType = StringField()
+    appid = StringField()
     groupname = StringField()
 
 class usetoken(Document):
@@ -27,7 +27,7 @@ class usetoken(Document):
     """
     uid = IntField()
     token = StringField()
-    tokenType = StringField()
+    appid = StringField()
     expires = IntField()
 
 class connector(object):
