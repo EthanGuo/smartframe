@@ -118,7 +118,7 @@ def accountChangepasswd(uid,data):
 
 def accountInvite(uid,data):
     """
-    params, data: {'token':(string)token, 'email':(string)email, 'tokenType':(string)tokenType, 'username':(string)username}
+    params, data: {'token':(string)token, 'email':(string)email, 'tokenType':(string)tokenType, 'username':(string)username, 'gid':(string)groupid}
     return, data: {}
     """ 
     #Send a mail to the invited user, or return error.

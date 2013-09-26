@@ -3,17 +3,19 @@
 
 from gevent.pywsgi import WSGIServer
 from bottle import request, response, Bottle
-from plugins import LoginPlugin
+from plugins import ContentTypePlugin, DataFormatPlugin
 from impl.mapping import *
 
 appweb = Bottle()
 
-# login_plugin = LoginPlugin(getuserid=getUserId,
-#                            request_token_param="token",
-#                            login=True)  # login is required by default
-# appweb.install(login_plugin)
+contenttype_plugin = ContentTypePlugin()
+appweb.install(contenttype_plugin)
 
-@appweb.route('/account', method='POST', content_type='application/json', login=False)
+dataformat_plugin = DataFormatPlugin()
+appwe.install(dataformat_plugin)
+
+
+@appweb.route('/account', method='POST', content_type='application/json', data_format=['subc', 'data'])
 def doAccountWithOutUid():
     """
     URL:/account
@@ -32,7 +34,7 @@ def doAccountWithOutUid():
     """
     return accountWithOutUid(request.json)
 
-@appweb.route('/user/<uid>', method='POST',content_type=['application/json','multipart/form-data'])
+@appweb.route('/user/<uid>', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
 def doAccountWithUid(uid):
     """
     URL:/user/<uid>
@@ -52,7 +54,7 @@ def doAccountWithUid(uid):
     """
     return accountWithUid(request.json, uid)
 
-@appweb.route('/user/<uid>', method='GET')
+@appweb.route('/user/<uid>', method='GET', data_format=['subc', 'data'])
 def doGetAccountInfo(uid):
     """
     URL:/account
