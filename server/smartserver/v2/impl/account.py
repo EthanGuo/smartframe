@@ -24,8 +24,11 @@ def createToken(appid, uid):
     token = m.hexdigest()
     data = {'token':token,'appid':appid,'uid':uid,'expires':TOKEN_EXPIRES[appid]}
     tokenInst = usetoken().from_json(json.dumps(data))
-    tokenInst.save()
-    return token
+    try:
+        tokenInst.save()
+        return {'status': 'ok', 'token': token}
+    except OperationError:
+        return {'status': 'error', 'token': ''}
 
 def resultWrapper(msg, data, status):
     """
@@ -54,7 +57,10 @@ def accountLogin(data):
     if len(result) != 0:
         useraccount = result[0]
         ret = createToken(appid = useraccount.appid, uid = useraccount.uid)
-        rmsg, rdata, rstatus = '', {'token': ret, 'uid': useraccount.uid}, 'ok'
+        if ret['status'] == 'ok':
+            rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': useraccount.uid}, 'ok'
+        else:
+            rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
     else:
         rmsg, rdata, rstatus = 'Incorrect UserName/Password!', {'code': '02'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
@@ -68,10 +74,17 @@ def accountRegister(data):
     # If both username and email have not been registered, create a new user, generate a token, send a mail then return, or return error.
     if (len(list(user.objects(username = userInst.username))) == 0) & (len(list(user.objects(info__email = userInst.info.email))) == 0):
         #Password should be encryped already.
-        userInst.save()
+        try:
+            userInst.save()
+        except OperationError:
+            rmsg, rdata, rstatus = 'Save user failed!', {}, 'error'
+            return resultWrapper(rmsg, rdata, rstatus)
         ret = createToken(appid = userInst.appid, uid = userInst.uid)
-        #sendVerifyMail(userInst.info.email, userInst.username, ret)
-        rmsg, rdata, rstatus = '', {'token': ret, 'uid': userInst.uid}, 'ok'
+        if ret['status'] == 'ok':
+            rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': userInst.uid}, 'ok'
+            #sendVerifyMail(userInst.info.email, userInst.username, ret)
+        else:
+            rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
     else:
         rmsg, rdata, rstatus = 'An account with same email or username already registered!', {'code': '04'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
@@ -89,12 +102,18 @@ def accountForgotPasswd(data):
         m.update(newpassword)
         m.hexdigest()
         useraccount = result[0]
-        user.objects(uid = useraccount.uid).update_one(set__password = m.hexdigest())
-        useraccount.reload()
+        try:
+            user.objects(uid = useraccount.uid).update_one(set__password = m.hexdigest())
+            useraccount.reload()
+        except OperationError:
+            rmsg, rdata, rstatus = 'Save new password failed!', {'code': '04'}, 'error'
         #Generate a token, then send mail to it.
         ret = createToken(appid = '03', uid = useraccount.uid)
-        #sendForgotPasswdMail(data['email'], newpassword, ret)
-        rmsg, rdata, rstatus = '', {}, 'ok' 
+        if ret['status'] == 'ok':
+            #sendForgotPasswdMail(data['email'], newpassword, ret)
+            rmsg, rdata, rstatus = '', {}, 'ok' 
+        else:
+            rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
     else:
         rmsg, rdata, rstatus = 'Invalid email!', {'code': '04'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
@@ -109,9 +128,12 @@ def accountChangepasswd(uid,data):
     result = list(user.objects(uid = uid, password = data['oldpassword']))
     #If user exist, update its password, or return error
     if len(result) == 1:
-        user.objects(uid = uid).update_one(set__password = data['newpassword'])
-        result[0].reload()
-        rmsg, rdata, rstatus = '', {}, 'ok'
+        try:
+            user.objects(uid = uid).update_one(set__password = data['newpassword'])
+            result[0].reload()
+            rmsg, rdata, rstatus = '', {}, 'ok'
+        except OperationError:
+            rmsg, rdata, rstatus = 'Save new password failed!', {'code': '03'}, 'error'
     else:
         rmsg, rdata, rstatus = 'Incorrect original password!', {'code': '03'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
@@ -132,8 +154,11 @@ def accountLogout(uid,data):
     return, data: {}
     """ 
     #Remove the token then return
-    usetoken.objects(uid = uid).update_one(unset__token = data['token'])
-    rmsg, rdata, rstatus = '', {}, 'ok'
+    try:
+        usetoken.objects(uid = uid).update_one(unset__token = data['token'])
+        rmsg, rdata, rstatus = '', {}, 'ok'
+    except OperationError:
+        rmsg, rdata, rstatus = 'Remove token failed!', {}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
 
 def accountUpdate():
