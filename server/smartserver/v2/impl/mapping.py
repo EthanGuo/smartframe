@@ -17,16 +17,6 @@ func_match = {'register': accountRegister,
             #doAccountGetAction
             }
 
-def data_checker(func):
-    #Data should be in the format of {'subc': subc, 'data': {}}
-    def wrapper(args):
-        if (args.get('subc', 0) != 0) & (args.get('data', 0) != 0):
-            return func(args)
-        else:
-            return resultWrapper('Bad request', {'code': '04'}, 'error')
-    return wrapper
-
-@data_checker
 def accountWithOutUid(data):
     """
        Implement account register/forgotpasswd/login here.

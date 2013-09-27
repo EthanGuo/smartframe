@@ -9,7 +9,7 @@ __all__ = ["MONGODB_URI", "MONGODB_REPLICASET", "REDIS_URI", "REDIS_HOST",
            "REDIS_PORT", "REDIS_DB", "MEMCACHED_URI", "WEB_HOST", "WEB_PORT"]
 
 
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017").strip().replace("mongodb://", "")
 MONGODB_REPLICASET = os.getenv("MONGODB_REPLICASET")
 REDIS_URI = os.getenv("REDIS_URI", "redis://localhost:6379")
 MEMCACHED_URI = os.getenv("MEMCACHED_URI", "localhost:11211")
