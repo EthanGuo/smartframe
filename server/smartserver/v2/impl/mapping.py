@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from account import *
+from group import *
 
 func_match = {'register': accountRegister,
             'login': accountLogin,
@@ -13,8 +14,11 @@ func_match = {'register': accountRegister,
             'logout': accountLogout,
             #accountWithUid
             'info': accountGetInfo,
-            'list': accountGetList
+            'list': accountGetList,
             #doAccountGetAction
+            'create': groupCreate,
+            'delete': groupDelete,
+            #groupBasicAction
             }
 
 def accountWithOutUid(data):
@@ -36,13 +40,13 @@ def getAccountInfo(data, uid):
     return func_match.get(data['subc'])(uid)
 
 
-# def doGroupBasicAction(data):
-#     if data['action'] == 'create':
-#         return doGroupCreate(data['data'])
-#     elif data['action'] == 'delete':
-#         return doGroupDelete(data['data'])
+def groupBasicAction(data):
+    """
+       Implement group create/delete here.
+    """
+    return func_match.get(data['subc'])(data['data'])
 
-# def doGroupMemeberAction(gid,data):
+# def groupMemeberAction(gid,data):
 #     if data['action'] == 'setmember':
 #         return setGroupMembers(gid,data['data'])
 #     elif data['action'] == 'addmember':
@@ -50,11 +54,15 @@ def getAccountInfo(data, uid):
 #     elif data['action'] == 'delmember':
 #         return delGroupMembers(gid,data['data'])
 
-# def doGroupGetAction(gid,data):
+# def getGroupInfo(gid,data):
 #     if data['action'] =='info':
 #         return getGroupInfo(gid, data['data'])
 #     elif data['action'] == 'testsummary':
 #         return getTestSessionSummary(gid, data['data'])
+
+
+
+
 
 # def doTestSessionBasicAction(gid,sid,data):
 #     if data['action'] =='create':

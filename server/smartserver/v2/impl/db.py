@@ -19,7 +19,6 @@ class user(Document):
     active = BooleanField()
     uid = SequenceField()
     appid = StringField()
-    groupname = StringField()
 
 class usetoken(Document):
     """
@@ -29,6 +28,18 @@ class usetoken(Document):
     token = StringField()
     appid = StringField()
     expires = IntField()
+
+class groupMember(EmbeddedDocument):
+    uid = IntField()
+    role = IntField()
+
+class group(Document):
+    """
+    db schema of collection group in mongodb
+    """
+    groupname = StringField()
+    gid = SequenceField()
+    members = ListField(EmbeddedDocumentField(groupMember))
 
 class connector(object):
     """
