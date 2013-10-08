@@ -84,8 +84,8 @@ def doGroupAction():
              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
-    |       |create        |{'token':(string)token, 'groupname':(string)name, 'info':(JSON)info} 
-    |       |delete        |{'token':(string)token, 'gid':(string)gid}
+    |       |create        |{'token':(string)token, 'groupname':(string)name} 
+    |       |delete        |{'token':(string)token, 'gid':(int)gid}
     -----------------------------------------------------------------------------------------
     """
     return groupBasicAction(request.json)
@@ -110,7 +110,7 @@ def doMemberToGroupAction(gid):
     return groupMemeberAction(request.json, gid)
 
 @appweb.route('/group/<gid>/info', method='GET')
-def doGroupInfo(gid):
+def doGetGroupInfo(gid):
     """
     URL:/group/<gid>/info
     TYPE:http/GET

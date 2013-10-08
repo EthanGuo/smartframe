@@ -6,6 +6,7 @@ import uuid
 import string
 from random import choice
 from ..sendmail import *
+from util import resultWrapper
 from db import user,usetoken
 import json
 
@@ -29,15 +30,6 @@ def createToken(appid, uid):
         return {'status': 'ok', 'token': token}
     except OperationError:
         return {'status': 'error', 'token': ''}
-
-def resultWrapper(msg, data, status):
-    """
-    Unify the format of the return.
-    """
-    if status == 'ok':
-        return {'results': 'ok', 'data': data, 'msg': msg}
-    elif status == 'error':
-        return {'results': 'error', 'data': data, 'msg': msg}
 
 def accountLogin(data):
     """

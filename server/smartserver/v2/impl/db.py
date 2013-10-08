@@ -33,7 +33,7 @@ class groupMember(EmbeddedDocument):
     uid = IntField()
     role = IntField()
 
-class group(Document):
+class groups(Document):
     """
     db schema of collection group in mongodb
     """
