@@ -7,6 +7,7 @@ import string
 from random import choice
 from ..sendmail import *
 from util import resultWrapper
+from mongoengine import OperationError
 from db import user,usetoken
 import json
 
@@ -41,13 +42,13 @@ def accountLogin(data):
     if '@' in data['username']:
         data = {'appid': data['appid'], 'password': data['password'], 'info':{'email': data['username']}}
         userInst = user().from_json(json.dumps(data))
-        result = list(user.objects(info__email = userInst.info.email,password = userInst.password))
+        result = user.objects(info__email = userInst.info.email,password = userInst.password)
     else:
         userInst = user().from_json(json.dumps(data))
-        result = list(user.objects(username = userInst.username,password = userInst.password))
+        result = user.objects(username = userInst.username,password = userInst.password)
     #If user exists, create a token for it and return, or return error.
     if len(result) != 0:
-        useraccount = result[0]
+        useraccount = result.first()
         ret = createToken(appid = useraccount.appid, uid = useraccount.uid)
         if ret['status'] == 'ok':
             rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': useraccount.uid}, 'ok'
@@ -64,7 +65,7 @@ def accountRegister(data):
     """
     userInst = user().from_json(json.dumps(data))
     # If both username and email have not been registered, create a new user, generate a token, send a mail then return, or return error.
-    if (len(list(user.objects(username = userInst.username))) == 0) & (len(list(user.objects(info__email = userInst.info.email))) == 0):
+    if (len(user.objects(username = userInst.username)) == 0) & (len(user.objects(info__email = userInst.info.email)) == 0):
         #Password should be encryped already.
         try:
             userInst.save()
@@ -87,13 +88,13 @@ def accountForgotPasswd(data):
     return, data: {}
     """    
     # Find user by email, if user exists, update its password, generate a token, then send mail to it, or return error.
-    result = list(user.objects(info__email = data['email']))
+    result = user.objects(info__email = data['email'])
     if len(result) == 1:
         newpassword = ''.join([choice(string.ascii_letters + string.digits) for i in range(8)])
         m = hashlib.md5()
         m.update(newpassword)
         m.hexdigest()
-        useraccount = result[0]
+        useraccount = result.first()
         try:
             user.objects(uid = useraccount.uid).update_one(set__password = m.hexdigest())
             useraccount.reload()
@@ -117,12 +118,12 @@ def accountChangepasswd(uid,data):
     """  
     #oldpassword/newpassword should be encrypted already.
     #Find user by user uid and oldpassword
-    result = list(user.objects(uid = uid, password = data['oldpassword']))
+    result = user.objects(uid = uid, password = data['oldpassword'])
     #If user exist, update its password, or return error
     if len(result) == 1:
         try:
             user.objects(uid = uid).update_one(set__password = data['newpassword'])
-            result[0].reload()
+            list(result)[0].reload()
             rmsg, rdata, rstatus = '', {}, 'ok'
         except OperationError:
             rmsg, rdata, rstatus = 'Save new password failed!', {'code': '03'}, 'error'
@@ -162,11 +163,11 @@ def accountGetInfo(uid):
     return, data: {'uid':(int)uid, 'username':(string)username, 'info': (dict)userinfo}
     """ 
     #If uid exists, return its username and info, or return error.
-    result = list(user.objects(uid=uid))
+    result = user.objects(uid=uid)
     if len(result) == 0:
         rmsg, rdata, rstatus = 'Invalid User ID!!', {'code': '04'}, 'error'
     else:
-        useraccount = result[0]
+        useraccount = result.first()
         rdata = {'uid': uid, 'username': useraccount['username'], 'info': useraccount['info']}
         rmsg, rstatus = '', 'ok'
     return resultWrapper(rmsg, rdata, rstatus)
@@ -177,7 +178,7 @@ def accountGetList(uid):
     return, data: {'count':(int)count, 'users':[{'uid':(int)uid, 'username':(string)username}...]}
     """ 
     #If users exist in database, return all of them or return error
-    if len(list(user.objects())) == 0:
+    if len(user.objects()) == 0:
         rmsg, rdata, rstatus = 'no user found!', {'code': '04'}, 'error'
     else:
         rmsg, rstatus = '', 'ok'

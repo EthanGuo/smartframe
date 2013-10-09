@@ -121,7 +121,7 @@ def doGetGroupInfo(gid):
              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data                   |return data
-    |       |info          |{'token':(string)token,|{'groupname'(string)groupname, 'members':[{'uid':(int)uid1, 'role':(int)roleId1},{'uid':(int)uid2, 'role':(int)roleId2},...]} 
+    |       |info          |{'token':(string)token,|{'members':[{'uid':(int)uid1, 'role':(int)roleId1},{'uid':(int)uid2, 'role':(int)roleId2},...]} 
     |       |testsummary   |{'token':(string)token,|{'count':(int)count, 'sessions':[ {planname':(string)value,'starttime':(string)value, 'result':{'total':(int)value, 'pass':(int)value, 'fail':(int)value, 'error':(int)value}, 'runtime':(string)value},... ] }}
     -----------------------------------------------------------------------------------------
     """

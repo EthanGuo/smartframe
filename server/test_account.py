@@ -12,45 +12,45 @@ class TestAccount(unittest.TestCase):
         self.db = self._mc.smartServer_eth
 
     def test_createToken(self):
-        token = createToken('03', 9)
+        token = createToken('03', 9)['token']
         self.assertTrue(self.db['usetoken'].find({'token': token}).count() == 1)
 
     def test_accountRegister(self):
-        data = {'username': 'test', 'password': '123456', 'tokenType': '03', 'info': {'email': 'test@borqs.com'}}
+        data = {'username': 'test', 'password': '123456', 'appid': '03', 'info': {'email': 'test@borqs.com'}}
         token = accountRegister(data)['data']['token']
-        self.assertTrue(self.db['user'].find({'username': 'test', 'tokenType': '03', 'info.email': 'test@borqs.com'}).count())
+        self.assertTrue(self.db['user'].find({'username': 'test', 'appid': '03', 'info.email': 'test@borqs.com'}).count())
         self.assertTrue(self.db['usetoken'].find({'token': token}).count())
 
         result = accountRegister(data)
         self.assertTrue(result['results'] == 'error')
 
-        data = {'username': 'test', 'password': '123456', 'tokenType': '03', 'info': {'email': 'test1@borqs.com'}}
+        data = {'username': 'test', 'password': '123456', 'appid': '03', 'info': {'email': 'test1@borqs.com'}}
         result = accountRegister(data)
         self.assertTrue(result['results'] == 'error')
 
-        data = {'username': 'test1', 'password': '123456', 'tokenType': '03', 'info': {'email': 'test@borqs.com'}}
+        data = {'username': 'test1', 'password': '123456', 'appid': '03', 'info': {'email': 'test@borqs.com'}}
         result = accountRegister(data)
         self.assertTrue(result['results'] == 'error') 
 
     def test_accountLogin(self):
-        self.db['user'].insert({'tokenType':'03', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
+        self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
 
-        dataUsername = {'tokenType':'03', 'username':'test', 'password':'123456'}
+        dataUsername = {'appid':'03', 'username':'test', 'password':'123456'}
         result = accountLogin(dataUsername)
         self.assertTrue(self.db['usetoken'].find(result['data']).count() == 1)
         self.db['usetoken'].remove({'token': result['data']['token']})
 
-        dataEmail = {'tokenType':'03', 'username':'test@borqs.com', 'password':'123456'}
+        dataEmail = {'appid':'03', 'username':'test@borqs.com', 'password':'123456'}
         result = accountLogin(dataEmail)
         self.assertTrue(self.db['usetoken'].find(result['data']).count() == 1)
         self.db['usetoken'].remove({'token': result['data']['token']})
 
-        dataWrongUsername = {'tokenType':'03', 'username':'test1', 'password':'123456'}
+        dataWrongUsername = {'appid':'03', 'username':'test1', 'password':'123456'}
         result = accountLogin(dataWrongUsername)
         self.assertTrue(result['results'] == 'error')
 
     def test_accountForgotPasswd(self):
-        self.db['user'].insert({'tokenType':'03', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
+        self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
 
         result = accountForgotPasswd({'email': 'test@borqs.com'})
         self.assertTrue(result['results'] == 'ok')
@@ -59,7 +59,7 @@ class TestAccount(unittest.TestCase):
         self.assertTrue(result['results'] == 'error')
 
     def test_accountChangepasswd(self):
-        data = {'tokenType':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}}
+        data = {'appid':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}}
         self.db['user'].insert(data)
 
         uid = 9
@@ -79,7 +79,7 @@ class TestAccount(unittest.TestCase):
         self.assertFalse(self.db['usetoken'].find({'token': token}).count())
 
     def test_accountGetInfo(self):
-        self.db['user'].insert({'tokenType':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}})
+        self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}})
         
         result = accountGetInfo(9)
         self.assertTrue(self.db['user'].find({'uid': result['data']['uid']}).count() == 1)
@@ -89,7 +89,7 @@ class TestAccount(unittest.TestCase):
         self.assertTrue(result['results'] == 'error')
 
     def test_accountGetList(self):
-        self.db['user'].insert({'tokenType':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}})
+        self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}})
         
         result = accountGetList(9)
         for user in result['data']['users']:

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from util import resultWrapper
+from mongoengine import OperationError
 from db import groups, user, usetoken
 import json
 
@@ -13,9 +14,9 @@ def groupCreate(data):
     params, data: {'token':(string)token, 'groupname':(string)name} 
     return, data: {'gid':(int)gid}
     """
-    #If groupname has been regitered already, return error
-    uid = list(usetoken.objects(token = data['token']))[0].uid
-    if len(list(groups.objects(groupname = data['groupname']))) != 0:
+    #If groupname has been registered already, return error
+    uid = usetoken.objects(token = data['token']).first().uid
+    if len(groups.objects(groupname = data['groupname'])) != 0:
         return resultWrapper('A group with same username exists!', {'code': '04'}, 'error')
     #Save group and set current user as its owner.
     groupInst = groups().from_json(json.dumps({'groupname': data['groupname'], 'members': [{'uid': uid, 'role': ROLES_M['owner']}]}))
@@ -23,22 +24,22 @@ def groupCreate(data):
         groupInst.save()
     except OperationError:
         return resultWrapper('save group failed', {}, 'error')
-    gid = list(groups.objects(groupname = data['groupname']))[0].gid
+    gid = groups.objects(groupname = data['groupname']).first().gid
     return resultWrapper('', {'gid': gid}, 'ok')
 
 def __CheckUserRole(token, gid):
-    uid = list(usetoken.objects(token = token))[0].uid
-    Members = list(groups.objects(gid = gid, members__uid = uid))[0].members
+    uid = usetoken.objects(token = token).first().uid
+    Members = groups.objects(gid = gid, members__uid = uid).first().members
     for member in Members:
-        if (ROLES[member.role] != 'owner') & (ROLES[member.role] != 'admin'):
-            return 0
-        else:
-            return 1
+        if (member.uid) == uid:
+            if (ROLES[member.role] == 'owner') or (ROLES[member.role] == 'admin'):
+                return 1
+    return 0
 
 def groupDelete(data):
     """
     params, data: {'token':(string)token, 'gid':(gid)groupid} 
-    return, data: {'gid':(int)gid}
+    return, data: {}
     """
     #If current user is admin or owner, permit delete or return error.
     if not __CheckUserRole(data['token'], data['gid']):
@@ -76,7 +77,7 @@ def setGroupMembers(data, gid):
         return resultWrapper('Admin permission required!', {'code':'00'}, 'error')
     else:
         for member in data['members']:
-            if len(list(groups.objects(gid = gid, members__uid = member['uid']))) == 0:
+            if len(groups.objects(gid = gid, members__uid = member['uid'])) == 0:
                 return resultWrapper('This user have not been added to currect group yet!', {}, 'error')
             else:
                 try:
@@ -95,11 +96,11 @@ def delGroupMembers(data, gid):
         return resultWrapper('Admin permission required!', {'code':'00'}, 'error')
     else:
         for member in data['members']:
-            if len(list(groups.objects(gid = gid, members__uid = member['uid']))) == 0:
+            if len(groups.objects(gid = gid, members__uid = member['uid'])) == 0:
                 return resultWrapper('This user does not belong to currect group!', {}, 'error')
             else:
                 try:
-                    groups.objects(gid = gid).update(pop__members__S__uid = member['uid'])
+                    groups.objects(gid = gid).update(pull__members = {'uid':member['uid'], 'role': member['role']})
                 except OperationError:
                     return resultWrapper('Remove user failed!', {'code': '04'}, 'error')
         return resultWrapper('', {}, 'ok')
@@ -111,11 +112,11 @@ def groupGetInfo(data, gid):
     """
     #If current user is a member, return all members' info of current group, or return error.
     Members = []
-    uid = list(usetoken.objects(token = data['token']))[0].uid
-    if len(list(groups.objects(gid = gid, members__uid = uid))) == 0:
+    uid = usetoken.objects(token = data['token']).first().uid
+    if len(groups.objects(gid = gid, members__uid = uid)) == 0:
         return resultWrapper('Member permission required!', {'code':'00'}, 'error')
     else:
-        for member in list(groups.objects(gid = gid))[0].members:
+        for member in groups.objects(gid = gid).first().members:
             User = user.objects(uid = member.uid).first()
             Members.append({
                 'uid': member.uid,
