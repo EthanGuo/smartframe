@@ -4,19 +4,19 @@
 from account import *
 from group import *
 
-account_func_match = {'register': accountRegister,
-            'login': accountLogin,
-            'forgotpasswd': accountForgotPasswd,
-            #accountWithOutUid
-            'changepasswd': accountChangepasswd,
-            'update': accountUpdate,
-            'invite': accountInvite,
-            'logout': accountLogout,
-            #accountWithUid
-            'info': accountGetInfo,
-            'list': accountGetList,
-            #doAccountGetAction
-            }
+# account_func_match = {'register': accountRegister,
+#             'login': accountLogin,
+#             'forgotpasswd': accountForgotPasswd,
+#             #accountWithOutUid
+#             'changepasswd': accountChangepasswd,
+#             'update': accountUpdate,
+#             'invite': accountInvite,
+#             'logout': accountLogout,
+#             #accountWithUid
+#             'info': accountGetInfo,
+#             'list': accountGetList,
+#             #doAccountGetAction
+#             }
 
 group_func_match = {'create': groupCreate,
             'delete': groupDelete,
@@ -30,23 +30,23 @@ group_func_match = {'create': groupCreate,
             #getGroupInfo
 }
 
-def accountWithOutUid(data):
-    """
-       Implement account register/forgotpasswd/login here.
-    """
-    return account_func_match.get(data['subc'])(data['data'])
+# def accountWithOutUid(data):
+#     """
+#        Implement account register/forgotpasswd/login here.
+#     """
+#     return account_func_match.get(data['subc'])(data['data'])
 
-def accountWithUid(data, uid):
-    """
-       Implement account changepasswd/update/invite/logout here.
-    """
-    return account_func_match.get(data['subc'])(uid, data['data'])
+# def accountWithUid(data, uid):
+#     """
+#        Implement account changepasswd/update/invite/logout here.
+#     """
+#     return account_func_match.get(data['subc'])(uid, data['data'])
 
-def getAccountInfo(data, uid):
-    """
-       Implement account info/list here.
-    """
-    return account_func_match.get(data['subc'])(uid)
+# def getAccountInfo(data, uid):
+#     """
+#        Implement account info/list here.
+#     """
+#     return account_func_match.get(data['subc'])(uid)
 
 
 def groupBasicAction(data):
