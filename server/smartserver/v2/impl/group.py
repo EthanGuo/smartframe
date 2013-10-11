@@ -58,6 +58,7 @@ def addGroupMembers(data, gid):
     return, data: {}
     """
     #If current user is admin or owner, permit add member or return error.
+    gid = int(gid)
     if not __CheckUserRole(data['token'], gid):
         return resultWrapper('Admin permission required!', {'code':'00'}, 'error')
     else:
@@ -73,6 +74,7 @@ def setGroupMembers(data, gid):
     return, data: {}
     """
     #If current user is admin or owner, permit set member role or return error.
+    gid = int(gid)
     if not __CheckUserRole(data['token'], gid):
         return resultWrapper('Admin permission required!', {'code':'00'}, 'error')
     else:
@@ -92,6 +94,7 @@ def delGroupMembers(data, gid):
     return, data: {}
     """
     #If current user is admin or owner, permit remove member or return error.
+    gid = int(gid)
     if not __CheckUserRole(data['token'], gid):
         return resultWrapper('Admin permission required!', {'code':'00'}, 'error')
     else:
@@ -111,6 +114,7 @@ def groupGetInfo(data, gid):
     return, data: {'members':[{'uid':(int)uid, 'role':(String)role, 'username':(String)username, 'info':(JSON)info},...]}
     """
     #If current user is a member, return all members' info of current group, or return error.
+    gid = int(gid)
     Members = []
     uid = usetoken.objects(token = data['token']).first().uid
     if len(groups.objects(gid = gid, members__uid = uid)) == 0:

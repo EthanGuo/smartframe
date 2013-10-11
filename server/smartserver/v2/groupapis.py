@@ -15,62 +15,62 @@ dataformat_plugin = DataFormatPlugin()
 appweb.install(dataformat_plugin)
 
 
-# @appweb.route('/account', method='POST', content_type='application/json', data_format=['subc', 'data'])
-# def doAccountWithOutUid():
-#     """
-#     URL:/account
-#     TYPE:http/POST
-#     @type data:JSON
-#     @param data:{'subc': '', 'data':{}}
-#     @rtype: JSON
-#     @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-#              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
-#     ---------------------------------------------------------------------------------------
-#     |support|subc          |data
-#     |       |register      |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
-#     |       |forgotpasswd  |{'email':(string)mailaddress}
-#     |       |login         |{'appid':(string)appid, 'username':(string)username, 'password':(string)password}
-#     ---------------------------------------------------------------------------------------
-#     """
-#     return accountWithOutUid(request.json)
+@appweb.route('/account', method='POST', content_type='application/json', data_format=['subc', 'data'])
+def doAccountWithOutUid():
+    """
+    URL:/account
+    TYPE:http/POST
+    @type data:JSON
+    @param data:{'subc': '', 'data':{}}
+    @rtype: JSON
+    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
+             error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+    ---------------------------------------------------------------------------------------
+    |support|subc          |data
+    |       |register      |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
+    |       |forgotpasswd  |{'email':(string)mailaddress}
+    |       |login         |{'appid':(string)appid, 'username':(string)username, 'password':(string)password}
+    ---------------------------------------------------------------------------------------
+    """
+    return accountWithOutUid(request.json)
 
-# @appweb.route('/user/<uid>', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
-# def doAccountWithUid(uid):
-#     """
-#     URL:/user/<uid>
-#     TYPE:http/POST
-#     @type data:JSON
-#     @param data:{'subc': '', 'data':{}}
-#     @rtype: JSON
-#     @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-#              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
-#     ----------------------------------------------------------------------------------------
-#     |support|subc          |data
-#     |       |changepasswd  |{'token':(string)token,'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
-#     |       |update        |{'token':(string)token,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}}
-#     |       |invite        |{'token':(string)token, 'email':(string)email}
-#     |       |logout        |{'token':(string)token}
-#     -----------------------------------------------------------------------------------------
-#     """
-#     return accountWithUid(request.json, uid)
+@appweb.route('/user/<uid>', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
+def doAccountWithUid(uid):
+    """
+    URL:/user/<uid>
+    TYPE:http/POST
+    @type data:JSON
+    @param data:{'subc': '', 'data':{}}
+    @rtype: JSON
+    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
+             error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+    ----------------------------------------------------------------------------------------
+    |support|subc          |data
+    |       |changepasswd  |{'token':(string)token,'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
+    |       |update        |{'token':(string)token,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}}
+    |       |invite        |{'token':(string)token, 'email':(string)email}
+    |       |logout        |{'token':(string)token}
+    -----------------------------------------------------------------------------------------
+    """
+    return accountWithUid(request.json, uid)
 
-# @appweb.route('/user/<uid>', method='GET', data_format=['subc', 'data'])
-# def doGetAccountInfo(uid):
-#     """
-#     URL:/account
-#     TYPE:http/GET
-#     @type data:JSON
-#     @param data:{'subc': '', 'data':{}}
-#     @rtype: JSON
-#     @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-#              error-{'results':'error', 'data':{}, 'msg': '(string)info'}
-#     ----------------------------------------------------------------------------------------
-#     |support|subc          |data  |return data 
-#     |       |list          |null  |{'count':(int)value, 'users':[{'uid':(string)uid,'username':(string)username},{'uid':(string)uid,'username':(string)username}]}}
-#     |       |info          |null  |{'username':(string)username,'inGroups':[{'gid':gid1,'groupname':(string)name1},{'gid':gid2,'groupname':(string)name2},...],'info':{'email':(string)email, 'telephone':(string)telephone, 'company':(string)company}}
-#     -----------------------------------------------------------------------------------------
-#     """
-#     return getAccountInfo(data, uid)
+@appweb.route('/user/<uid>', method='GET', data_format=['subc', 'data'])
+def doGetAccountInfo(uid):
+    """
+    URL:/account
+    TYPE:http/GET
+    @type data:JSON
+    @param data:{'subc': '', 'data':{}}
+    @rtype: JSON
+    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
+             error-{'results':'error', 'data':{}, 'msg': '(string)info'}
+    ----------------------------------------------------------------------------------------
+    |support|subc          |data  |return data 
+    |       |list          |null  |{'count':(int)value, 'users':[{'uid':(string)uid,'username':(string)username},{'uid':(string)uid,'username':(string)username}]}}
+    |       |info          |null  |{'username':(string)username,'inGroups':[{'gid':gid1,'groupname':(string)name1},{'gid':gid2,'groupname':(string)name2},...],'info':{'email':(string)email, 'telephone':(string)telephone, 'company':(string)company}}
+    -----------------------------------------------------------------------------------------
+    """
+    return getAccountInfo(data, uid)
 
 @appweb.route('/group', method='POST',content_type='application/json', data_format=['subc', 'data'])
 def doGroupAction():
@@ -107,7 +107,7 @@ def doMemberToGroupAction(gid):
     |       |delmember     |{'token':(string)token, 'members':[{'uid':(int)uid,'role':(int)roleId}]}
     -----------------------------------------------------------------------------------------
     """
-    return groupMemeberAction(request.json, gid)
+    return groupMemberAction(request.json, gid)
 
 @appweb.route('/group/<gid>/info', method='GET')
 def doGetGroupInfo(gid):
@@ -125,7 +125,8 @@ def doGetGroupInfo(gid):
     |       |testsummary   |{'token':(string)token,|{'count':(int)count, 'sessions':[ {planname':(string)value,'starttime':(string)value, 'result':{'total':(int)value, 'pass':(int)value, 'fail':(int)value, 'error':(int)value}, 'runtime':(string)value},... ] }}
     -----------------------------------------------------------------------------------------
     """
-    return getGroupInfo(request.json, gid)
+    data = {'subc': request.params.get('subc'), 'data': request.params.get('data')}
+    return getGroupInfo(data, gid)
 
 
 if __name__ == '__main__':
