@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from gevent.pywsgi import WSGIServer
-from bottle import request, response, Bottle
+from bottle import request, Bottle
 from plugins import ContentTypePlugin, DataFormatPlugin, LoginPlugin
 from impl.mapping import *
 
@@ -28,8 +28,8 @@ def doAccountWithOutUid():
     @type data:JSON
     @param data:{'subc': '', 'data':{}}
     @rtype: JSON
-    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-             error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ---------------------------------------------------------------------------------------
     |support|subc          |data
     |       |register      |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
@@ -47,8 +47,8 @@ def doAccountWithUid(uid):
     @type data:JSON
     @param data:{'subc': '', 'data':{}}
     @rtype: JSON
-    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-             error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data
     |       |changepasswd  |{'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
@@ -67,8 +67,8 @@ def doGetAccountInfo(uid):
     @type data:JSON
     @param data:{'subc': '', 'data':{}}
     @rtype: JSON
-    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-             error-{'results':'error', 'data':{}, 'msg': '(string)info'}
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data  |return data 
     |       |list          |null  |{'count':(int)value, 'users':[{'uid':(string)uid,'username':(string)username},{'uid':(string)uid,'username':(string)username}]}}
@@ -83,11 +83,11 @@ def doGroupAction(uid):
     """
     URL:/group
     TYPE:http/POST
-    @type data:JSON
-    @param data:{'subc': '', 'data':{}}
+    @data type: JSON
+    @param: {'subc': '', 'data':{}}
     @rtype: JSON
-    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-             error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
     |       |create        |{'groupname':(string)name} 
@@ -97,15 +97,15 @@ def doGroupAction(uid):
     return groupBasicAction(request.json, uid)
 
 @appweb.route('/group/<gid>/member', method='POST', content_type='application/json', data_format=['subc', 'data'])
-def doMemberToGroupAction(gid, uid):
+def doGroupMemberAction(gid, uid):
     """
     URL:/group/<gid>/member
     TYPE:http/POST
     @type data:JSON
     @param data:{'subc': '', 'data':{}}
     @rtype: JSON
-    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-             error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
     |       |addmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}  
@@ -123,12 +123,12 @@ def doGetGroupInfo(gid, uid):
     @type data:JSON
     @param data:{'subc': '', 'data':{}}
     @rtype: JSON
-    @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-             error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc          |data |return data
-    |       |info          |{}   |{'members':[{'uid':(int)uid1, 'role':(int)roleId1},{'uid':(int)uid2, 'role':(int)roleId2},...]} 
-    |       |testsummary   |{}   |{'count':(int)count, 'sessions':[ {planname':(string)value,'starttime':(string)value, 'result':{'total':(int)value, 'pass':(int)value, 'fail':(int)value, 'error':(int)value}, 'runtime':(string)value},... ] }}
+    |support|subc          |data 
+    |       |info          |{}   
+    |       |testsummary   |{}   
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc')}
@@ -151,8 +151,8 @@ if __name__ == '__main__':
 #     @type data:JSON
 #     @param data:{'subc': '', 'data':{}}
 #     @rtype: JSON
-#     @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-#              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+#     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+#              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
 #     ----------------------------------------------------------------------------------------
 #     |support|subc   |data                   
 #     |       |create |{'token':(string)token,'planname':(string)value,'starttime':(string)value,'deviceinfo':{'id':(string)id,'revision':(string)revision,'product':(string)product, 'width':(int)width, 'height':(int)height}}
@@ -181,11 +181,11 @@ if __name__ == '__main__':
 #     @type data:JSON
 #     @param data:{'subc': '', 'data':{}}
 #     @rtype: JSON
-#     @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-#              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+#     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+#              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
 #     ----------------------------------------------------------------------------------------
 #     |support|subc    |data                                                          |return data
-#     |       |results |{'token':(string)token,'gid':(string)gid, 'sid':(string)sid}} |:{'count':(int)count, 'paging':{'pagesize':(int)pagesize,'totalpage':(int)totalpage,'curpage':(int)curPage },'cases':[{'casename':(string)casename, 'starttime':(string)}, 'result':(pass,fail,error), 'log':(string)logfileKey, snaps':[]...]}}, 'msg': ''}
+#     |       |result |{'token':(string)token,'gid':(string)gid, 'sid':(string)sid}} |:{'count':(int)count, 'paging':{'pagesize':(int)pagesize,'totalpage':(int)totalpage,'curpage':(int)curPage },'cases':[{'casename':(string)casename, 'starttime':(string)}, 'result':(pass,fail,error), 'log':(string)logfileKey, snaps':[]...]}}, 'msg': ''}
 #     |       |summary |{'token':(string)token,'gid':(string)gid, 'sid':(string)sid}  |
 #     -----------------------------------------------------------------------------------------
 #     """
@@ -204,8 +204,8 @@ if __name__ == '__main__':
 #     @type data:JSON
 #     @param data:{'subc': '', 'data':{}}
 #     @rtype: JSON
-#     @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
-#              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+#     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+#              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
 #     ----------------------------------------------------------------------------------------
 #     |support|subc    |data                                                          
 #     |       |create  |{'token':(string)value,'caseName':(string)value, 'starttime':(string)timestamp}

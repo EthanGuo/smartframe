@@ -21,39 +21,39 @@ class TestGroupAPIs(unittest.TestCase):
         createData['token'] = 'abcdefg'
         result = requests.post(url=url, data=json.dumps(createData), headers=headers)
         result = json.loads(result.content)
-        self.assertTrue(result['results'] == 'ok')
+        self.assertTrue(result['result'] == 'ok')
 
         deleteData = {'subc': 'delete', 'data': {'gid': result['data']['gid']}}
         deleteData['token'] = 'abcdefg'
         result = requests.post(url=url, data=json.dumps(deleteData), headers=headers)
         result = json.loads(result.content)
-        self.assertTrue(result['results'] == 'ok')
+        self.assertTrue(result['result'] == 'ok')
 
     def test_doMemberToGroupAction(self):
-        self.db['groups'].insert({'groupname': 'test', 'gid': 1, 'members': [{'uid': 9, 'role': 0}]})
+        self.db['groups'].insert({'groupname': 'test', 'gid': 1, 'members': [{'uid': 9, 'role': 10}]})
         url = 'http://127.0.0.1:8080/smartapi/group/1/member'
         headers = {'content-type': 'application/json'}
         
-        addData = {"subc": "addmember", "data": {"members": [{"uid": 2, "role": 2}]}}
+        addData = {"subc": "addmember", "data": {"members": [{"uid": 2, "role": 8}]}}
         addData['token'] = "abcdefg"
         result = requests.post(url=url, data=json.dumps(addData), headers=headers)
         result = json.loads(result.content)
-        self.assertTrue(result['results'] == 'ok')
+        self.assertTrue(result['result'] == 'ok')
         
-        setData = {'subc': 'setmember', 'data': {'members': [{'uid': 2, 'role': 1}]}}
+        setData = {'subc': 'setmember', 'data': {'members': [{'uid': 2, 'role': 9}]}}
         setData['token'] = 'abcdefg'
         result = requests.post(url=url, data=json.dumps(setData), headers=headers)
         result = json.loads(result.content)
-        self.assertTrue(result['results'] == 'ok')
+        self.assertTrue(result['result'] == 'ok')
 
-        delData = {'subc': 'delmember', 'data': {'token': 'abcdefg', 'members': [{'uid': 2, 'role': 1}]}}
+        delData = {'subc': 'delmember', 'data': {'token': 'abcdefg', 'members': [{'uid': 2, 'role': 9}]}}
         delData['token'] = 'abcdefg'
         result = requests.post(url=url, data=json.dumps(delData), headers=headers)
         result = json.loads(result.content)
-        self.assertTrue(result['results'] == 'ok')
+        self.assertTrue(result['result'] == 'ok')
 
     def test_doGetGroupInfo(self):
-        data = {'groupname': 'test', 'gid': 1, 'members': [{'uid': 0, 'role': 0}, {'uid': 1, 'role': 1}, {'uid': 2, 'role': 2}]}
+        data = {'groupname': 'test', 'gid': 1, 'members': [{'uid': 0, 'role': 10}, {'uid': 1, 'role': 9}, {'uid': 2, 'role': 8}]}
         self.db['groups'].insert(data)
         self.db['user'].insert({'appid':'03', 'username':'test0', 'uid': 0,'password':'123456', 'info': {'email': 'test0@borqs.com'}})
         self.db['user'].insert({'appid':'03', 'username':'test1', 'uid': 1,'password':'123456', 'info': {'email': 'test1@borqs.com'}})
@@ -67,7 +67,7 @@ class TestGroupAPIs(unittest.TestCase):
         s = requests.Session()
         prequest = requests.Request("GET", url=url, params=infoData).prepare()
         resp = s.send(prequest)
-        self.assertTrue(json.loads(resp.content)['results'] == 'ok')
+        self.assertTrue(json.loads(resp.content)['result'] == 'ok')
 
     def tearDown(self):
         self._mc.drop_database('smartServer_eth')

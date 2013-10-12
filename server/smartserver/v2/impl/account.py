@@ -63,7 +63,7 @@ def accountLogin(data):
             rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
     else:
         rmsg, rdata, rstatus = 'Incorrect UserName/Password!', {'code': '02'}, 'error'
-    return resultWrapper(rmsg, rdata, rstatus)
+    return resultWrapper(rstatus, rdata, rmsg)
 
 def accountRegister(data):
     """
@@ -78,7 +78,7 @@ def accountRegister(data):
             userInst.save()
         except OperationError:
             rmsg, rdata, rstatus = 'Save user failed!', {}, 'error'
-            return resultWrapper(rmsg, rdata, rstatus)
+            return resultWrapper(rstatus, rdata, rmsg)
         ret = createToken(appid = userInst.appid, uid = userInst.uid)
         if ret['status'] == 'ok':
             rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': userInst.uid}, 'ok'
@@ -87,7 +87,7 @@ def accountRegister(data):
             rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
     else:
         rmsg, rdata, rstatus = 'An account with same email or username already registered!', {'code': '04'}, 'error'
-    return resultWrapper(rmsg, rdata, rstatus)
+    return resultWrapper(rstatus, rdata, rmsg)
 
 def accountForgotPasswd(data):
     """
@@ -116,7 +116,7 @@ def accountForgotPasswd(data):
             rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
     else:
         rmsg, rdata, rstatus = 'Invalid email!', {'code': '04'}, 'error'
-    return resultWrapper(rmsg, rdata, rstatus)
+    return resultWrapper(rstatus, rdata, rmsg)
 
 def accountChangepasswd(data, uid):
     """
@@ -136,7 +136,7 @@ def accountChangepasswd(data, uid):
             rmsg, rdata, rstatus = 'Save new password failed!', {'code': '03'}, 'error'
     else:
         rmsg, rdata, rstatus = 'Incorrect original password!', {'code': '03'}, 'error'
-    return resultWrapper(rmsg, rdata, rstatus)
+    return resultWrapper(rstatus, rdata, rmsg)
 
 def accountInvite(data, uid):
     """
@@ -146,7 +146,7 @@ def accountInvite(data, uid):
     #Send a mail to the invited user, or return error.
     #sendInviteMail(data['email'], data['username'])
     rmsg, rdata, rstatus = '', {}, 'ok'
-    return resultWrapper(rmsg, rdata, rstatus)
+    return resultWrapper(rstatus, rdata, rmsg)
 
 def accountLogout(data, uid):
     """
@@ -159,7 +159,7 @@ def accountLogout(data, uid):
         rmsg, rdata, rstatus = '', {}, 'ok'
     except OperationError:
         rmsg, rdata, rstatus = 'Remove token failed!', {}, 'error'
-    return resultWrapper(rmsg, rdata, rstatus)
+    return resultWrapper(rstatus, rdata, rmsg)
 
 def accountUpdate(data, uid):
     pass
@@ -177,7 +177,7 @@ def accountGetInfo(uid):
         useraccount = result.first()
         rdata = {'uid': uid, 'username': useraccount['username'], 'info': useraccount['info']}
         rmsg, rstatus = '', 'ok'
-    return resultWrapper(rmsg, rdata, rstatus)
+    return resultWrapper(rstatus, rdata, rmsg)
 
 def accountGetList(uid):
     """
@@ -191,5 +191,5 @@ def accountGetList(uid):
         rmsg, rstatus = '', 'ok'
         users = [{'uid': d['uid'], 'username': d['username']} for d in list(user.objects())]
         rdata = {'count': len(users), 'users': users}
-    return resultWrapper(rmsg, rdata, rstatus)
+    return resultWrapper(rstatus, rdata, rmsg)
 

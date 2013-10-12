@@ -22,15 +22,15 @@ class TestAccount(unittest.TestCase):
         self.assertTrue(self.db['usetoken'].find({'token': token}).count())
 
         result = accountRegister(data)
-        self.assertTrue(result['results'] == 'error')
+        self.assertTrue(result['result'] == 'error')
 
         data = {'username': 'test', 'password': '123456', 'appid': '03', 'info': {'email': 'test1@borqs.com'}}
         result = accountRegister(data)
-        self.assertTrue(result['results'] == 'error')
+        self.assertTrue(result['result'] == 'error')
 
         data = {'username': 'test1', 'password': '123456', 'appid': '03', 'info': {'email': 'test@borqs.com'}}
         result = accountRegister(data)
-        self.assertTrue(result['results'] == 'error') 
+        self.assertTrue(result['result'] == 'error') 
 
     def test_accountLogin(self):
         self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
@@ -47,16 +47,16 @@ class TestAccount(unittest.TestCase):
 
         dataWrongUsername = {'appid':'03', 'username':'test1', 'password':'123456'}
         result = accountLogin(dataWrongUsername)
-        self.assertTrue(result['results'] == 'error')
+        self.assertTrue(result['result'] == 'error')
 
     def test_accountForgotPasswd(self):
         self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
 
         result = accountForgotPasswd({'email': 'test@borqs.com'})
-        self.assertTrue(result['results'] == 'ok')
+        self.assertTrue(result['result'] == 'ok')
 
         result = accountForgotPasswd({'email': 'test1@borqs.com'})
-        self.assertTrue(result['results'] == 'error')
+        self.assertTrue(result['result'] == 'error')
 
     def test_accountChangepasswd(self):
         data = {'appid':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}}
@@ -65,11 +65,11 @@ class TestAccount(unittest.TestCase):
         uid = 9
         data = {'newpassword': '654321', 'oldpassword': '123456'}
         result = accountChangepasswd(uid, data)
-        self.assertTrue(result['results'] == 'ok')
+        self.assertTrue(result['result'] == 'ok')
 
         data = {'newpassword': '654321', 'oldpassword': '12345'}
         result = accountChangepasswd(uid, data)
-        self.assertTrue(result['results'] == 'error')
+        self.assertTrue(result['result'] == 'error')
 
     def test_accountLogout(self):
         token = createToken('03', 9)
@@ -86,7 +86,7 @@ class TestAccount(unittest.TestCase):
         self.assertTrue(self.db['user'].find({'username': result['data']['username']}).count() == 1)
 
         result = accountGetInfo(8)
-        self.assertTrue(result['results'] == 'error')
+        self.assertTrue(result['result'] == 'error')
 
     def test_accountGetList(self):
         self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}})

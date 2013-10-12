@@ -4,25 +4,25 @@
 from account import *
 from group import *
 
-account_func_match = {'register': accountRegister,
-            'login': accountLogin,
-            'forgotpasswd': accountForgotPasswd, #accountWithOutUid
-            'changepasswd': accountChangepasswd,
-            'update': accountUpdate,
-            'invite': accountInvite,
-            'logout': accountLogout, #accountWithUid
-            'info': accountGetInfo,
-            'list': accountGetList, #doAccountGetAction            
+account_func = {'register': accountRegister,
+                'login': accountLogin,
+                'forgotpasswd': accountForgotPasswd, #accountWithOutUid
+                'changepasswd': accountChangepasswd,
+                'update': accountUpdate,
+                'invite': accountInvite,
+                'logout': accountLogout, #accountWithUid
+                'info': accountGetInfo,
+                'list': accountGetList, #doAccountGetAction            
             }
 
-group_func_match = {'create': groupCreate,
-            'delete': groupDelete, #groupBasicAction
-            'addmember': addGroupMembers,
-            'setmember': setGroupMembers,
-            'delmember': delGroupMembers, #groupMemeberAction
-            'info': groupGetInfo,
-            'sessionsummary': groupGetSessionsSummary, #getGroupInfo
-}
+group_func = {  'create': groupCreate,
+                'delete': groupDelete, #groupBasicAction
+                'addmember': addGroupMembers,
+                'setmember': setGroupMembers,
+                'delmember': delGroupMembers, #groupMemeberAction
+                'info': groupGetInfo,
+                'sessionsummary': groupGetSessionsSummary, #getGroupInfo
+            }
 
 def getUserId(token):
     """
@@ -34,38 +34,38 @@ def accountWithOutUid(data):
     """
        Implement account register/forgotpasswd/login here.
     """
-    return account_func_match.get(data['subc'])(data['data'])
+    return account_func.get(data['subc'])(data['data'])
 
 def accountWithUid(data, uid):
     """
        Implement account changepasswd/update/invite/logout here.
     """
-    return account_func_match.get(data['subc'])(data['data'], uid)
+    return account_func.get(data['subc'])(data['data'], uid)
 
 def getAccountInfo(data, uid):
     """
        Implement account info/list here.
     """
-    return account_func_match.get(data['subc'])(uid)
+    return account_func.get(data['subc'])(uid)
 
 
 def groupBasicAction(data, uid):
     """
        Implement group create/delete here.
     """
-    return group_func_match.get(data['subc'])(data['data'], uid)
+    return group_func.get(data['subc'])(data['data'], uid)
 
 def groupMemberAction(data, gid, uid):
     """
        Implement group add member/set member role/remove member here.
     """
-    return group_func_match.get(data['subc'])(data['data'], gid, uid)
+    return group_func.get(data['subc'])(data['data'], gid, uid)
 
 def getGroupInfo(data, gid, uid):
     """
        Implement group get info/get related session summary here.
     """
-    return group_func_match.get(data['subc'])(gid, uid)
+    return group_func.get(data['subc'])(gid, uid)
 
 
 # def doTestSessionBasicAction(gid,sid,data):
