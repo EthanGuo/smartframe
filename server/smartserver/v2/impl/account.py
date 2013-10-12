@@ -32,6 +32,13 @@ def createToken(appid, uid):
     except OperationError:
         return {'status': 'error', 'token': ''}
 
+def accountValidToken(token):
+    userToken = usetoken.objects(token=token)
+    if len(userToken) == 0:
+        return None
+    else:
+        return userToken.first().uid
+
 def accountLogin(data):
     """
     params, data: {'appid':(int)appid, 'username':(string)username, 'password':(string)password}
@@ -111,9 +118,9 @@ def accountForgotPasswd(data):
         rmsg, rdata, rstatus = 'Invalid email!', {'code': '04'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
 
-def accountChangepasswd(uid,data):
+def accountChangepasswd(data, uid):
     """
-    params, data: {'token':(string)token,'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword}
+    params, data: {'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword}
     return, data: {}
     """  
     #oldpassword/newpassword should be encrypted already.
@@ -131,9 +138,9 @@ def accountChangepasswd(uid,data):
         rmsg, rdata, rstatus = 'Incorrect original password!', {'code': '03'}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
 
-def accountInvite(uid,data):
+def accountInvite(data, uid):
     """
-    params, data: {'token':(string)token, 'email':(string)email, 'appid':(string)appid, 'username':(string)username, 'gid':(string)groupid}
+    params, data: {'email':(string)email, 'appid':(string)appid, 'username':(string)username, 'gid':(string)groupid}
     return, data: {}
     """ 
     #Send a mail to the invited user, or return error.
@@ -141,20 +148,20 @@ def accountInvite(uid,data):
     rmsg, rdata, rstatus = '', {}, 'ok'
     return resultWrapper(rmsg, rdata, rstatus)
 
-def accountLogout(uid,data):
+def accountLogout(data, uid):
     """
     params, data: {'token':(string)token}
     return, data: {}
     """ 
     #Remove the token then return
     try:
-        usetoken.objects(uid = uid).update_one(unset__token = data['token'])
+        usetoken.objects(uid = uid).delete()
         rmsg, rdata, rstatus = '', {}, 'ok'
     except OperationError:
         rmsg, rdata, rstatus = 'Remove token failed!', {}, 'error'
     return resultWrapper(rmsg, rdata, rstatus)
 
-def accountUpdate():
+def accountUpdate(data, uid):
     pass
 
 def accountGetInfo(uid):

@@ -3,7 +3,7 @@
 
 from gevent.pywsgi import WSGIServer
 from bottle import request, response, Bottle
-from plugins import ContentTypePlugin, DataFormatPlugin
+from plugins import ContentTypePlugin, DataFormatPlugin, LoginPlugin
 from impl.mapping import *
 
 appweb = Bottle()
@@ -14,8 +14,13 @@ appweb.install(contenttype_plugin)
 dataformat_plugin = DataFormatPlugin()
 appweb.install(dataformat_plugin)
 
+login_plugin = LoginPlugin(getuserid=getUserId,
+                           request_token_param="token",
+                           login=True)  # login is required by default
+appweb.install(login_plugin)
 
-@appweb.route('/account', method='POST', content_type='application/json', data_format=['subc', 'data'])
+
+@appweb.route('/account', method='POST', content_type='application/json', data_format=['subc', 'data'], login=False)
 def doAccountWithOutUid():
     """
     URL:/account
@@ -46,15 +51,15 @@ def doAccountWithUid(uid):
              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data
-    |       |changepasswd  |{'token':(string)token,'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
-    |       |update        |{'token':(string)token,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}}
-    |       |invite        |{'token':(string)token, 'email':(string)email}
-    |       |logout        |{'token':(string)token}
+    |       |changepasswd  |{'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
+    |       |update        |{'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}}
+    |       |invite        |{'email':(string)email}
+    |       |logout        |{}
     -----------------------------------------------------------------------------------------
     """
     return accountWithUid(request.json, uid)
 
-@appweb.route('/user/<uid>', method='GET', data_format=['subc', 'data'])
+@appweb.route('/user/<uid>', method='GET')
 def doGetAccountInfo(uid):
     """
     URL:/account
@@ -70,10 +75,11 @@ def doGetAccountInfo(uid):
     |       |info          |null  |{'username':(string)username,'inGroups':[{'gid':gid1,'groupname':(string)name1},{'gid':gid2,'groupname':(string)name2},...],'info':{'email':(string)email, 'telephone':(string)telephone, 'company':(string)company}}
     -----------------------------------------------------------------------------------------
     """
+    data = {'subc': request.params.get('subc')}
     return getAccountInfo(data, uid)
 
 @appweb.route('/group', method='POST',content_type='application/json', data_format=['subc', 'data'])
-def doGroupAction():
+def doGroupAction(uid):
     """
     URL:/group
     TYPE:http/POST
@@ -84,14 +90,14 @@ def doGroupAction():
              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
-    |       |create        |{'token':(string)token, 'groupname':(string)name} 
-    |       |delete        |{'token':(string)token, 'gid':(int)gid}
+    |       |create        |{'groupname':(string)name} 
+    |       |delete        |{'gid':(int)gid}
     -----------------------------------------------------------------------------------------
     """
-    return groupBasicAction(request.json)
+    return groupBasicAction(request.json, uid)
 
 @appweb.route('/group/<gid>/member', method='POST', content_type='application/json', data_format=['subc', 'data'])
-def doMemberToGroupAction(gid):
+def doMemberToGroupAction(gid, uid):
     """
     URL:/group/<gid>/member
     TYPE:http/POST
@@ -102,15 +108,15 @@ def doMemberToGroupAction(gid):
              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
-    |       |addmember     |{'token':(string)token, 'members':[{'uid':(int)uid,'role':(int)roleId}]}  
-    |       |setmember     |{'token':(string)token, 'members':[{'uid':(int)uid,'role':(int)roleId}]}
-    |       |delmember     |{'token':(string)token, 'members':[{'uid':(int)uid,'role':(int)roleId}]}
+    |       |addmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}  
+    |       |setmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
+    |       |delmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
     -----------------------------------------------------------------------------------------
     """
-    return groupMemberAction(request.json, gid)
+    return groupMemberAction(request.json, gid, uid)
 
 @appweb.route('/group/<gid>/info', method='GET')
-def doGetGroupInfo(gid):
+def doGetGroupInfo(gid, uid):
     """
     URL:/group/<gid>/info
     TYPE:http/GET
@@ -120,13 +126,13 @@ def doGetGroupInfo(gid):
     @return: ok-{'results':'ok', 'data':{}, 'msg': ''}
              error-{'results':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc          |data                   |return data
-    |       |info          |{'token':(string)token,|{'members':[{'uid':(int)uid1, 'role':(int)roleId1},{'uid':(int)uid2, 'role':(int)roleId2},...]} 
-    |       |testsummary   |{'token':(string)token,|{'count':(int)count, 'sessions':[ {planname':(string)value,'starttime':(string)value, 'result':{'total':(int)value, 'pass':(int)value, 'fail':(int)value, 'error':(int)value}, 'runtime':(string)value},... ] }}
+    |support|subc          |data |return data
+    |       |info          |{}   |{'members':[{'uid':(int)uid1, 'role':(int)roleId1},{'uid':(int)uid2, 'role':(int)roleId2},...]} 
+    |       |testsummary   |{}   |{'count':(int)count, 'sessions':[ {planname':(string)value,'starttime':(string)value, 'result':{'total':(int)value, 'pass':(int)value, 'fail':(int)value, 'error':(int)value}, 'runtime':(string)value},... ] }}
     -----------------------------------------------------------------------------------------
     """
-    data = {'subc': request.params.get('subc'), 'data': request.params.get('data')}
-    return getGroupInfo(data, gid)
+    data = {'subc': request.params.get('subc')}
+    return getGroupInfo(data, gid, uid)
 
 
 if __name__ == '__main__':
