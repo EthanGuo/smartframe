@@ -25,8 +25,8 @@ def doAccountWithOutUid():
     """
     URL:/account
     TYPE:http/POST
-    @type data:JSON
-    @param data:{'subc': '', 'data':{}}
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
@@ -44,8 +44,8 @@ def doAccountWithUid(uid):
     """
     URL:/user/<uid>
     TYPE:http/POST
-    @type data:JSON
-    @param data:{'subc': '', 'data':{}}
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
@@ -64,8 +64,8 @@ def doGetAccountInfo(uid):
     """
     URL:/account
     TYPE:http/GET
-    @type data:JSON
-    @param data:{'subc': '', 'data':{}}
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
@@ -83,7 +83,7 @@ def doGroupAction(uid):
     """
     URL:/group
     TYPE:http/POST
-    @data type: JSON
+    @data type:JSON
     @param: {'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
@@ -101,8 +101,8 @@ def doGroupMemberAction(gid, uid):
     """
     URL:/group/<gid>/member
     TYPE:http/POST
-    @type data:JSON
-    @param data:{'subc': '', 'data':{}}
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
@@ -120,8 +120,8 @@ def doGetGroupInfo(gid, uid):
     """
     URL:/group/<gid>/info
     TYPE:http/GET
-    @type data:JSON
-    @param data:{'subc': '', 'data':{}}
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
@@ -148,8 +148,8 @@ if __name__ == '__main__':
 #     """
 #     URL:/group/<gid>/test/<sid>
 #     TYPE:http/POST
-#     @type data:JSON
-#     @param data:{'subc': '', 'data':{}}
+#     @data type:JSON
+#     @param:{'subc': '', 'data':{}}
 #     @rtype: JSON
 #     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
 #              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
@@ -178,8 +178,8 @@ if __name__ == '__main__':
 #     """
 #     URL:/group/<gid>/test/<sid>
 #     TYPE:http/GET
-#     @type data:JSON
-#     @param data:{'subc': '', 'data':{}}
+#     @data type:JSON
+#     @param:{'subc': '', 'data':{}}
 #     @rtype: JSON
 #     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
 #              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
@@ -201,8 +201,8 @@ if __name__ == '__main__':
 #     """
 #     URL:/group/<gid>/test/<sid>/case/<tid>
 #     TYPE:http/POST
-#     @type data:JSON
-#     @param data:{'subc': '', 'data':{}}
+#     @data type:JSON
+#     @param:{'subc': '', 'data':{}}
 #     @rtype: JSON
 #     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
 #              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
