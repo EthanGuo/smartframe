@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from gevent.pywsgi import WSGIServer
-from bottle import request, Bottle
+from bottle import request, Bottle, response
 from plugins import ContentTypePlugin, DataFormatPlugin, LoginPlugin
 from impl.mapping import *
 
@@ -29,7 +29,7 @@ def doAccountWithOutUid():
     @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
-             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ---------------------------------------------------------------------------------------
     |support|subc          |data
     |       |register      |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
@@ -48,7 +48,7 @@ def doAccountWithUid(uid):
     @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
-             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data
     |       |changepasswd  |{'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
@@ -87,7 +87,7 @@ def doGroupAction(uid):
     @param: {'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
-             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
     |       |create        |{'groupname':(string)name} 
@@ -105,7 +105,7 @@ def doGroupMemberAction(gid, uid):
     @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
-             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
     |       |addmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}  
@@ -124,7 +124,7 @@ def doGetGroupInfo(gid, uid):
     @param:{'subc': '', 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
-             error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
     |       |info          |{}   
@@ -134,6 +134,88 @@ def doGetGroupInfo(gid, uid):
     data = {'subc': request.params.get('subc')}
     return getGroupInfo(data, gid, uid)
 
+@appweb.route('/group/<gid>/session/<sid>/case', method='POST', content_type='application/json', data_format=['subc', 'data'])
+def doCaseResultAction(gid,sid):
+    """
+    URL:/group/<gid>/session/<sid>/case
+    TYPE:http/POST
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
+    @rtype: JSON
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    ----------------------------------------------------------------------------------------
+    |support|subc    |data                                                          
+    |       |create  |{'tid':(int)tid, 'caseName':(string)value, 'starttime':(string)timestamp}
+    |       |update  |{'tid':(int)/(list)tid, 'result':['Pass'/'Fail'/'Error'],'endtime':(string)endtime, 'traceinfo':(string)traceinfo, 'comments': (dict)comments}
+    -----------------------------------------------------------------------------------------
+    """
+    return caseResultAction(request.json, gid, sid)
+
+@appweb.route('/group/<gid>/session/<sid>/case/<tid>/fileupload', method='PUT', content_type=['application/zip', 'image/png'], login=False)
+def doUploadCaseFile(gid, sid, tid):
+    """
+    URL:/group/<gid>/session/<sid>/case/<tid>/fileupload
+    TYPE:http/PUT
+    @fileData type: binary stream
+    @param: content of file (zipped log/snapshot)
+    @rtype:JSON
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    """
+    subc = 'uploadpng' if 'image/png' in request.content_type else 'uploadzip'
+    xtype = request.headers.get('Ext-Type') or ''
+    return uploadCaseResultFile(subc, gid, sid, tid, request.body, xtype)
+
+@appweb.route('/snap/<imageid>', method='GET', login=False)
+def doGetCaseImage(imageid):
+    """
+    URL:/snap/<fid>
+    TYPE:http/GET
+    @data type: string
+    @param imageid: the unique id of case snap
+    @rtype: image/png
+    @return: image(bytes)
+    """
+    data = getSnapData(imageid)
+    if isinstance(data, type({})):
+        return data
+    else:
+        response.set_header('Content-Type', 'image/png')
+        return data
+
+@appweb.route('/group/<gid>/session/<sid>/case/<tid>/getsnaps', method='GET')
+def doGetCaseResultSnapshots(gid, sid, tid):
+    """
+    URL:/group/<gid>/session/<sid>/case/<tid>/getsnaps
+    TYPE:http/GET
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
+    @rtype: JSON
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    """
+    return getTestCaseSnaps(gid, sid, tid)
+
+@appweb.route('/group/<gid>/session/<sid>/case/<tid>/getlog', method='GET')
+def doGetCaseResultLog(gid, sid, tid):
+    """
+    URL:/group/<gid>/session/<sid>/case/<tid>/getlog
+    TYPE:http/GET
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
+    @rtype: JSON
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    """
+    result = getTestCaseLog(gid, sid, tid)
+    if result['result'] == 'ok':
+        filename = 'log-%s.zip' %tid
+        response.set_header('Content-Type', 'application/x-download')
+        response.set_header('Content-Disposition', 'attachment; filename=' + filename)
+        return result['data']
+    else:
+        return result
 
 if __name__ == '__main__':
     print 'WebServer Serving on 8080...'
@@ -191,33 +273,5 @@ if __name__ == '__main__':
 #     """
 #     return getSessionAction(gid,sid,request.json)
 
-# # @appweb.route('/group/<gid>/test/<sid>/case/<tid>/create', method='POST', content_type='application/json')
-# # def doCreateCaseResult(gid, sid, tid):
-# # @appweb.route('/group/<gid>/test/<sid>/case/<tid>/update', method='POST', content_type='application/json')
-# # def doUpdateCaseResult(gid, sid, tid):
 
-# @appweb.route('/group/<gid>/test/<sid>/case/<tid>', method='POST', content_type='application/json')
-# def doCaseResultAction(gid,sid,tid):
-#     """
-#     URL:/group/<gid>/test/<sid>/case/<tid>
-#     TYPE:http/POST
-#     @data type:JSON
-#     @param:{'subc': '', 'data':{}}
-#     @rtype: JSON
-#     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
-#              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
-#     ----------------------------------------------------------------------------------------
-#     |support|subc    |data                                                          
-#     |       |create  |{'token':(string)value,'caseName':(string)value, 'starttime':(string)timestamp}
-#     |       |update  |{'token':(string)value,'result':value ['Pass'/'Fail'/'Error'],'time':(string)timestamp}
-#     -----------------------------------------------------------------------------------------
-#     """
-#     return caseResultAction(gid,sid,tid,request.json)
 
-# @appweb.route('/group/<gid>/test/<sid>/case/<tid>/fileupload', method='PUT', content_type=['application/zip', 'image/png'], login=False)
-# def doUploadCaseFile(gid, sid, tid):
-#     return None
-
-# @appweb.route('/group/<gid>/test/<sid>/case/<tid>/snaps', method='GET')
-# def doGetCaseResultSnapshots(gid, sid, tid):
-#     return getTestCaseSnaps(gid, sid, tid)

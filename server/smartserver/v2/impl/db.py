@@ -41,6 +41,35 @@ class groups(Document):
     gid = SequenceField()
     members = ListField(EmbeddedDocumentField(groupMember))
 
+class commentInfo(EmbeddedDocument):
+    issuetype = StringField()
+    commentinfo = StringField()
+    caseresult = StringField()
+    endsession = StringField()
+
+class CaseImage(EmbeddedDocument):
+    imageid = StringField()
+    imagename = StringField()
+    image = ImageField()
+
+class cases(Document):
+    """
+    db schema of collection case state in mongodb
+    """
+    gid = IntField()
+    sid = IntField()
+    tid = IntField()
+    casename = StringField()
+    domain = StringField()
+    starttime = DateTimeField()
+    endtime = DateTimeField()
+    traceinfo = StringField()
+    result = StringField()
+    log = FileField()
+    expectshot = EmbeddedDocumentField(CaseImage)
+    snapshots = ListField(EmbeddedDocumentField(CaseImage))
+    comments = EmbeddedDocumentField(commentInfo)
+
 class connector(object):
     """
     class to setup connection to mongodb

@@ -3,6 +3,7 @@
 
 from account import *
 from group import *
+from case import *
 
 account_func = {'register': accountRegister,
                 'login': accountLogin,
@@ -24,11 +25,37 @@ group_func = {  'create': groupCreate,
                 'sessionsummary': groupGetSessionsSummary, #getGroupInfo
             }
 
+case_func = {   'create':caseresultCreate,
+                'update':caseresultUpdate, #caseResultAction
+            }
+
+caseupload_func = {'uploadpng': uploadPng,
+                   'uploadzip': uploadZip, #uploadCaseResultFile
+            }
+
 def getUserId(token):
     """
        Used by login plugin to verify the valid of current token
     """
     return accountValidToken(token)
+
+def getTestCaseSnaps(gid, sid, tid):
+    """
+       Used to get the snapshots of testcases.
+    """
+    return testcaseGetSnapshots(gid, sid, tid)
+
+def getTestCaseLog(gid, sid, tid):
+    """
+       Used to get the log of testcases.
+    """
+    return testcaseGetLog(gid, sid, tid)
+
+def getSnapData(imageid):
+    """
+       Used to get the image data of testcase. 
+    """
+    return testcaseGetSnapData(imageid)
 
 def accountWithOutUid(data):
     """
@@ -66,6 +93,18 @@ def getGroupInfo(data, gid, uid):
        Implement group get info/get related session summary here.
     """
     return group_func.get(data['subc'])(gid, uid)
+
+def caseResultAction(data, gid, sid):
+    """
+    Implement case results create/update.
+    """
+    return case_func.get(data['subc'])(data['data'], gid, sid)
+
+def uploadCaseResultFile(subc, gid, sid, tid, data, xtype):
+    """
+    Implement case log, snapshot upload.
+    """
+    return caseupload_func.get(subc)(gid, sid, tid, data, xtype)
 
 
 # def doTestSessionBasicAction(gid,sid,data):
