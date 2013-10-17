@@ -23,9 +23,8 @@ def caseresultCreate(data, gid, sid):
     try:
         caseInst.save()
     except OperationError :
-        return resultWrapper('error',{},'shwo except when save the test case') 
+        return resultWrapper('error',{},'Failed to create the testcase!') 
     return resultWrapper('ok',{},'') 
-
 
 def caseresultUpdate(data, gid, sid):
     """
@@ -33,16 +32,23 @@ def caseresultUpdate(data, gid, sid):
     return, data: {}
     """
     #update case result or add case comments
-    #If tids is list, do add case comments,else update case result.
-    if type(data['tids']) is types.ListType:
-        for tid in data['tids']:
+    #If tid is list, do add case comments,else update case result.
+    if type(data['tid']) is types.ListType:
+        for tid in data['tid']:
             try:
                 cases.objects(gid = gid,sid= sid, tid= tid).update(set__comments = data['comments'])
             except OperationError:
                 return resultWrapper('error', {}, 'Add comments failed!')
     else:
+        # Fetch all the images saved to memcache before then clear the cache.
+        snapshots = cache.getCache(str('sid:' + sid + ':tid:' + data['tid'] + ':snaps'))
+        cache.clearCache(str('sid:' + sid + ':tid:' + data['tid'] + ':snaps'))
+        # If case failed, save all the images fetched from memcache to database
+        if data['result'].lower() != 'fail':
+            snapshots = []
         try:
-            cases.objects(gid = gid,sid= sid, tid= data['tids']).update(set__result = data['result'].lower(),set__endtime = data['endtime'],set__traceinfo = data['traceinfo'])
+            cases.objects(gid = gid,sid= sid, tid= data['tid']).update(set__result = data['result'].lower(),set__endtime = data['endtime'],set__traceinfo = data['traceinfo'], push_all__snapshots=snapshots)
+            #TODO: trigger the task to update session summary here.
         except OperationError:
                 return resultWrapper('error', {}, 'update caseresult failed!')
     return resultWrapper('ok', {},'')
@@ -68,7 +74,8 @@ def uploadPng(gid, sid, tid, imagedata, stype):
         except OperationError:
             return resultWrapper('error', {}, 'Save image to database failed!')
     elif imagetype == 'current':
-        snaps.append({'imagename': imagename, 'image': imagedata})
+        imageid = generateUniqueID()
+        snaps.append({'imagename': imagename, 'image': imagedata, 'imageid': imageid})
         timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         cache.setCache(str('sid:' + sid + ':snap'), imagedata)
         cache.setCache(str('sid:' + sid + ':snaptime'), timenow)
