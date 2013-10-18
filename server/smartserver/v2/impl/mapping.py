@@ -26,6 +26,15 @@ group_func = {  'create': groupCreate,
                 'cyclereport': groupGetCycleReport,#getGroupInfo
             }
 
+session_func ={ 'create':sessionCreate,
+                'update':sessionUpdate,
+                'delete':sessionDelete, #doTestSessionBasicAction
+                'summary':sessionsummary,
+                'update':sessionupdate,
+                'live':sessionlive,
+                'history': sessionhistory, #getSessionAction
+            }
+
 case_func = {   'create':caseresultCreate,
                 'update':caseresultUpdate, #caseResultAction
             }
@@ -95,6 +104,18 @@ def getGroupInfo(data, gid, uid):
     """
     return group_func.get(data['subc'])(data['cid'], gid, uid)
 
+def doTestSessionBasicAction(data, gid, sid, uid):
+    """
+    Implement session create/update/delete.
+    """
+    return session_func.get(data['subc'])(data['data'], gid, sid, uid)
+
+def getSessionAction(data, gid, sid):
+    """
+    Implement get session summary
+    """
+    return session_func.get(data['subc'])(data['data'], gid, sid)
+
 def caseResultAction(data, gid, sid):
     """
     Implement case results create/update.
@@ -106,21 +127,3 @@ def uploadCaseResultFile(subc, gid, sid, tid, data, xtype):
     Implement case log, snapshot upload.
     """
     return caseupload_func.get(subc)(gid, sid, tid, data, xtype)
-
-
-# def doTestSessionBasicAction(gid,sid,data):
-#     if data['action'] =='create':
-#         return createTestSession(gid,sid,data['data'])
-#     elif data['action'] =='update':
-#         return updateTestSession(gid,sid,data['data'])
-#     elif data['action'] == 'delete':
-#         return deleteTestSession(gid,sdi,data['data'])
-
-# def doTestSessionGetAction(gid,sid,data):
-#     if data['action'] =='results':
-#         return getSessionAllresults(gid,sid,data['data'])
-#     elif data['action'] == 'getcase':
-#         return getSessionLive(gid,sid,data['data'])
-#     elif data['action'] =='summary':
-#         return getSessionSummary(gid,sid,data['data'])
-
