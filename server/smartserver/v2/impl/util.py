@@ -43,8 +43,8 @@ class Cache(object):
         if not self._mc is None:
             self._mc.delete(key)
         else:
-        	return None
-        	
+            return None
+        
 cache = Cache()
 #redis_con = redis.StrictRedis(REDIS_URI.strip().replace("", ""))
 redis_con = redis.StricRedis('127.0.0.1')

@@ -34,6 +34,7 @@ def caseresultUpdate(data, gid, sid):
     """
     #update case result or add case comments
     #If tid is list, do add case comments,else update case result.
+    gid, sid = int(gid), int(sid)
     if type(data['tid']) is types.ListType:
         for tid in data['tid']:
             try:
@@ -42,8 +43,8 @@ def caseresultUpdate(data, gid, sid):
                 return resultWrapper('error', {}, 'Add comments failed!')
     else:
         # Fetch all the images saved to memcache before then clear the cache.
-        snapshots = cache.getCache(str('sid:' + sid + ':tid:' + data['tid'] + ':snaps'))
-        cache.clearCache(str('sid:' + sid + ':tid:' + data['tid'] + ':snaps'))
+        snapshots = cache.getCache(str('sid:' + str(sid) + ':tid:' + data['tid'] + ':snaps'))
+        cache.clearCache(str('sid:' + str(sid) + ':tid:' + data['tid'] + ':snaps'))
         # If case failed, save all the images fetched from memcache to database
         if data['result'].lower() != 'fail':
             snapshots = []
@@ -121,7 +122,7 @@ def testcaseGetSnapshots(gid, sid, tid):
     """
     #If ids are valid, return all the images, or return error
     snaps = []
-    case = cases.objects(sid=sid, tid=tid)
+    case = cases.objects(sid=int(sid), tid=int(tid))
     if case:
         case = case.first()
         checksnaps = {'imagename': case.expectsnap.imagename, 'imageid': case.expectsnap.imageid}
@@ -137,7 +138,7 @@ def testcaseGetLog(gid, sid, tid):
     return, data: {'logfile': logfile}
     """
     #If the IDs requested are valid, return logfile, or return error.
-    case = cases.objects(sid=sid, tid=tid)
+    case = cases.objects(sid=int(sid), tid=int(tid))
     if case:
         case = case.first()
         logfile = case.log.read()

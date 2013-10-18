@@ -19,10 +19,13 @@ def checkSessionList():
 
 def updateSessionList(msg):
     '''
-        msg: {'sid': (string)sid}
+        msg: {'sid': (string)sid}/{'clear': (string)sid}
     '''
     print "Updating session list now..."
-    sessionlist.update({msg['sid']: time.time()}) 
+    if 'sid' in msg.keys():
+        sessionlist.update({msg['sid']: time.time()})
+    elif 'clear' in msg.keys():
+        sessionlist.pop(msg['clear']) 
 
 def addHeartBeat(queue):
     #con = redis.StrictRedis(REDIS_URI.strip().replace(""))
