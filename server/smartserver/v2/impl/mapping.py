@@ -104,7 +104,7 @@ def getGroupInfo(data, gid, uid):
     """
     return group_func.get(data['subc'])(data['cid'], gid, uid)
 
-def doTestSessionBasicAction(data, gid, sid, uid):
+def testSessionBasicAction(data, gid, sid, uid):
     """
     Implement session create/update/delete.
     """

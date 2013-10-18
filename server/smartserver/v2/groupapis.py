@@ -152,7 +152,7 @@ def doTestSessionAction(gid,sid,uid):
     |       |delete |{}
     -----------------------------------------------------------------------------------------
     """
-    return doTestSessionBasicAction(request.json, gid, sid, uid)
+    return testSessionBasicAction(request.json, gid, sid, uid)
 
 @appweb.route('/group/<gid>/session/<sid>', method='GET')
 def doGetSessionAction(gid, sid):
