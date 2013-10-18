@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from util import resultWrapper, cache
+from util import resultWrapper, cache, redis_con
 from mongoengine import OperationError
 from db import cases, CaseImage
 from datetime import datetime
@@ -23,7 +23,8 @@ def caseresultCreate(data, gid, sid):
     try:
         caseInst.save()
     except OperationError :
-        return resultWrapper('error',{},'Failed to create the testcase!') 
+        return resultWrapper('error',{},'Failed to create the testcase!')
+    #TODO: Set session alive here, clear endtime in another way. 
     return resultWrapper('ok',{},'') 
 
 def caseresultUpdate(data, gid, sid):
@@ -48,9 +49,12 @@ def caseresultUpdate(data, gid, sid):
             snapshots = []
         try:
             cases.objects(gid = gid,sid= sid, tid= data['tid']).update(set__result = data['result'].lower(),set__endtime = data['endtime'],set__traceinfo = data['traceinfo'], push_all__snapshots=snapshots)
-            #TODO: trigger the task to update session summary here.
         except OperationError:
                 return resultWrapper('error', {}, 'update caseresult failed!')
+    #TODO: trigger the task to update session summary here.
+    #TODO: Set session alive here, clear endtime in another way.
+    #publish heart beat to session watcher here.
+    redis_con.publish("session:heartbeat", json.dumps({'sid': sid}))
     return resultWrapper('ok', {},'')
 
 def uploadPng(gid, sid, tid, imagedata, stype):

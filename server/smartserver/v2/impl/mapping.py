@@ -22,7 +22,8 @@ group_func = {  'create': groupCreate,
                 'setmember': setGroupMembers,
                 'delmember': delGroupMembers, #groupMemeberAction
                 'info': groupGetInfo,
-                'sessionsummary': groupGetSessionsSummary, #getGroupInfo
+                'sessionsummary': groupGetSessionsSummary, 
+                'cyclereport': groupGetCycleReport,#getGroupInfo
             }
 
 case_func = {   'create':caseresultCreate,
@@ -90,9 +91,9 @@ def groupMemberAction(data, gid, uid):
 
 def getGroupInfo(data, gid, uid):
     """
-       Implement group get info/get related session summary here.
+       Implement group get info/get related session summary/get report here.
     """
-    return group_func.get(data['subc'])(gid, uid)
+    return group_func.get(data['subc'])(data['cid'], gid, uid)
 
 def caseResultAction(data, gid, sid):
     """
@@ -123,8 +124,3 @@ def uploadCaseResultFile(subc, gid, sid, tid, data, xtype):
 #     elif data['action'] =='summary':
 #         return getSessionSummary(gid,sid,data['data'])
 
-# def doTestCaseBasicAction(gid,sid,tid,data):
-#     if data['action'] == 'create':
-#         return createTestCaseResult(gid,sid,tid,data['data'])
-#     elif data['action'] == 'update':
-#         return updateTestCaseResult(gid,sid,tid,data['data'])

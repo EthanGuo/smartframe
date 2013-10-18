@@ -3,7 +3,7 @@
 
 from util import resultWrapper
 from mongoengine import OperationError
-from db import groups, user
+from db import groups, user, cycle, session
 import json
 
 ROLES = {'OWNER': 10, 'ADMIN': 9, 'MEMBER': 8, 'GUEST': 7}
@@ -46,9 +46,9 @@ def groupDelete(data, uid):
     else:
         try:
             groups.objects(gid = data['gid']).delete()
-            #TODO: Add a task to remove corresponding data of a group
         except OperationError:
             return resultWrapper('error', {}, 'Remove group failed!')
+        #TODO: Add a task to remove corresponding data of a group
         return resultWrapper('ok', {}, '')
 
 def addGroupMembers(data, gid, uid):
@@ -104,9 +104,9 @@ def delGroupMembers(data, gid, uid):
                 return resultWrapper('error', {}, 'Remove user failed!')
         return resultWrapper('ok', {}, '')
 
-def groupGetInfo(gid, uid):
+def groupGetInfo(data, gid, uid):
     """
-    params, data: {}
+    params, data: {'cid' is contained but wont be used here}
     return, data: {'members':[{'uid':(int)uid, 'role':(String)role, 'username':(String)username, 'info':(JSON)info},...]}
     """
     #If current user is a member, return all members' info of current group, or return error.
@@ -122,5 +122,45 @@ def groupGetInfo(gid, uid):
             })
     return resultWrapper('ok', {'members': groupMembers}, '')
 
-def groupGetSessionsSummary(gid, uid):
+def groupGetSessionsSummary(data, gid, uid):
+    """
+    params, data: {'cid' is contained but wont be used here}
+    return, data: {'cycles': [{'cid': cycleID, 'livecount': liveDeviceCount, 'devicecount': deviceCount, 'sessions':[{},...],...]}
+    """
+    result = []
+    sid_in_cycle = []
+    cycles = cycle.objects(gid=gid)
+    for c in cycles:
+        sessions = []
+        livecount = 0
+        for sid in c.sids:
+            s = session.objects(sid=sid).first()
+            if not s.endtime:
+                livecount += 1
+            sessions.append({'gid': s.gid, 'product': s.deviceinfo.product, 
+                             'revision': s.deviceinfo.revision, 'deviceid': s.deviceid,
+                             'starttime': s.starttime, 'endtime': s.endtime,
+                             'runtime': s.updatetime, 
+                             'tester': user.objects(uid=s.uid).first().username})
+            sid_in_cycle.append(sid)
+        result.append({'cid': c.cid, 'livecount': livecount, 
+                       'devicecount': len(c.sids),
+                       'sessions': sessions})
+    sessions = session.objects(gid=gid)
+    sess = []
+    for s in sessions:
+        if not (s.sid in sid_in_cycle):
+            sess.append({'gid': s.gid, 'product': s.deviceinfo.product, 
+                         'revision': s.deviceinfo.revision, 'deviceid': s.deviceid,
+                         'starttime': s.starttime, 'endtime': s.endtime,
+                         'runtime': s.updatetime, 
+                         'tester': user.objects(uid=s.uid).first().username})
+    result.append({'cid': '', 'livecount': '', 
+                   'devicecount': '',
+                   'sessions': sess})
+
+    return resultWrapper('ok', {'cycles': result}, '')
+
+def groupGetCycleReport(data, gid, uid):
+    # data is cid itself
     pass

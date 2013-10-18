@@ -8,7 +8,7 @@ from random import choice
 from ..sendmail import *
 from util import resultWrapper
 from mongoengine import OperationError
-from db import user,usetoken
+from db import user,usetoken, groups, session
 import json
 
 TOKEN_EXPIRES = {'01': 30*24*3600,
@@ -175,7 +175,27 @@ def accountGetInfo(uid):
         rmsg, rdata, rstatus = 'Invalid User ID!!', {'code': '04'}, 'error'
     else:
         useraccount = result.first()
-        rdata = {'uid': uid, 'username': useraccount['username'], 'info': useraccount['info']}
+        uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data']}
+        usersession, usergroup = [], []
+        sessions = session.objects(uid=uid)
+        if sessions:
+            for s in sessions:
+                usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': groups.objects(gid=gid).first().groupname})
+        group = groups.objects(members__uid=uid)
+        if group:
+            for g in group:
+                for member in g.members:
+                    if member.uid == uid:
+                        userrole = member.role
+                    if member.role == 10:
+                        groupowner = user.objects(uid=member.uid).first().username
+                usergroup.append({'gid': g.gid, 
+                                  'groupname': g.groupname, 
+                                  'userrole': userrole, 
+                                  'groupowner': groupowner,
+                                  'allsession': len(session.objects(gid=gid)),
+                                  'livesession': len(session.objects(gid=gid, endtime=''))})
+        rdata = {'userinfo': uinfo, 'usersession': usersession, 'usergroup': usergroup}
         rmsg, rstatus = '', 'ok'
     return resultWrapper(rstatus, rdata, rmsg)
 

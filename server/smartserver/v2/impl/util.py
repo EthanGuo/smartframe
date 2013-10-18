@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import memcache
-from ..config import MEMCACHED_URI
+import redis
+from ..config import MEMCACHED_URI, REDIS_URI
 
 def resultWrapper(status, data, msg=''):
     """
@@ -45,3 +46,5 @@ class Cache(object):
         	return None
         	
 cache = Cache()
+#redis_con = redis.StrictRedis(REDIS_URI.strip().replace("", ""))
+redis_con = redis.StricRedis('127.0.0.1')

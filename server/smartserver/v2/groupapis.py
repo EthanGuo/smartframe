@@ -126,13 +126,34 @@ def doGetGroupInfo(gid, uid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc          |data 
-    |       |info          |{}   
-    |       |testsummary   |{}   
+    |support|subc            |data 
+    |       |info            |{}   
+    |       |sessionsummary  |{}
+    |       |cyclereport     |{}   
     -----------------------------------------------------------------------------------------
     """
-    data = {'subc': request.params.get('subc')}
+    data = {'subc': request.params.get('subc'), 'cid': request.params.get('cid', '')}
     return getGroupInfo(data, gid, uid)
+
+@appweb.route('/group/<gid>/session/<sid>', method='POST', content_type='application/json',data_format=['subc', 'data'])
+def doTestSessionAction(gid,sid,uid):
+    """
+    URL:/group/<gid>/test/<sid>
+    TYPE:http/POST
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
+    @rtype: JSON
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    ----------------------------------------------------------------------------------------
+    |support|subc   |data                   
+    |       |create |{'planname':(string)value,'starttime':(string)value,'deviceinfo':{'id':(string)id,'revision':(string)revision,'product':(string)product, 'width':(int)width, 'height':(int)height}}
+    |       |update |{'cid':(int)cid,'endtime':(string)endtime, 'status':(string)status}
+    |       |delete |{}
+    -----------------------------------------------------------------------------------------
+    """
+    return testSessionAction(gid,sid,uid,request.json)
+
 
 @appweb.route('/group/<gid>/session/<sid>/case', method='POST', content_type='application/json', data_format=['subc', 'data'])
 def doCaseResultAction(gid,sid):
@@ -244,8 +265,6 @@ if __name__ == '__main__':
 #     """
 #     return testSessionAction(gid,sid,request.json)
 
-# # @appweb.route('/group/<gid>/test/<sid>/results', method='GET')
-# # def doGetSessionInfo(gid, sid):   
 # # @appweb.route('/group/<gid>/test/<sid>/live', method='GET')
 # # def getSessionLiveData(gid, sid):
 # # @appweb.route('/group/<gid>/test/<sid>/poll', method='GET')

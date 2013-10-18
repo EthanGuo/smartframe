@@ -4,46 +4,46 @@
 import redis
 import threading
 from Queue import Queue
-import time
+import time, types, json
+from smartserver.config import REDIS_URI
 
 queue = Queue()
-sessionlist = {'abcd-efgh': 12345678, }
+sessionlist = {}
 
 def checkSessionList():
-    print "checking session list"
-    for session in sessionlist:
+    print "Checking session list now..."
+    for session in sessionlist.keys():
         if (time.time() - sessionlist[session]) > 600:
-            print "Session has not been updated in 10mins, surppose its dead"
+            print "Session %s has not been updated in 10mins, surppose its dead" %session
+            sessionlist.pop(session)
 
-def updateSessionList(data):
+def updateSessionList(msg):
     '''
-        data: {'sid': (string)sid, 'uptime': (int)uptime}
+        msg: {'sid': (string)sid}
     '''
-    print "Updating session list"
-    if data['sid'] in sessionlist:
-        sessionlist[data['sid']] = data['uptime']
-    else:
-        sessionlist.update({data['sid']: data['uptime']}) 
+    print "Updating session list now..."
+    sessionlist.update({msg['sid']: time.time()}) 
 
 def addHeartBeat(queue):
-    server = redis.StrictRedis('127.0.0.1')
-    client = server.pubsub()
-    client.subscribe('session:heartbeat')
-    for msg in client.listen():
+    #con = redis.StrictRedis(REDIS_URI.strip().replace(""))
+    con = redis.StrictRedis('127.0.0.1')
+    pubs = con.pubsub()
+    pubs.subscribe('session:heartbeat')
+    for msg in pubs.listen():
         queue.put(msg['data'])
 
 def addChecker(queue):
     while True:
         queue.put('check')
-        time.sleep(10)
+        time.sleep(30)
         
 def worker(queue):
     while True:
-        task = queue.get()
-        if task == 'check':
+        msg = queue.get()
+        if msg == 'check':
             checkSessionList()
-        else:
-            updateSessionList(task)
+        elif type(msg) is types.StringType:
+            updateSessionList(json.loads(msg))
 
 def main():
     treceive = threading.Thread(target=addHeartBeat, args=(queue,))

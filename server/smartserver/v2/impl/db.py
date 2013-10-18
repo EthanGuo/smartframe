@@ -41,6 +41,38 @@ class groups(Document):
     gid = SequenceField()
     members = ListField(EmbeddedDocumentField(groupMember))
 
+class CountNumber(EmbeddedDocument):
+    total = IntField()
+    passnum = IntField()
+    failnum = IntField()
+    errornum = IntField()
+
+class device(EmbeddedDocument):
+    revision = StringField()
+    product = StringField()
+    width = StringField()
+    height = StringField()
+
+class session(Document):
+    """
+    db schema of collection case state in mongodb
+    """
+    gid = IntField()
+    sid = IntField()
+    uid = IntField()
+    planname = StringField()
+    starttime = DateTimeField()
+    endtime = DateTimeField()
+    updatetime = DateTimeField()
+    casecount = EmbeddedDocumentField(CountNumber)
+    deviceid = StringField()
+    deviceinfo = EmbeddedDocumentField(device)
+
+class cycle(Document):
+    gid = IntField()
+    sids = ListField(IntField())
+    cid = SequenceField()
+
 class commentInfo(EmbeddedDocument):
     issuetype = StringField()
     commentinfo = StringField()
