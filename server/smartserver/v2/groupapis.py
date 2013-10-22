@@ -206,7 +206,7 @@ def doUploadCaseFile(gid, sid, tid):
     xtype = request.headers.get('Ext-Type') or ''
     return uploadCaseResultFile(subc, gid, sid, tid, request.body, xtype)
 
-@appweb.route('/snap/<imageid>', method='GET', login=False)
+@appweb.route('/snap/<imageid>', method='GET')
 def doGetCaseImage(imageid):
     """
     URL:/snap/<fid>
@@ -217,14 +217,14 @@ def doGetCaseImage(imageid):
     @return: image(bytes)
     """
     data = getSnapData(imageid)
-    if isinstance(data, type({})):
+    if data['result'] == 'error':
         return data
     else:
         response.set_header('Content-Type', 'image/png')
-        return data
+        return data['data']['imagedata']
 
-@appweb.route('/group/<gid>/session/<sid>/case/<tid>/getsnaps', method='GET')
-def doGetCaseResultSnapshots(gid, sid, tid):
+@appweb.route('/group/<gid>/session/<sid>/case/<tid>', method='GET')
+def doGetCaseFiles(gid, sid, tid):
     """
     URL:/group/<gid>/session/<sid>/case/<tid>/getsnaps
     TYPE:http/GET
@@ -234,27 +234,18 @@ def doGetCaseResultSnapshots(gid, sid, tid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     """
-    return getTestCaseSnaps(gid, sid, tid)
-
-@appweb.route('/group/<gid>/session/<sid>/case/<tid>/getlog', method='GET')
-def doGetCaseResultLog(gid, sid, tid):
-    """
-    URL:/group/<gid>/session/<sid>/case/<tid>/getlog
-    TYPE:http/GET
-    @data type:JSON
-    @param:{'subc': '', 'data':{}}
-    @rtype: JSON
-    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
-             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
-    """
-    result = getTestCaseLog(gid, sid, tid)
-    if result['result'] == 'ok':
-        filename = 'log-%s.zip' %tid
-        response.set_header('Content-Type', 'application/x-download')
-        response.set_header('Content-Disposition', 'attachment; filename=' + filename)
-        return result['data']
-    else:
-        return result
+    subc = request.params.get('subc')
+    if subc == 'getsnaps':
+        return getTestCaseSnaps(gid, sid, tid)
+    elif subc == 'getlog':
+        result = getTestCaseLog(gid, sid, tid)
+        if result['result'] == 'ok':
+            filename = 'log-%s.zip' %tid
+            response.set_header('Content-Type', 'application/x-download')
+            response.set_header('Content-Disposition', 'attachment; filename=' + filename)
+            return result['data']['logfile']
+        else:
+            return result
 
 if __name__ == '__main__':
     print 'WebServer Serving on 8080...'

@@ -4,6 +4,7 @@
 from account import *
 from group import *
 from case import *
+from session import *
 
 account_func = {'register': accountRegister,
                 'login': accountLogin,
@@ -30,9 +31,9 @@ session_func ={ 'create':sessionCreate,
                 'update':sessionUpdate,
                 'delete':sessionDelete, #doTestSessionBasicAction
                 'summary':sessionsummary,
-                'update':sessionupdate,
-                'live':sessionlive,
-                'history': sessionhistory, #getSessionAction
+                # 'update':sessionupdate,
+                # 'live':sessionlive,
+                # 'history': sessionhistory, #getSessionAction
             }
 
 case_func = {   'create':caseresultCreate,

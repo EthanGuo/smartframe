@@ -13,7 +13,7 @@ class TestGroupAPIs(unittest.TestCase):
         self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
         self.db['usetoken'].insert({'appid':'03', 'uid':9, 'token': 'abcdefg'})
 
-    def test_doGroupAction(self):
+    def testdoGroupAction(self):
         url = 'http://127.0.0.1:8080/smartapi/group'
         headers = {'content-type': 'application/json'}
 
@@ -29,7 +29,7 @@ class TestGroupAPIs(unittest.TestCase):
         result = json.loads(result.content)
         self.assertTrue(result['result'] == 'ok')
 
-    def test_doMemberToGroupAction(self):
+    def testdoMemberToGroupAction(self):
         self.db['groups'].insert({'groupname': 'test', 'gid': 1, 'members': [{'uid': 9, 'role': 10}]})
         url = 'http://127.0.0.1:8080/smartapi/group/1/member'
         headers = {'content-type': 'application/json'}
@@ -52,7 +52,7 @@ class TestGroupAPIs(unittest.TestCase):
         result = json.loads(result.content)
         self.assertTrue(result['result'] == 'ok')
 
-    def test_doGetGroupInfo(self):
+    def testdoGetGroupInfo(self):
         data = {'groupname': 'test', 'gid': 1, 'members': [{'uid': 0, 'role': 10}, {'uid': 1, 'role': 9}, {'uid': 2, 'role': 8}]}
         self.db['groups'].insert(data)
         self.db['user'].insert({'appid':'03', 'username':'test0', 'uid': 0,'password':'123456', 'info': {'email': 'test0@borqs.com'}})

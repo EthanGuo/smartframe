@@ -12,7 +12,7 @@ class TestGroup(unittest.TestCase):
         self.db = self._mc.smartServer_eth
         self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
 
-    def test_groupCreate(self):
+    def testgroupCreate(self):
         data = {'groupname': 'test'}
         result = groupCreate(data, 9)
         self.assertTrue(self.db['groups'].find({'gid': result['data']['gid']}).count() == 1)
@@ -28,7 +28,7 @@ class TestGroup(unittest.TestCase):
         self.db['user'].insert({'appid':'03', 'username':'test2', 'uid': 2,'password':'123456', 'info': {'email': 'test2@borqs.com'}})# member
         self.db['user'].insert({'appid':'03', 'username':'test3', 'uid': 3,'password':'123456', 'info': {'email': 'test3@borqs.com'}}) # Test token
 
-    def test_groupDelete(self):
+    def testgroupDelete(self):
         self.__insertGroup()
 
         data = {'gid': 5}
@@ -39,7 +39,7 @@ class TestGroup(unittest.TestCase):
         result = groupDelete(data, 0)
         self.assertTrue(self.db['groups'].find({'gid': 5}).count() == 0)
 
-    def test_addGroupMembers(self):
+    def testaddGroupMembers(self):
         self.__insertGroup()
 
         data = {'members':[{'uid': 3, 'role': 8}]}
@@ -50,7 +50,7 @@ class TestGroup(unittest.TestCase):
         addGroupMembers(data, 5, 0)
         self.assertTrue(len(self.db['groups'].find({'gid': 5})[0]['members']) == 4)
 
-    def test_setGroupMembers(self):
+    def testsetGroupMembers(self):
         self.__insertGroup()
 
         data = {'members':[{'uid': 2, 'role': 10}]}
@@ -65,7 +65,7 @@ class TestGroup(unittest.TestCase):
             if member['uid'] == 2:
                 self.assertTrue(member['role'] == 10)
 
-    def test_delGroupMembers(self):
+    def testdelGroupMembers(self):
         self.__insertGroup()
 
         data = {'members':[{'uid': 2, 'role': 8}]}
@@ -79,10 +79,10 @@ class TestGroup(unittest.TestCase):
         Members = self.db['groups'].find({'gid': 5})[0]['members']
         self.assertTrue(len(Members) == 2)
 
-    def test_groupGetInfo(self):
+    def testgroupGetInfo(self):
         self.__insertGroup()
 
-        result = groupGetInfo(5, 2)
+        result = groupGetInfo({}, 5, 2)
         self.assertTrue(len(result['data']['members']) == 3)
 
     # def test_groupGetSessionsSummary(self):

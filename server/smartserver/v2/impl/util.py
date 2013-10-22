@@ -47,4 +47,4 @@ class Cache(object):
         
 cache = Cache()
 #redis_con = redis.StrictRedis(REDIS_URI.strip().replace("", ""))
-redis_con = redis.StricRedis('127.0.0.1')
+redis_con = redis.StrictRedis('127.0.0.1')

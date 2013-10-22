@@ -82,7 +82,11 @@ class commentInfo(EmbeddedDocument):
 class CaseImage(EmbeddedDocument):
     imageid = StringField()
     imagename = StringField()
-    image = ImageField()
+    image = FileField()
+
+class Log(EmbeddedDocument):
+    # Work around of the mongoengine 0.8.4 AttributeError issue when invoke class.field.save() 
+    log = FileField()
 
 class cases(Document):
     """
@@ -97,7 +101,7 @@ class cases(Document):
     endtime = DateTimeField()
     traceinfo = StringField()
     result = StringField()
-    log = FileField()
+    log = EmbeddedDocumentField(Log)
     expectshot = EmbeddedDocumentField(CaseImage)
     snapshots = ListField(EmbeddedDocumentField(CaseImage))
     comments = EmbeddedDocumentField(commentInfo)
