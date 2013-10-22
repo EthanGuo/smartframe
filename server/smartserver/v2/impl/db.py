@@ -9,6 +9,11 @@ class userinfo(EmbeddedDocument):
     phonenumber = StringField()
     company = StringField()
 
+class CaseImage(EmbeddedDocument):
+    imageid = StringField()
+    imagename = StringField()
+    image = FileField()
+
 class user(Document):
     """
     db schema of collection user in mongodb
@@ -19,6 +24,7 @@ class user(Document):
     active = BooleanField()
     uid = SequenceField()
     appid = StringField()
+    avatar = EmbeddedDocumentField(CaseImage)
 
 class usetoken(Document):
     """
@@ -78,11 +84,6 @@ class commentInfo(EmbeddedDocument):
     commentinfo = StringField()
     caseresult = StringField()
     endsession = StringField()
-
-class CaseImage(EmbeddedDocument):
-    imageid = StringField()
-    imagename = StringField()
-    image = FileField()
 
 class Log(EmbeddedDocument):
     # Work around of the mongoengine 0.8.4 AttributeError issue when invoke class.field.save() 

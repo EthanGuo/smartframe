@@ -1,16 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from util import resultWrapper, cache, redis_con
+from util import resultWrapper, cache, redis_con, generateUniqueID
 from mongoengine import OperationError
 from db import cases, CaseImage, Log
 from datetime import datetime
 import json
-import hashlib, uuid
-
-def generateUniqueID():
-    m = hashlib.md5()
-    m.update(str(uuid.uuid1()))
-    return m.hexdigest()
 
 def caseresultCreate(data, gid, sid):
     """

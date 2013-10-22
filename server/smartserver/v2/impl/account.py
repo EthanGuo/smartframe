@@ -6,9 +6,9 @@ import uuid
 import string
 from random import choice
 from ..sendmail import *
-from util import resultWrapper
+from util import resultWrapper, generateUniqueID
 from mongoengine import OperationError
-from db import user,usetoken, groups, session
+from db import user,usetoken, groups, session, CaseImage
 import json
 
 TOKEN_EXPIRES = {'01': 30*24*3600,
@@ -162,7 +162,40 @@ def accountLogout(data, uid):
     return resultWrapper(rstatus, rdata, rmsg)
 
 def accountUpdate(data, uid):
-    pass
+    """
+    params, data: {'appid': (string)appid, 'email': (string)email, 'company': (string)company, 'telephone': (string)phone, 'file': (dict)file}
+    return, data: {'token': (string)token}
+    """ 
+    if 'file' in data.keys():
+        filetype = data['file']['filename'].split('.')[-1]
+        if not filetype in ['png', 'jpg', 'jpeg']:
+            return resultWrapper('error', {}, 'Support png/jpg/jpeg image only!')
+        filedata = data['file']['file']
+        u = user.objects(uid=uid).first()
+        if u.avatar:
+            u.avatar.image.delete()
+        image = CaseImage(imagename=data['file']['filename'], imageid=generateUniqueID())
+        image.image.new_file()
+        image.image.write(filedata)
+        image.image.close()
+        try:
+            user.objects(uid=uid).update(set__avatar=image)
+        except OperationError:
+            return resultWrapper('error', {}, 'Update avatar failed!')
+        return resultWrapper('ok', {}, 'Upload successfully!')
+    else:
+        try:
+            if data.has_key('email'):
+                user.objects(uid=uid).update(set__info__email=data['email'])
+            if data.has_key('company'):
+                user.objects(uid=uid).update(set__info__company=data['company'])
+            if data.has_key('telephone'):
+                user.objects(uid=uid).update(set__info__phonenumber=data['telephone'])
+        except OperationError:
+            return resultWrapper('error', {}, 'Update user info failed!')
+        result = createToken(data['appid'], uid)
+        if result['status'] == 'ok':
+            return resultWrapper('ok', {'token': result['token']}, '')
 
 def accountGetInfo(uid):
     """
@@ -175,7 +208,8 @@ def accountGetInfo(uid):
         rmsg, rdata, rstatus = 'Invalid User ID!!', {'code': '04'}, 'error'
     else:
         useraccount = result.first()
-        uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data']}
+        avatarid = useraccount.avatar.imageid if useraccount.avatar else ''
+        uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data'], 'avatar': avatarid}
         usersession, usergroup = [], []
         sessions = session.objects(uid=uid)
         if sessions:

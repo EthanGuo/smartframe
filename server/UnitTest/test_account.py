@@ -94,6 +94,14 @@ class TestAccount(unittest.TestCase):
         result = accountGetList(9)
         for user in result['data']['users']:
             self.assertTrue(self.db['user'].find({'uid': user['uid'], 'username': user['username']}).count() == 1)
+    
+    def testaccountUpdate(self):
+        self.db['user'].insert({'appid':'03', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}})
+        
+        uid = 9
+        data = {'file': {'filename': '1.png', 'file': open('1.png','rb').read()}}
+        result = accountUpdate(data, uid)
+        self.assertTrue(result['result'] == 'ok')
 
     def tearDown(self):
         self._mc.drop_database('smartServer_eth')

@@ -39,10 +39,10 @@ def doAccountWithOutUid():
     """
     return accountWithOutUid(request.json)
 
-@appweb.route('/user/<uid>', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
+@appweb.route('/account/<uid>', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
 def doAccountWithUid(uid):
     """
-    URL:/user/<uid>
+    URL:/account/<uid>
     TYPE:http/POST
     @data type:JSON
     @param:{'subc': '', 'data':{}}
@@ -57,12 +57,16 @@ def doAccountWithUid(uid):
     |       |logout        |{}
     -----------------------------------------------------------------------------------------
     """
-    return accountWithUid(request.json, uid)
+    if 'multipart/form-data' in request.content_type:
+        data = {'subc': 'update', 'data': {'file': request.files.get('data')}}
+    else:
+        data = request.json
+    return accountWithUid(data, uid)
 
-@appweb.route('/user/<uid>', method='GET')
+@appweb.route('/account/<uid>', method='GET')
 def doGetAccountInfo(uid):
     """
-    URL:/account
+    URL:/account/<uid>
     TYPE:http/GET
     @data type:JSON
     @param:{'subc': '', 'data':{}}
