@@ -3,6 +3,7 @@
 
 from util import resultWrapper, cache, redis_con
 from mongoengine import OperationError
+from datetime import datetime
 from db import groups, session, cycle, user, cases
 import json
 
@@ -118,3 +119,68 @@ def sessionsummary(data, gid, sid):
            'starttime':result.starttime,'updatetime':result.updatetime,
            'summary':result.casecount, 'gid': gid, 'sid': sid}
     return resultWrapper('ok',data,'')
+
+def sessionPollStatus(data, gid, sid):
+    """
+    params, data: {'tid': (int)value}
+    return, data: {}
+    """
+    #return 'ok' means session has been updated already, 'error' means not yet.
+    if cases(gid=int(gid), sid=int(sid), tid__gt=data['tid']):
+        return resultWrapper('ok', {}, 'Session has been updated!')
+    else:
+        return resultWrapper('error', {}, 'Session has NOT been updated yet!')
+
+def sessionGetLatestCases(data, gid, sid):
+    """
+    params, data: {'amount': (int)value}
+    return, data: {'cases': [{'tid':(int)tid, 'casename':(string)name, 
+                              'starttime':(string)time, 'result':(string)result, 
+                              'traceinfo':(string)trace, 'comments':(dict)comments},...]}
+    """
+    #Fetch the first 'amount'(20 for example) cases and return them.
+    amount = data.get('amount', 20)
+    result = []
+    for case in cases.objects(gid=int(gid), sid=int(sid)).order_by('-tid')[:amount]:
+        result.append({'tid': case.tid, 'casename': case.casename, 
+                       'starttime': case.starttime.strftime("%Y-%m-%d %H:%M:%S"),
+                       'result': case.result, 'traceinfo': case.traceinfo,
+                       'comments': case.comments.__dict__['_data']})
+    return resultWrapper('ok', {'cases': result}, '')
+
+def sessionGetHistoryCases(data, gid, sid):
+    """
+    params, data: {'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
+    return, data: {'pagenumber':(int)value, 
+                   'cases': [{'tid':(int)tid, 'casename':(string)name, 
+                              'starttime':(string)time, 'result':(string)result, 
+                              'traceinfo':(string)trace, 'comments':(dict)comments},...]}
+    """
+    #Fetch the cases of page 'pagenumber', 'pagesize' and 'casetype' can not customized.
+    sess = session.objects(sid=int(sid))
+    if not sess:
+        return resultWrapper('error', {}, 'Invalid session ID!')
+    #To calculate how many pages are there in this session, for frontend display purpose
+    pagesize = data.get('pagesize', 100)
+    totalamount = sess.first().casecount.totalnum
+    if (totalamount % pagesize != 0):
+        totalpageamount = totalamount / pagesize + 1
+    else:
+        totalpageamount = totalamount / pagesize
+    #To calculate the startpoint and endpoint of the cases to fetch.
+    pagenumber = data.get('pagenumber', 1)
+    casetype = data.get('casetype', 'total')
+    startpoint = (pagenumber - 1) * pagesize
+    endpoint = startpoint + pagesize
+    if casetype == 'total':
+        case = cases.objects(gid=int(gid), sid=int(sid)).order_by('-tid')[startpoint : endpoint]
+    else:
+        case = cases.objects(gid=int(gid), sid=int(sid), result=casetype).order_by('-tid')[startpoint : endpoint]
+
+    result = []
+    for c in case:
+        result.append({'tid': c.tid, 'casename': c.casename, 
+                       'starttime': c.starttime.strftime("%Y-%m-%d %H:%M:%S"),
+                       'result': c.result, 'traceinfo': c.traceinfo,
+                       'comments': c.comments.__dict__['_data']})
+    return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')

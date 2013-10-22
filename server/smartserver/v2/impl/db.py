@@ -21,7 +21,6 @@ class user(Document):
     username = StringField()
     password = StringField()
     info = EmbeddedDocumentField(userinfo)
-    active = BooleanField()
     uid = SequenceField()
     appid = StringField()
     avatar = EmbeddedDocumentField(CaseImage)
@@ -48,7 +47,7 @@ class groups(Document):
     members = ListField(EmbeddedDocumentField(groupMember))
 
 class CountNumber(EmbeddedDocument):
-    total = IntField()
+    totalnum = IntField()
     passnum = IntField()
     failnum = IntField()
     errornum = IntField()

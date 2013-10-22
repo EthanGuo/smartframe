@@ -31,9 +31,9 @@ session_func ={ 'create':sessionCreate,
                 'update':sessionUpdate,
                 'delete':sessionDelete, #doTestSessionBasicAction
                 'summary':sessionsummary,
-                # 'update':sessionupdate,
-                # 'live':sessionlive,
-                # 'history': sessionhistory, #getSessionAction
+                'poll':sessionPollStatus,
+                'latest':sessionGetLatestCases,
+                'history': sessionGetHistoryCases, #getSessionAction
             }
 
 case_func = {   'create':caseresultCreate,

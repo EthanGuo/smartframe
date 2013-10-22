@@ -168,13 +168,13 @@ def doGetSessionAction(gid, sid):
              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc         |data 
-    |       |live         |
-    |       |history      |
-    |       |update       |
+    |       |latest       |{'amount': (int)value}
+    |       |history      |{'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
+    |       |poll         |{'tid': (int)value}
     |       |summary      |{}   
     -----------------------------------------------------------------------------------------
     """
-    data = {'subc': request.params.get('subc'), 'data':''}
+    data = {'subc': request.params.get('subc'), 'data':request.params}
     return getSessionAction(data, gid, sid)
 
 @appweb.route('/group/<gid>/session/<sid>/case', method='POST', content_type='application/json', data_format=['subc', 'data'])
@@ -254,7 +254,3 @@ def doGetCaseFiles(gid, sid, tid):
 if __name__ == '__main__':
     print 'WebServer Serving on 8080...'
     WSGIServer(("", 8080), appweb).serve_forever()
-
-# @appweb.route('/account/active', method='POST', content_type='application/json')
-# def doActiveUser(uid, token):
-#     return null
