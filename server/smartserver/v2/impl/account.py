@@ -9,12 +9,11 @@ from ..sendmail import *
 from util import resultWrapper, generateUniqueID
 from mongoengine import OperationError
 from db import user,usetoken, groups, session, CaseImage
+import time
 import json
 
-TOKEN_EXPIRES = {'01': 30*24*3600,
-                 '02': 7*24*3600,
-                 '03': 24*3600,
-                 '04': 24*3600
+TOKEN_EXPIRES = {'01': 30*24*3600, # For client end upload result purpose 
+                 '02': 7*24*3600, #For browser user.
                  }
 
 def createToken(appid, uid):
@@ -24,7 +23,7 @@ def createToken(appid, uid):
     m = hashlib.md5()
     m.update(str(uuid.uuid1()))
     token = m.hexdigest()
-    data = {'token':token,'appid':appid,'uid':uid,'expires':TOKEN_EXPIRES[appid]}
+    data = {'token':token,'appid':appid,'uid':uid,'expires':(TOKEN_EXPIRES[appid] + time.time())}
     tokenInst = usetoken().from_json(json.dumps(data))
     try:
         tokenInst.save()

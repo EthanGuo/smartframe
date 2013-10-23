@@ -58,7 +58,7 @@ def caseresultUpdate(data, gid, sid):
         try:
             cases.objects(gid=gid, sid=sid, tid=data['tid']).update(set__result=data['result'].lower(), 
                                                                     set__endtime=data['endtime'], 
-                                                                    set__traceinfo=data['traceinfo'], 
+                                                                    set__traceinfo=data.get('traceinfo',''), 
                                                                     push_all__snapshots=snapshots)
         except OperationError:
             return resultWrapper('error', {}, 'update caseresult failed!')

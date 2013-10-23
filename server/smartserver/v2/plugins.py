@@ -139,6 +139,7 @@ class LoginPlugin(object):
                     kwargs[self.uid_keyword] = uid
                 if has_token:
                     kwargs[self.token_keyword] = token
+                #TODO: increase token expire time here after every valid request.
                 return callback(*args, **kwargs)
 
         # Replace the route callback with the wrapped one.
