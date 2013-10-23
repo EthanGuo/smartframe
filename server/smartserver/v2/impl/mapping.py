@@ -30,7 +30,7 @@ group_func = {  'create': groupCreate,
 session_func ={ 'create':sessionCreate,
                 'update':sessionUpdate,
                 'delete':sessionDelete, #doTestSessionBasicAction
-                'summary':sessionsummary,
+                'summary':sessionSummary,
                 'poll':sessionPollStatus,
                 'latest':sessionGetLatestCases,
                 'history': sessionGetHistoryCases, #getSessionAction

@@ -18,7 +18,7 @@ def sessionCreate(data, gid, sid, uid):
     sessionInst = session().from_json(json.dumps({'gid': int(gid), 'sid': int(sid),'uid':int(uid),
                                       'planname':data['planname'],'starttime':data['starttime'],
                                       'deviceinfo':data['deviceinfo']}))
-    if data['deviceid'] is None:
+    if not data.get('deviceid'):
         sessionInst.deviceid = 'N/A'
     else:
         sessionInst.deviceid = data['deviceid']
@@ -37,41 +37,41 @@ def sessionUpdate(data, gid, sid, uid):
     gid, sid = int(gid), int(sid)
     if 'cid' in data:
         # If cid = 0, create a new cycle and add sid to it.
-        if (data['cid'] == 0) and cycle.objects(sids=sid):
-            return resultWrapper('error', {}, 'Please remove session from current cycle first!')
-        else:
-            cycleinst = cycle().from_json(json.dumps({'gid': gid, 'sids': [sid]}))
-            try:
-                cycleinst.save()
-                cid = cycle.objects(sids=sid).first().cid
-            except OperationError:
-                return resultWrapper('error', {}, 'Create new cycle failed!')
-            return resultWrapper('ok', {'cid': cid}, '')
-            # If cid = -1, remove current session from cycle it belongs.
-        if (data['cid'] == -1) and not cycle.objects(sids=sid):
-            return resultWrapper('error', {}, 'This session does not belong to any cycle!')
-        else:
-            try:
-                cycle.objects(sids=sid).update(pull__sids=sid)
-            except OperationError:
-                return resultWrapper('error', {}, 'Remove session from current cycle failed!')
-            return resultWrapper('ok', {}, '')
+        if (data['cid'] == 0):
+            if cycle.objects(sids=sid):
+                return resultWrapper('error', {}, 'Please remove session from current cycle first!')
+            else:
+                cycleinst = cycle().from_json(json.dumps({'gid': gid, 'sids': [sid]}))
+                try:
+                    cycleinst.save()
+                    cid = cycle.objects(sids=sid).first().cid
+                except OperationError:
+                    return resultWrapper('error', {}, 'Create new cycle failed!')
+                return resultWrapper('ok', {'cid': cid}, '')
+
+        # If cid = -1, remove current session from cycle it belongs.
+        if (data['cid'] == -1):
+            if not cycle.objects(sids=sid):
+                return resultWrapper('error', {}, 'This session does not belong to any cycle!')
+            else:
+                try:
+                    cycle.objects(sids=sid).update(pull__sids=sid)
+                except OperationError:
+                    return resultWrapper('error', {}, 'Remove session from current cycle failed!')
+                return resultWrapper('ok', {}, '')
+
         # For other case, remove session from current session then add it to new cycle.
         if cycle.objects(sids=sid):
             try:
                 cycle.objects(sids=sid).update(pull__sids=sid)
-                cycle.objects(cid=data['cid']).update(push__sids=sid)
-                cid = cycle.objects(sids=sid).first().cid
             except OperationError:
-                return resultWrapper('error', {}, 'Change cycle failed!')
-            return resultWrapper('ok', {'cid': cid}, '')
-        else:
-            try:
-                cycle.objects(cid=data['cid']).update(push__sids=sid)
-                cid = cycle.objects(sids=sid).first().cid
-            except OperationError:
-                return resultWrapper('error', {}, 'Add current session to cycle failed!')
-            return resultWrapper('ok', {'cid': cid}, '')
+                return resultWrapper('error', {}, 'Remove session from current cycle failed!')
+        try:
+            cycle.objects(cid=data['cid']).update(push__sids=sid)
+            cid = cycle.objects(sids=sid).first().cid
+        except OperationError:
+            return resultWrapper('error', {}, 'Add current session to cycle failed!')
+        return resultWrapper('ok', {'cid': cid}, '')
     
     # Update endtime here.
     if 'endtime' in data:
@@ -81,9 +81,9 @@ def sessionUpdate(data, gid, sid, uid):
             session.objects(sid=sid).update(set__endtime=data['endtime'])
         except OperationError:
             return resultWrapper('error', {}, 'Update session endtime failed!')
+        # send session heart to sessionwatcher and remove current sid from the watcher list.
+        redis_con.publish("session:heartbeat", json.dumps({'clear': sid}))
         return resultWrapper('ok', {}, '')
-    # send session heart to sessionwatcher and remove current sid from the watcher list.
-    redis_con.publish("session:heartbeat", json.dumps({'clear': sid}))
 
 def sessionDelete(data, gid, sid, uid):
     """
@@ -92,8 +92,7 @@ def sessionDelete(data, gid, sid, uid):
     """
     gid, sid, uid = int(gid), int(sid), int(uid)
     for member in groups.objects(gid=gid).first().members:
-        if member.uid == uid:
-            role = member.role
+        role = member.role if member.uid == uid else -1
     if session.objects(sid=sid, uid=uid) or (role > 8):
         try:
             session.objects(sid=sid).delete()
@@ -103,8 +102,9 @@ def sessionDelete(data, gid, sid, uid):
             return resultWrapper('error', {}, 'Failed to remove the session!')
         #Task to remove all the cases in this session.
         return resultWrapper('ok',{},'')
+    return resultWrapper('error', {}, 'Permission denied!')
 
-def sessionsummary(data, gid, sid):
+def sessionSummary(data, gid, sid):
     """
     params, data: {}
     return, data: {'planname':(string)planname,'tester':(string)tester,
@@ -113,12 +113,17 @@ def sessionsummary(data, gid, sid):
                    'deviceid':deviceid, summary':casecount,'deviceinfo':deviceinfo}
     """
     result = session.objects(sid = int(sid)).first()
-    tester = user.objects(uid =result.uid).first().username
-    data ={'planname':result.planname,'tester':tester,
-           'deviceid':result.deviceid, 'deviceinfo':result.deviceinfo,
-           'starttime':result.starttime,'updatetime':result.updatetime,
-           'summary':result.casecount, 'gid': gid, 'sid': sid}
-    return resultWrapper('ok',data,'')
+    if result:
+        tester = user.objects(uid =result.uid).first().username
+        deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
+        casecount = result.casecount.__dict__['_data'] if result.casecount else ''
+        data ={'planname':result.planname,'tester':tester,
+               'deviceid':result.deviceid, 'deviceinfo':deviceinfo,
+               'starttime':result.starttime,'updatetime':result.updatetime,
+               'summary':casecount,'gid': gid, 'sid': sid}
+        return resultWrapper('ok',data,'')
+    else:
+        return resultWrapper('error', {}, 'Invalid session ID!')
 
 def sessionPollStatus(data, gid, sid):
     """
@@ -126,7 +131,7 @@ def sessionPollStatus(data, gid, sid):
     return, data: {}
     """
     #return 'ok' means session has been updated already, 'error' means not yet.
-    if cases(gid=int(gid), sid=int(sid), tid__gt=data['tid']):
+    if cases.objects(gid=int(gid), sid=int(sid), tid__gt=data['tid']):
         return resultWrapper('ok', {}, 'Session has been updated!')
     else:
         return resultWrapper('error', {}, 'Session has NOT been updated yet!')
@@ -142,16 +147,17 @@ def sessionGetLatestCases(data, gid, sid):
     amount = data.get('amount', 20)
     result = []
     for case in cases.objects(gid=int(gid), sid=int(sid)).order_by('-tid')[:amount]:
+        comments = case.comments.__dict__['_data'] if case.comments else ''
+        starttime = case.starttime.strftime("%Y-%m-%d %H:%M:%S") if case.starttime else ''
         result.append({'tid': case.tid, 'casename': case.casename, 
-                       'starttime': case.starttime.strftime("%Y-%m-%d %H:%M:%S"),
-                       'result': case.result, 'traceinfo': case.traceinfo,
-                       'comments': case.comments.__dict__['_data']})
+                       'starttime': starttime,'result': case.result, 
+                       'traceinfo': case.traceinfo,'comments': comments})
     return resultWrapper('ok', {'cases': result}, '')
 
 def sessionGetHistoryCases(data, gid, sid):
     """
     params, data: {'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
-    return, data: {'pagenumber':(int)value, 
+    return, data: {'totalpage':(int)value, 
                    'cases': [{'tid':(int)tid, 'casename':(string)name, 
                               'starttime':(string)time, 'result':(string)result, 
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
@@ -162,7 +168,7 @@ def sessionGetHistoryCases(data, gid, sid):
         return resultWrapper('error', {}, 'Invalid session ID!')
     #To calculate how many pages are there in this session, for frontend display purpose
     pagesize = data.get('pagesize', 100)
-    totalamount = sess.first().casecount.totalnum
+    totalamount = sess.first().casecount.totalnum if sess.first() else 0
     if (totalamount % pagesize != 0):
         totalpageamount = totalamount / pagesize + 1
     else:
@@ -179,8 +185,9 @@ def sessionGetHistoryCases(data, gid, sid):
 
     result = []
     for c in case:
+        comments = c.comments.__dict__['_data'] if c.comments else ''
+        starttime = c.starttime.strftime("%Y-%m-%d %H:%M:%S") if c.starttime else ''
         result.append({'tid': c.tid, 'casename': c.casename, 
-                       'starttime': c.starttime.strftime("%Y-%m-%d %H:%M:%S"),
-                       'result': c.result, 'traceinfo': c.traceinfo,
-                       'comments': c.comments.__dict__['_data']})
+                       'starttime': starttime, 'result': c.result, 
+                       'traceinfo': c.traceinfo, 'comments': comments})
     return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')

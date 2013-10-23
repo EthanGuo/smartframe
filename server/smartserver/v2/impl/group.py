@@ -114,11 +114,12 @@ def groupGetInfo(data, gid, uid):
     groupMembers = []
     for member in groups.objects(gid = gid).first().members:
         User = user.objects(uid = member.uid).first()
+        info = User.info.__dict__['_data'] if User.info else ''
         groupMembers.append({
             'uid': member.uid,
             'role': member.role,
             'username': User.username,
-            'info': User.info.__dict__['_data']
+            'info': info
             })
     return resultWrapper('ok', {'members': groupMembers}, '')
 
