@@ -60,7 +60,7 @@ class device(EmbeddedDocument):
 
 class session(Document):
     """
-    db schema of collection case state in mongodb
+    db schema of collection session in mongodb
     """
     gid = IntField()
     sid = IntField()
@@ -74,6 +74,9 @@ class session(Document):
     deviceinfo = EmbeddedDocumentField(device)
 
 class cycle(Document):
+    """
+    db schema of collection cycle in mongodb
+    """
     gid = IntField()
     sids = ListField(IntField())
     cid = SequenceField()
@@ -85,12 +88,13 @@ class commentInfo(EmbeddedDocument):
     endsession = StringField()
 
 class Log(EmbeddedDocument):
-    # Work around of the mongoengine 0.8.4 AttributeError issue when invoke class.field.save() 
+    # Work around of the mongoengine 0.8.4 AttributeError issue 
+    # when invoke class.field.save() 
     log = FileField()
 
 class cases(Document):
     """
-    db schema of collection case state in mongodb
+    db schema of collection case in mongodb
     """
     gid = IntField()
     sid = IntField()

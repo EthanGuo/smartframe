@@ -85,6 +85,33 @@ def sessionUpdate(data, gid, sid, uid):
         redis_con.publish("session:heartbeat", json.dumps({'clear': sid}))
         return resultWrapper('ok', {}, '')
 
+def sessionUploadXML(data, gid, sid, uid):
+    """
+    params, data: stream data of xml uploaded
+    return, data: {}
+    """    
+    try:
+        import xml.etree.cElementTree as ET
+    except ImportError:
+        import xml.etree.ElementTree as ET
+    #Parse the xml file to get case result data then save into database one by one.
+    for testcase in ET.parse(data).getroot().iter('testcase'):
+        caseId = testcase.attrib['order']
+        casename = ''.join([testcase.attrib['component'],'.',testcase.attrib['id'].split('_')[0]])
+        for resultInfo in testcase.iter('result_info'):
+            starttime = resultInfo.find('start').text
+            endtime = resultInfo.find('end').text
+            result = resultInfo.find('actual_result').text.lower()
+        try:
+            caseInst = cases().from_json(json.dumps({'gid': int(gid), 'sid': int(sid), 
+                                                     'tid': int(caseId), 'casename': casename,
+                                                     'starttime': starttime, 'endtime': endtime,
+                                                     'result': result}))
+            caseInst.save()
+        except OperationError:
+            return resultWrapper('error', {}, 'Create case failed!')
+    #TODO: update session summary here.
+
 def sessionDelete(data, gid, sid, uid):
     """
     params, data: {}

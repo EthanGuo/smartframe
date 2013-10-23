@@ -29,6 +29,7 @@ group_func = {  'create': groupCreate,
 
 session_func ={ 'create':sessionCreate,
                 'update':sessionUpdate,
+                'uploadXML': sessionUploadXML,
                 'delete':sessionDelete, #doTestSessionBasicAction
                 'summary':sessionSummary,
                 'poll':sessionPollStatus,

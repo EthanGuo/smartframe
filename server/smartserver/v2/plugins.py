@@ -72,9 +72,10 @@ class DataFormatPlugin(object):
             return callback
 
         def wrapper(*args, **kwargs):
-            for key in format:
-                if request.json.get(key, 'badkey') == 'badkey':
-                    return err(code='500', msg='Invalid request data-format!')
+            if 'application/json' in request.content_type:
+                for key in format:
+                    if request.json.get(key, 'badkey') == 'badkey':
+                        return err(code='500', msg='Invalid request data-format!')
             return callback(*args, **kwargs)
         return wrapper
 

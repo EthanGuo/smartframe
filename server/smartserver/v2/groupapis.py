@@ -139,7 +139,7 @@ def doGetGroupInfo(gid, uid):
     data = {'subc': request.params.get('subc'), 'cid': request.params.get('cid', '')}
     return getGroupInfo(data, gid, uid)
 
-@appweb.route('/group/<gid>/session/<sid>', method='POST', content_type='application/json',data_format=['subc', 'data'])
+@appweb.route('/group/<gid>/session/<sid>', method='POST', content_type=['application/json', 'multipart/form-data'], data_format=['subc', 'data'])
 def doTestSessionAction(gid,sid,uid):
     """
     URL:/group/<gid>/test/<sid>
@@ -156,7 +156,11 @@ def doTestSessionAction(gid,sid,uid):
     |       |delete |{}
     -----------------------------------------------------------------------------------------
     """
-    return testSessionBasicAction(request.json, gid, sid, uid)
+    if 'multipart/form-data' in request.content_type:
+        data = {'subc': 'uploadXML', 'data': request.files.get('file').file}
+    else:
+        data = request.json
+    return testSessionBasicAction(data, gid, sid, uid)
 
 @appweb.route('/group/<gid>/session/<sid>', method='GET')
 def doGetSessionAction(gid, sid):
