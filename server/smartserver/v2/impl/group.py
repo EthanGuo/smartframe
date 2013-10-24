@@ -3,35 +3,34 @@
 
 from util import resultWrapper
 from mongoengine import OperationError
-from db import groups, user, cycle, session
+from db import groups, user, cycle, session, GroupMember
 import json
 
 ROLES = {'OWNER': 10, 'ADMIN': 9, 'MEMBER': 8, 'GUEST': 7}
 
 def groupCreate(data, uid):
     """
-    params, data: {'groupname':(string)name} 
+    params, data: {'groupname':(string)name, 'info': (string)info} 
     return, data: {'gid':(int)gid}
     """
     #If groupname has been registered already, return error
     if len(groups.objects(groupname = data['groupname'])) != 0:
         return resultWrapper('error', {}, 'A group with same username exists!')
     #Save group and set current user as its owner.
-    groupInst = groups().from_json(json.dumps({'groupname': data['groupname'], 'members': [{'uid': uid, 'role': ROLES['OWNER']}]}))
+    groupInst = groups().from_json(json.dumps({'groupname': data['groupname'], 'info': data['info']}))
     try:
         groupInst.save()
+        gid = groups.objects(groupname = data['groupname']).first().gid
+        memberInst = GroupMember().from_json(json.dumps({'uid': int(uid), 'role': ROLES['OWNER'], 'gid': gid}))
+        memberInst.save()
     except OperationError:
         return resultWrapper('error', {}, 'save group failed')
-    gid = groups.objects(groupname = data['groupname']).first().gid
     return resultWrapper('ok', {'gid': gid}, '')
 
 def __getUserRole(uid, gid):
-    g = groups.objects(gid = gid).first()
+    g = GroupMember.objects(gid = gid, uid=uid).first()
     if g:
-        groupMembers = g.members
-        for member in groupMembers:
-            if (member.uid) == uid:
-                return member.role
+        return g.role
     else:
         return -1 # Invalide gid
 
@@ -41,30 +40,15 @@ def groupDelete(data, uid):
     return, data: {}
     """
     #If current user is admin or owner, permit delete or return error.
-    if __getUserRole(uid, data['gid']) < 10:
+    if __getUserRole(int(uid), data['gid']) < 10:
         return resultWrapper('error', {}, 'Permission denied!')
     else:
         try:
             groups.objects(gid = data['gid']).delete()
+            GroupMember.objects(gid=data['gid']).delete()
         except OperationError:
             return resultWrapper('error', {}, 'Remove group failed!')
         #TODO: Add a task to remove corresponding data of a group
-        return resultWrapper('ok', {}, '')
-
-def addGroupMembers(data, gid, uid):
-    """
-    params, data: {'members':[{'uid':(int)uid,'role':(int)roleId}]}
-    return, data: {}
-    """
-    #If current user is admin or owner, permit add member or return error.
-    gid = int(gid)
-    if __getUserRole(uid, gid) < 9:
-        return resultWrapper('error', {}, 'Permission denied!')
-    else:
-        try:
-            groups.objects(gid = gid).update(push_all__members=data['members'])
-        except OperationError:
-            return resultWrapper('error', {}, 'Add member failed!')
         return resultWrapper('ok', {}, '')
 
 def setGroupMembers(data, gid, uid):
@@ -72,19 +56,26 @@ def setGroupMembers(data, gid, uid):
     params, data: {'members':[{'uid':(int)uid,'role':(int)roleId}]}
     return, data: {}
     """
-    #If current user is admin or owner, permit set member role or return error.
+    #If current user is admin or owner, continue or return error.
     gid = int(gid)
     if __getUserRole(uid, gid) < 9:
         return resultWrapper('error', {}, 'Permission denied!')
     else:
         for member in data['members']:
-            if len(groups.objects(gid = gid, members__uid = member['uid'])) == 0:
-                return resultWrapper('error', {}, 'This user have not been added to currect group yet!')
-            else:
-                try:
-                    groups.objects(gid = gid, members__uid = member['uid']).update(set__members__S__role = member['role'])
-                except OperationError:
-                    return resultWrapper('error', {}, 'Set user role failed!')
+            target = GroupMember.objects(gid=gid, uid=member['uid']).first()
+            try:
+                #If target exists in current group, modify its role.
+                if target:
+                    if target.role == 10:
+                        return resultWrapper('error', {}, 'Can not modify owner permission!')
+                    else:
+                        GroupMember.objects(gid=gid, uid=member['uid']).update(set__role=member['role'])
+                #If target does not exist in current group, save it to current group.
+                else:
+                    memberInst = GroupMember().from_json(json.dumps({'gid': gid, 'uid': member['uid'], 'role': member['role']}))
+                    memberInst.save()
+            except OperationError:
+                return resultWrapper('error', {}, 'Operation failed!')
         return resultWrapper('ok', {}, '')    
 
 def delGroupMembers(data, gid, uid):
@@ -99,7 +90,7 @@ def delGroupMembers(data, gid, uid):
     else:
         for member in data['members']:
             try:
-                groups.objects(gid = gid).update(pull__members = {'uid':member['uid'], 'role': member['role']})
+                GroupMember.objects(gid=gid, uid=member['uid']).delete()
             except OperationError:
                 return resultWrapper('error', {}, 'Remove user failed!')
         return resultWrapper('ok', {}, '')
@@ -112,7 +103,7 @@ def groupGetInfo(data, gid, uid):
     #If current user is a member, return all members' info of current group, or return error.
     gid = int(gid)
     groupMembers = []
-    for member in groups.objects(gid = gid).first().members:
+    for member in GroupMember.objects(gid=gid):
         User = user.objects(uid = member.uid).first()
         info = User.info.__dict__['_data'] if User.info else ''
         groupMembers.append({

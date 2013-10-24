@@ -85,7 +85,7 @@ def sessionUpdate(data, gid, sid, uid):
         redis_con.publish("session:heartbeat", json.dumps({'clear': sid}))
         return resultWrapper('ok', {}, '')
 
-def sessionUploadXML(data, gid, sid, uid):
+def sessionUploadXML(data, gid, sid):
     """
     params, data: stream data of xml uploaded
     return, data: {}

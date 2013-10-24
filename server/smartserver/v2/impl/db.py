@@ -4,15 +4,20 @@
 from mongoengine import *
 from ..config import DB_NAME, MONGODB_URI, PORT
 
+class File(EmbeddedDocument):
+    # Work around of the mongoengine 0.8.4 AttributeError issue 
+    # when invoke class.field.save() 
+    data = FileField()
+
+class Files(Document):
+    fileid = StringField()
+    filename = StringField()
+    filedata = EmbeddedDocumentField(File)
+
 class userinfo(EmbeddedDocument):
     email = EmailField(max_length=50)
     phonenumber = StringField()
     company = StringField()
-
-class CaseImage(EmbeddedDocument):
-    imageid = StringField()
-    imagename = StringField()
-    image = FileField()
 
 class user(Document):
     """
@@ -23,7 +28,7 @@ class user(Document):
     info = EmbeddedDocumentField(userinfo)
     uid = SequenceField()
     appid = StringField()
-    avatar = EmbeddedDocumentField(CaseImage)
+    avatar = StringField()
 
 class usetoken(Document):
     """
@@ -34,9 +39,13 @@ class usetoken(Document):
     appid = StringField()
     expires = IntField()
 
-class groupMember(EmbeddedDocument):
+class GroupMember(Document):
+    """
+    db schema of collection groupMember in mongodb
+    """
     uid = IntField()
     role = IntField()
+    gid = IntField()
 
 class groups(Document):
     """
@@ -44,7 +53,7 @@ class groups(Document):
     """
     groupname = StringField()
     gid = SequenceField()
-    members = ListField(EmbeddedDocumentField(groupMember))
+    info = StringField()
 
 class CountNumber(EmbeddedDocument):
     totalnum = IntField()
@@ -87,16 +96,10 @@ class commentInfo(EmbeddedDocument):
     caseresult = StringField()
     endsession = StringField()
 
-class Log(EmbeddedDocument):
-    # Work around of the mongoengine 0.8.4 AttributeError issue 
-    # when invoke class.field.save() 
-    log = FileField()
-
 class cases(Document):
     """
     db schema of collection case in mongodb
     """
-    gid = IntField()
     sid = IntField()
     tid = IntField()
     casename = StringField()
@@ -105,9 +108,9 @@ class cases(Document):
     endtime = DateTimeField()
     traceinfo = StringField()
     result = StringField()
-    log = EmbeddedDocumentField(Log)
-    expectshot = EmbeddedDocumentField(CaseImage)
-    snapshots = ListField(EmbeddedDocumentField(CaseImage))
+    log = StringField()
+    expectshot = StringField()
+    snapshots = ListField(StringField())
     comments = EmbeddedDocumentField(commentInfo)
 
 class connector(object):

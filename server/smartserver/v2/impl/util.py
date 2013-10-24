@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import memcache
 import redis
-import hashlib, uuid
 from ..config import MEMCACHED_URI, REDIS_URI
 
 def resultWrapper(status, data, msg=''):
@@ -13,11 +12,6 @@ def resultWrapper(status, data, msg=''):
         return {'result': 'ok', 'data': data, 'msg': msg}
     elif status == 'error':
         return {'result': 'error', 'data': data, 'msg': msg}
-
-def generateUniqueID():
-    m = hashlib.md5()
-    m.update(str(uuid.uuid1()))
-    return m.hexdigest()
 
 class Cache(object):
     def __init__(self):

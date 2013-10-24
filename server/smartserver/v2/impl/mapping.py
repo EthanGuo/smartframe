@@ -5,6 +5,7 @@ from account import *
 from group import *
 from case import *
 from session import *
+from filedealer import *
 
 account_func = {'register': accountRegister,
                 'login': accountLogin,
@@ -19,7 +20,6 @@ account_func = {'register': accountRegister,
 
 group_func = {  'create': groupCreate,
                 'delete': groupDelete, #groupBasicAction
-                'addmember': addGroupMembers,
                 'setmember': setGroupMembers,
                 'delmember': delGroupMembers, #groupMemeberAction
                 'info': groupGetInfo,
@@ -29,7 +29,6 @@ group_func = {  'create': groupCreate,
 
 session_func ={ 'create':sessionCreate,
                 'update':sessionUpdate,
-                'uploadXML': sessionUploadXML,
                 'delete':sessionDelete, #doTestSessionBasicAction
                 'summary':sessionSummary,
                 'poll':sessionPollStatus,
@@ -51,23 +50,17 @@ def getUserId(token):
     """
     return accountValidToken(token)
 
-def getTestCaseSnaps(gid, sid, tid):
+def getFileData(fileid):
     """
-       Used to get the snapshots of testcases.
+       Used to get the image/log data of testcase. 
     """
-    return testcaseGetSnapshots(gid, sid, tid)
+    return fetchFileData(fileid)
 
-def getTestCaseLog(gid, sid, tid):
+def uploadSessionResult(filedata, gid, sid):
     """
-       Used to get the log of testcases.
+       Used to upload xml containing case result of a session
     """
-    return testcaseGetLog(gid, sid, tid)
-
-def getSnapData(imageid):
-    """
-       Used to get the image data of testcase. 
-    """
-    return testcaseGetSnapData(imageid)
+    return sessionUploadXML(filedata, gid, sid)
 
 def accountWithOutUid(data):
     """
@@ -118,14 +111,14 @@ def getSessionAction(data, gid, sid):
     """
     return session_func.get(data['subc'])(data['data'], gid, sid)
 
-def caseResultAction(data, gid, sid):
+def caseResultAction(data, sid):
     """
     Implement case results create/update.
     """
     return case_func.get(data['subc'])(data['data'], gid, sid)
 
-def uploadCaseResultFile(subc, gid, sid, tid, data, xtype):
+def uploadCaseResultFile(subc, sid, tid, data, xtype):
     """
     Implement case log, snapshot upload.
     """
-    return caseupload_func.get(subc)(gid, sid, tid, data, xtype)
+    return caseupload_func.get(subc)(sid, tid, data, xtype)

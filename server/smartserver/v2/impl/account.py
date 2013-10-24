@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import hashlib
-import uuid
-import string
+import hashlib, uuid
+import string, json
 from random import choice
 from ..sendmail import *
-from util import resultWrapper, generateUniqueID
+from util import resultWrapper
 from mongoengine import OperationError
-from db import user,usetoken, groups, session, CaseImage
+from db import user,usetoken, groups, session
+from filedealer import saveFile
 import time
-import json
 
 TOKEN_EXPIRES = {'01': 30*24*3600, # For client end upload result purpose 
                  '02': 7*24*3600, #For browser user.
@@ -162,7 +161,7 @@ def accountLogout(data, uid):
 
 def accountUpdate(data, uid):
     """
-    params, data: {'appid': (string)appid, 'email': (string)email, 'company': (string)company, 'telephone': (string)phone, 'file': (dict)file}
+    params, data: {'appid': (string)appid, 'username': (string)username, 'company': (string)company, 'telephone': (string)phone, 'file': (dict)file}
     return, data: {'token': (string)token}
     """ 
     if 'file' in data.keys():
@@ -173,19 +172,16 @@ def accountUpdate(data, uid):
         u = user.objects(uid=uid).first()
         if u.avatar:
             u.avatar.image.delete()
-        image = CaseImage(imagename=data['file']['filename'], imageid=generateUniqueID())
-        image.image.new_file()
-        image.image.write(filedata)
-        image.image.close()
+        imageid = saveFile(filedata, 'image/' + filetype, data['file']['filename'])
         try:
-            user.objects(uid=uid).update(set__avatar=image)
+            user.objects(uid=uid).update(set__avatar=imageid)
         except OperationError:
             return resultWrapper('error', {}, 'Update avatar failed!')
         return resultWrapper('ok', {}, 'Upload successfully!')
     else:
         try:
-            if data.has_key('email'):
-                user.objects(uid=uid).update(set__info__email=data['email'])
+            if data.has_key('username'):
+                user.objects(uid=uid).update(set__username=data['username'])
             if data.has_key('company'):
                 user.objects(uid=uid).update(set__info__company=data['company'])
             if data.has_key('telephone'):
@@ -207,27 +203,22 @@ def accountGetInfo(uid):
         rmsg, rdata, rstatus = 'Invalid User ID!!', {'code': '04'}, 'error'
     else:
         useraccount = result.first()
-        avatarid = useraccount.avatar.imageid if useraccount.avatar else ''
-        uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data'], 'avatar': avatarid}
+        uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data'], 'avatar': useraccount.avatar}
         usersession, usergroup = [], []
         sessions = session.objects(uid=uid)
         if sessions:
             for s in sessions:
                 usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': groups.objects(gid=gid).first().groupname})
-        group = groups.objects(members__uid=uid)
+        group = GroupMember.objects(uid=uid)
         if group:
             for g in group:
-                for member in g.members:
-                    if member.uid == uid:
-                        userrole = member.role
-                    if member.role == 10:
-                        groupowner = user.objects(uid=member.uid).first().username
-                usergroup.append({'gid': g.gid, 
-                                  'groupname': g.groupname, 
-                                  'userrole': userrole, 
-                                  'groupowner': groupowner,
-                                  'allsession': len(session.objects(gid=gid)),
-                                  'livesession': len(session.objects(gid=gid, endtime=''))})
+                ownerid = GroupMember.objects(role=10, gid=g.gid).first().uid
+                ownername = user.objects(uid=ownerid).first().username
+                targetgroupname = groups.objects(gid=g.gid).first().groupname
+                usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
+                                  'userrole': g.role, 'groupowner': ownername,
+                                  'allsession': len(session.objects(gid=g.gid)),
+                                  'livesession': len(session.objects(gid=g.gid, endtime=''))})
         rdata = {'userinfo': uinfo, 'usersession': usersession, 'usergroup': usergroup}
         rmsg, rstatus = '', 'ok'
     return resultWrapper(rstatus, rdata, rmsg)

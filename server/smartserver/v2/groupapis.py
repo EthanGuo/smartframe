@@ -52,7 +52,7 @@ def doAccountWithUid(uid):
     ----------------------------------------------------------------------------------------
     |support|subc          |data
     |       |changepasswd  |{'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
-    |       |update        |{'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}}
+    |       |update        |{'username':(string), 'telephone':(string)telephone, 'company':(string)company}
     |       |invite        |{'email':(string)email}
     |       |logout        |{}
     -----------------------------------------------------------------------------------------
@@ -112,7 +112,6 @@ def doGroupMemberAction(gid, uid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
-    |       |addmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}  
     |       |setmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
     |       |delmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
     -----------------------------------------------------------------------------------------
@@ -139,10 +138,10 @@ def doGetGroupInfo(gid, uid):
     data = {'subc': request.params.get('subc'), 'cid': request.params.get('cid', '')}
     return getGroupInfo(data, gid, uid)
 
-@appweb.route('/group/<gid>/session/<sid>', method='POST', content_type=['application/json', 'multipart/form-data'], data_format=['subc', 'data'])
+@appweb.route('/group/<gid>/session/<sid>', method='POST', content_type='application/json', data_format=['subc', 'data'])
 def doTestSessionAction(gid,sid,uid):
     """
-    URL:/group/<gid>/test/<sid>
+    URL:/group/<gid>/session/<sid>
     TYPE:http/POST
     @data type:JSON
     @param:{'subc': '', 'data':{}}
@@ -156,11 +155,7 @@ def doTestSessionAction(gid,sid,uid):
     |       |delete |{}
     -----------------------------------------------------------------------------------------
     """
-    if 'multipart/form-data' in request.content_type:
-        data = {'subc': 'uploadXML', 'data': request.files.get('file').file}
-    else:
-        data = request.json
-    return testSessionBasicAction(data, gid, sid, uid)
+    return testSessionBasicAction(request.json, gid, sid, uid)
 
 @appweb.route('/group/<gid>/session/<sid>', method='GET')
 def doGetSessionAction(gid, sid):
@@ -181,10 +176,10 @@ def doGetSessionAction(gid, sid):
     data = {'subc': request.params.get('subc'), 'data':request.params}
     return getSessionAction(data, gid, sid)
 
-@appweb.route('/group/<gid>/session/<sid>/case', method='POST', content_type='application/json', data_format=['subc', 'data'])
-def doCaseResultAction(gid,sid):
+@appweb.route('/session/<sid>/case', method='POST', content_type='application/json', data_format=['subc', 'data'])
+def doCaseResultAction(sid):
     """
-    URL:/group/<gid>/session/<sid>/case
+    URL:/session/<sid>/case
     TYPE:http/POST
     @data type:JSON
     @param:{'subc': '', 'data':{}}
@@ -193,67 +188,70 @@ def doCaseResultAction(gid,sid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc    |data                                                          
-    |       |create  |{'tid':(int)tid, 'caseName':(string)value, 'starttime':(string)timestamp}
+    |       |create  |{'tid':(int)tid, 'casename':(string)value, 'starttime':(string)timestamp}
     |       |update  |{'tid':(int)/(list)tid, 'result':['Pass'/'Fail'/'Error'],'endtime':(string)endtime, 'traceinfo':(string)traceinfo, 'comments': (dict)comments}
     -----------------------------------------------------------------------------------------
     """
-    return caseResultAction(request.json, gid, sid)
+    return caseResultAction(request.json, sid)
 
-@appweb.route('/group/<gid>/session/<sid>/case/<tid>/fileupload', method='PUT', content_type=['application/zip', 'image/png'], login=False)
-def doUploadCaseFile(gid, sid, tid):
+@appweb.route('/session/<sid>/case/<tid>/fileupload', method='PUT', content_type=['application/zip', 'image/png'], login=False)
+def doUploadCaseFile(sid, tid):
     """
-    URL:/group/<gid>/session/<sid>/case/<tid>/fileupload
+    URL:/session/<sid>/case/<tid>/fileupload
     TYPE:http/PUT
     @fileData type: binary stream
     @param: content of file (zipped log/snapshot)
     @rtype:JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    ----------------------------------------------------------------------------------------
+    |support|subc           |data                                                          
+    |       |uploadpng      |{}
+    |       |uploadzip      |{}
+    -----------------------------------------------------------------------------------------
     """
     subc = 'uploadpng' if 'image/png' in request.content_type else 'uploadzip'
     xtype = request.headers.get('Ext-Type') or ''
-    return uploadCaseResultFile(subc, gid, sid, tid, request.body, xtype)
+    return uploadCaseResultFile(subc, sid, tid, request.body, xtype)
 
-@appweb.route('/snap/<imageid>', method='GET')
-def doGetCaseImage(imageid):
+@appweb.route('/file/<fileid>', method='GET')
+def doGetCaseFile(fileid):
     """
-    URL:/snap/<fid>
+    URL:/file/<fid>
     TYPE:http/GET
     @data type: string
-    @param imageid: the unique id of case snap
-    @rtype: image/png
-    @return: image(bytes)
+    @param fileid: the unique id of case file
+    @rtype: image/png, application/zip
+    @return: image(bytes), attachment
     """
-    data = getSnapData(imageid)
+    data = getFileData(fileid)
     if data['result'] == 'error':
         return data
     else:
-        response.set_header('Content-Type', 'image/png')
-        return data['data']['imagedata']
+        if data['data']['content_type'] in ['image/png', 'image/jpg', 'image/jpeg']:
+            response.set_header('Content-Type', data['data']['content_type'])
+            return data['data']['filedata']
+        elif data['data']['content_type'] in ['application/zip']:
+            response.set_header('Content-Type', 'application/x-download')
+            response.set_header('Content-Disposition', 'attachment; filename=' + data['data']['filename'])
+            return result['data']['filedata']
 
-@appweb.route('/group/<gid>/session/<sid>/case/<tid>', method='GET')
-def doGetCaseFiles(gid, sid, tid):
+@appweb.route('/group/<gid>/session/<sid>/uploadresult', method='POST', content_type='multipart/form-data')
+def doUploadSessionResult(gid, sid):
     """
-    URL:/group/<gid>/session/<sid>/case/<tid>/getsnaps
-    TYPE:http/GET
-    @data type:JSON
-    @param:{'subc': '', 'data':{}}
+    URL:/group/<gid>/session/<sid>/uploadresult
+    TYPE:http/POST
+    @data type:form-data
+    @param: result file
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    ----------------------------------------------------------------------------------------
+    |support|subc        |data                   
+    |       |uploadXML   |filedata
+    -----------------------------------------------------------------------------------------
     """
-    subc = request.params.get('subc')
-    if subc == 'getsnaps':
-        return getTestCaseSnaps(gid, sid, tid)
-    elif subc == 'getlog':
-        result = getTestCaseLog(gid, sid, tid)
-        if result['result'] == 'ok':
-            filename = 'log-%s.zip' %tid
-            response.set_header('Content-Type', 'application/x-download')
-            response.set_header('Content-Disposition', 'attachment; filename=' + filename)
-            return result['data']['logfile']
-        else:
-            return result
+    return uploadSessionResult(request.files.get('file').file, gid, sid)
 
 if __name__ == '__main__':
     print 'WebServer Serving on 8080...'
