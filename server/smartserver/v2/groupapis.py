@@ -151,7 +151,8 @@ def doTestSessionAction(gid,sid,uid):
     ----------------------------------------------------------------------------------------
     |support|subc   |data                   
     |       |create |{'planname':(string)value,'starttime':(string)value,'deviceinfo':{'id':(string)id,'revision':(string)revision,'product':(string)product, 'width':(int)width, 'height':(int)height}}
-    |       |update |{'cid':(int)cid,'endtime':(string)endtime, 'status':(string)status}
+    |       |update |{'endtime':(string)endtime, 'status':(string)status}
+    |       |cycle  |{'cid':(int)cid}
     |       |delete |{}
     -----------------------------------------------------------------------------------------
     """

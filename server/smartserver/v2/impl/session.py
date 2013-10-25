@@ -26,7 +26,7 @@ def sessionCreate(data, gid, sid, uid):
         sessionInst.save()
     except OperationError :
         return resultWrapper('error',{},'Failed to create session!') 
-    return resultWrapper('ok',{},'') 
+    return resultWrapper('ok',{},'')
 
 def sessionUpdate(data, gid, sid, uid):
     """
@@ -35,44 +35,6 @@ def sessionUpdate(data, gid, sid, uid):
     """
     #update session cid or endtime
     gid, sid = int(gid), int(sid)
-    if 'cid' in data:
-        # If cid = 0, create a new cycle and add sid to it.
-        if (data['cid'] == 0):
-            if Cycles.objects(sids=sid):
-                return resultWrapper('error', {}, 'Please remove session from current cycle first!')
-            else:
-                cycleinst = Cycles().from_json(json.dumps({'gid': gid, 'sids': [sid]}))
-                try:
-                    cycleinst.save()
-                    cid = Cycles.objects(sids=sid).first().cid
-                except OperationError:
-                    return resultWrapper('error', {}, 'Create new cycle failed!')
-                return resultWrapper('ok', {'cid': cid}, '')
-
-        # If cid = -1, remove current session from cycle it belongs.
-        if (data['cid'] == -1):
-            if not Cycles.objects(sids=sid):
-                return resultWrapper('error', {}, 'This session does not belong to any cycle!')
-            else:
-                try:
-                    Cycles.objects(sids=sid).update(pull__sids=sid)
-                except OperationError:
-                    return resultWrapper('error', {}, 'Remove session from current cycle failed!')
-                return resultWrapper('ok', {}, '')
-
-        # For other case, remove session from current session then add it to new cycle.
-        if Cycles.objects(sids=sid):
-            try:
-                Cycles.objects(sids=sid).update(pull__sids=sid)
-            except OperationError:
-                return resultWrapper('error', {}, 'Remove session from current cycle failed!')
-        try:
-            Cycles.objects(cid=data['cid']).update(push__sids=sid)
-            cid = Cycles.objects(sids=sid).first().cid
-        except OperationError:
-            return resultWrapper('error', {}, 'Add current session to cycle failed!')
-        return resultWrapper('ok', {'cid': cid}, '')
-    
     # Update endtime here.
     if 'endtime' in data:
         cache.clearCache(str('sid:' + str(sid) + ':snap'))
@@ -84,6 +46,45 @@ def sessionUpdate(data, gid, sid, uid):
         # send session heart to sessionwatcher and remove current sid from the watcher list.
         redis_con.publish("session:heartbeat", json.dumps({'clear': sid}))
         return resultWrapper('ok', {}, '')
+
+def sessionCycle(data, gid, sid, uid):
+    # If cid = 0, create a new cycle and add sid to it.
+    Cid = data['cid']
+    if (Cid == 0):
+        if Cycles.objects(sids=sid):
+            return resultWrapper('error', {}, 'Please remove session from current cycle first!')
+        else:
+            cycleinst = Cycles().from_json(json.dumps({'gid': gid, 'sids': [sid]}))
+            try:
+                cycleinst.save()
+                cid = Cycles.objects(sids=sid).first().cid
+            except OperationError:
+                return resultWrapper('error', {}, 'Create new cycle failed!')
+            return resultWrapper('ok', {'cid': cid}, '')
+
+    # If cid = -1, remove current session from cycle it belongs.
+    if (Cid == -1):
+        if not Cycles.objects(sids=sid):
+            return resultWrapper('error', {}, 'This session does not belong to any cycle!')
+        else:
+            try:
+                Cycles.objects(sids=sid).update(pull__sids=sid)
+            except OperationError:
+                return resultWrapper('error', {}, 'Remove session from current cycle failed!')
+            return resultWrapper('ok', {}, '')
+
+    # For other case, remove session from current session then add it to new cycle.
+    if Cycles.objects(sids=sid):
+        try:
+            Cycles.objects(sids=sid).update(pull__sids=sid)
+        except OperationError:
+            return resultWrapper('error', {}, 'Remove session from current cycle failed!')
+    try:
+        Cycles.objects(cid=Cid).update(push__sids=sid)
+        cid = Cycles.objects(sids=sid).first().cid
+    except OperationError:
+        return resultWrapper('error', {}, 'Add current session to cycle failed!')
+    return resultWrapper('ok', {'cid': cid}, '')
 
 def sessionUploadXML(data, gid, sid):
     """

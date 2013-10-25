@@ -27,8 +27,9 @@ group_func = {  'create': groupCreate,
                 'cyclereport': groupGetCycleReport,#getGroupInfo
             }
 
-session_func ={ 'create':sessionCreate,
+session_func ={ 'create': sessionCreate,
                 'update':sessionUpdate,
+                'cycle': sessionCycle,
                 'delete':sessionDelete, #doTestSessionBasicAction
                 'summary':sessionSummary,
                 'poll':sessionPollStatus,
