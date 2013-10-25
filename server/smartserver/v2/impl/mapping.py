@@ -9,22 +9,25 @@ from filedealer import *
 
 account_func = {'register': accountRegister,
                 'login': accountLogin,
-                'forgotpasswd': accountForgotPasswd, #accountWithOutUid
-                'changepasswd': accountChangepasswd,
+                'retrievepswd': accountRetrievePasswd, #accountWithOutUid
+                'changepswd': accountChangepasswd,
                 'update': accountUpdate,
                 'invite': accountInvite,
                 'logout': accountLogout, #accountWithUid
-                'info': accountGetInfo,
-                'list': accountGetUserList, #doAccountGetAction            
+                'accountlist': accountGetUserList,                 
+                'accountinfo': accountGetInfo,
+                'groups': accountGetGroups,
+                'sessions': accountGetSessions,#getAccountInfo            
             }
 
-group_func = {  'create': groupCreate,
-                'delete': groupDelete, #groupBasicAction
-                'setmember': setGroupMembers,
-                'delmember': delGroupMembers, #groupMemeberAction
-                'info': groupGetInfo,
-                'sessionsummary': groupGetSessionsSummary, 
-                'cyclereport': groupGetCycleReport,#getGroupInfo
+group_func = {  'create': groupCreate, #groupBasicAction
+                'delete': groupDelete, 
+                'setmember': groupSetMembers,
+                'delmember': groupDelMembers, #groupMemeberAction
+                'members': groupGetMembers,
+                'sessions': groupGetSessions,
+                'cycles': groupGetCycles,
+                'report': groupGetReport,#getGroupInfo
             }
 
 session_func ={ 'create': sessionCreate,
@@ -50,6 +53,12 @@ def getUserId(token):
        Used by login plugin to verify the valid of current token
     """
     return accountValidToken(token)
+
+def uploadFile(content_type, filedata):
+    """
+       Used to upload file and upload file only
+    """
+    return saveFile(filedata, content_type)
 
 def getFileData(fileid):
     """

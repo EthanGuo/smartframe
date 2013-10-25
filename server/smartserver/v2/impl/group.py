@@ -34,24 +34,25 @@ def __getUserRole(uid, gid):
     else:
         return -1 # Invalide gid
 
-def groupDelete(data, uid):
+def groupDelete(data, gid, uid):
     """
-    params, data: {'gid':(gid)groupid} 
+    params, data: {} 
     return, data: {}
     """
     #If current user is admin or owner, permit delete or return error.
-    if __getUserRole(int(uid), data['gid']) < 10:
+    gid = int(gid)
+    if __getUserRole(int(uid), gid) < 10:
         return resultWrapper('error', {}, 'Permission denied!')
     else:
         try:
-            Groups.objects(gid = data['gid']).delete()
-            GroupMembers.objects(gid=data['gid']).delete()
+            Groups.objects(gid=gid).delete()
+            GroupMembers.objects(gid=gid).delete()
         except OperationError:
             return resultWrapper('error', {}, 'Remove group failed!')
         #TODO: Add a task to remove corresponding data of a group
         return resultWrapper('ok', {}, '')
 
-def setGroupMembers(data, gid, uid):
+def groupSetMembers(data, gid, uid):
     """
     params, data: {'members':[{'uid':(int)uid,'role':(int)roleId}]}
     return, data: {}
@@ -80,7 +81,7 @@ def setGroupMembers(data, gid, uid):
                 return resultWrapper('error', {}, 'Operation failed!')
         return resultWrapper('ok', {}, '')    
 
-def delGroupMembers(data, gid, uid):
+def groupDelMembers(data, gid, uid):
     """
     params, data: {'members':[{'uid':(int)uid,'role':(int)roleId}]}
     return, data: {}
@@ -97,7 +98,7 @@ def delGroupMembers(data, gid, uid):
                 return resultWrapper('error', {}, 'Remove user failed!')
         return resultWrapper('ok', {}, '')
 
-def groupGetInfo(data, gid, uid):
+def groupGetMembers(data, gid, uid):
     """
     params, data: {'cid' is contained but wont be used here}
     return, data: {'members':[{'uid':(int)uid, 'role':(String)role, 'username':(String)username, 'info':(JSON)info},...]}
@@ -116,44 +117,48 @@ def groupGetInfo(data, gid, uid):
             })
     return resultWrapper('ok', {'members': groupMembers}, '')
 
-def groupGetSessionsSummary(data, gid, uid):
+def groupGetSessions(data, gid, uid):
     """
     params, data: {'cid' is contained but wont be used here}
-    return, data: {'cycles': [{'cid': cycleID, 'livecount': liveDeviceCount, 'devicecount': deviceCount, 'sessions':[{},...],...]}
+    return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 
+                                'revision':(String)revision, 'deviceid':(string)deviceid,
+                                'starttime': (String)time, 'endtime': (String)time,
+                                'runtime': (String)time, 'tester': (String)name},...]}
     """
-    result = []
-    sid_in_cycle = []
-    cycles = Cycles.objects(gid=gid)
-    for c in cycles:
-        sessions = []
-        livecount = 0
-        for sid in c.sids:
-            s = Sessions.objects(sid=sid).first()
-            if not s.endtime:
-                livecount += 1
-            sessions.append({'gid': s.gid, 'product': s.deviceinfo.product, 
-                             'revision': s.deviceinfo.revision, 'deviceid': s.deviceid,
-                             'starttime': s.starttime, 'endtime': s.endtime,
-                             'runtime': s.updatetime, 
-                             'tester': Users.objects(uid=s.uid).first().username})
-            sid_in_cycle.append(sid)
-        result.append({'cid': c.cid, 'livecount': livecount, 
-                       'devicecount': len(c.sids),
-                       'sessions': sessions})
-    sessions = Sessions.objects(gid=gid)
-    sess = []
-    for s in sessions:
-        if not (s.sid in sid_in_cycle):
-            sess.append({'gid': s.gid, 'product': s.deviceinfo.product, 
-                         'revision': s.deviceinfo.revision, 'deviceid': s.deviceid,
-                         'starttime': s.starttime, 'endtime': s.endtime,
-                         'runtime': s.updatetime, 
-                         'tester': Users.objects(uid=s.uid).first().username})
-    result.append({'cid': '', 'livecount': '', 
-                   'devicecount': '',
-                   'sessions': sess})
+    gid, sessions = int(gid), []
+    for session in Sessions.objects(gid=gid):
+        product = session.deviceinfo.product if session.deviceinfo else ''
+        revision = session.deviceinfo.revision if session.deviceinfo else ''
+        user = Users.objects(uid=session.uid).first()
+        tester = user.username if user else ''
+        sessions.append({'gid': gid, 'product': product, 'revision': revision,
+                         'deviceid': session.deviceid, 'starttime': session.starttime,
+                         'endtime': session.endtime, 'runtime': session.updatetime,
+                         'tester': tester})
+    return resultWrapper('ok', {'sessions': sessions}, '')
 
-    return resultWrapper('ok', {'cycles': result}, '')
+def groupGetCycles(data, gid, uid):
+    """
+    params, data: {'cid' is contained but wont be used here}
+    return, data: {'sessions':[{'cid': (int)cid, 'product': (string)product, 'revision': (string)revision,
+                                'livecount': (int)num, 'devicecount': (int)num},...]}
+    """
+    gid, cycles, i = int(gid), [], 0
+    for cycle in Cycles.objects(gid=gid):
+        cycles.append({'cid': cycle.cid, 'devicecount': 0, 'livecount': 0, 'product': '', 'revision': ''})
+        for sid in cycle.sids:
+            session = Sessions.objects(sid=sid).first()
+            if not cycles[i]['product']:
+                if session.deviceinfo:
+                    cycles[i]['product'] = session.deviceinfo.product
+            if not cycles[i]['revision']:
+                if session.deviceinfo:
+                    cycles[i]['revision'] = session.deviceinfo.revision
+            if not session.endtime:
+                cycles[i]['livecount'] += 1
+            cycles[i]['devicecount'] += 1
+        i += 1
+    return resultWrapper('ok', {'cycles': cycles}, '')
 
 def groupGetCycleReport(data, gid, uid):
     # data is cid itself

@@ -20,8 +20,27 @@ login_plugin = LoginPlugin(getuserid=getUserId,
 appweb.install(login_plugin)
 
 
-@appweb.route('/account', method='POST', content_type='application/json', data_format=['subc', 'data'], login=False)
-def doAccountWithoutUid():
+@appweb.route('/accountbasic', method='POST', content_type='application/json', data_format=['subc', 'data'], login=False)
+def doAccount():
+    """
+    URL:/accountbasic
+    TYPE:http/POST
+    @data type:JSON
+    @param:{'subc': '', 'data':{}}
+    @rtype: JSON
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    ---------------------------------------------------------------------------------------
+    |support|subc           |data
+    |       |register       |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
+    |       |retrievepswd   |{'email':(string)mailaddress}
+    |       |login          |{'appid':(string)appid, 'username':(string)username, 'password':(string)password}
+    ---------------------------------------------------------------------------------------
+    """
+    return accountWithoutUid(request.json)
+
+@appweb.route('/account', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
+def doAccountPOST(uid):
     """
     URL:/account
     TYPE:http/POST
@@ -30,43 +49,25 @@ def doAccountWithoutUid():
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
-    ---------------------------------------------------------------------------------------
-    |support|subc          |data
-    |       |register      |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
-    |       |forgotpasswd  |{'email':(string)mailaddress}
-    |       |login         |{'appid':(string)appid, 'username':(string)username, 'password':(string)password}
-    ---------------------------------------------------------------------------------------
-    """
-    return accountWithoutUid(request.json)
-
-@appweb.route('/account/<uid>', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
-def doAccountWithUid(uid):
-    """
-    URL:/account/<uid>
-    TYPE:http/POST
-    @data type:JSON
-    @param:{'subc': '', 'data':{}}
-    @rtype: JSON
-    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
-             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data
-    |       |changepasswd  |{'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
+    |       |changepswd    |{'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
     |       |update        |{'username':(string), 'telephone':(string)telephone, 'company':(string)company}
     |       |invite        |{'email':(string)email}
     |       |logout        |{}
     -----------------------------------------------------------------------------------------
     """
     if 'multipart/form-data' in request.content_type:
-        data = {'subc': 'update', 'data': {'file': request.files.get('data')}}
+        data = {'subc': 'update'}
+        data['data'] = {'file': request.files.get('data')}
     else:
         data = request.json
     return accountWithUid(data, uid)
 
-@appweb.route('/account/<uid>', method='GET')
-def doGetAccountInfo(uid):
+@appweb.route('/account', method='GET')
+def doAccountGET(uid):
     """
-    URL:/account/<uid>
+    URL:/account
     TYPE:http/GET
     @data type:JSON
     @param:{'subc': '', 'data':{}}
@@ -75,15 +76,17 @@ def doGetAccountInfo(uid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data  |return data 
-    |       |list          |null  |{'count':(int)value, 'users':[{'uid':(string)uid,'username':(string)username},{'uid':(string)uid,'username':(string)username}]}}
-    |       |info          |null  |{'username':(string)username,'inGroups':[{'gid':gid1,'groupname':(string)name1},{'gid':gid2,'groupname':(string)name2},...],'info':{'email':(string)email, 'telephone':(string)telephone, 'company':(string)company}}
+    |       |accountlist   |null  |{'count':(int)value, 'users':[{'uid':(string)uid,'username':(string)username},{'uid':(string)uid,'username':(string)username}]}}
+    |       |accountinfo   |null  |{'username':(string)username,'info':{'email':(string)email, 'telephone':(string)telephone, 'company':(string)company}}
+    |       |groups        |null  |{'groups':[{'gid':(int)gid1,'groupname':(string)name1, 'allsession': (int)count, 'livesession': (int)count},...]}
+    |       |sessions      |null  |{'sessions': [{'sid':(int)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc')}
     return getAccountInfo(data, uid)
 
 @appweb.route('/group', method='POST',content_type='application/json', data_format=['subc', 'data'])
-def doGroupAction(uid):
+def doGroup(uid):
     """
     URL:/group
     TYPE:http/POST
@@ -94,16 +97,15 @@ def doGroupAction(uid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
-    |       |create        |{'groupname':(string)name} 
-    |       |delete        |{'gid':(int)gid}
+    |       |create        |{'groupname':(string)name, 'info': }
     -----------------------------------------------------------------------------------------
     """
     return groupBasicAction(request.json, uid)
 
-@appweb.route('/group/<gid>/member', method='POST', content_type='application/json', data_format=['subc', 'data'])
-def doGroupMemberAction(gid, uid):
+@appweb.route('/group/<gid>', method='POST', content_type='application/json', data_format=['subc', 'data'])
+def doGroupPOST(gid, uid):
     """
-    URL:/group/<gid>/member
+    URL:/group/<gid>
     TYPE:http/POST
     @data type:JSON
     @param:{'subc': '', 'data':{}}
@@ -112,16 +114,17 @@ def doGroupMemberAction(gid, uid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
+    |       |delete        |{}
     |       |setmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
     |       |delmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
     -----------------------------------------------------------------------------------------
     """
     return groupMemberAction(request.json, gid, uid)
 
-@appweb.route('/group/<gid>/info', method='GET')
-def doGetGroupInfo(gid, uid):
+@appweb.route('/group/<gid>', method='GET')
+def doGroupGET(gid, uid):
     """
-    URL:/group/<gid>/info
+    URL:/group/<gid>
     TYPE:http/GET
     @data type:JSON
     @param:{'subc': '', 'data':{}}
@@ -130,16 +133,17 @@ def doGetGroupInfo(gid, uid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc            |data 
-    |       |info            |{}   
-    |       |sessionsummary  |{}
-    |       |cyclereport     |{}   
+    |       |members         |{}   
+    |       |sessions        |{}
+    |       |cycles          |{}
+    |       |report          |{}   
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'cid': request.params.get('cid', '')}
     return getGroupInfo(data, gid, uid)
 
 @appweb.route('/group/<gid>/session/<sid>', method='POST', content_type='application/json', data_format=['subc', 'data'])
-def doTestSessionAction(gid,sid,uid):
+def doSessionPOST(gid,sid,uid):
     """
     URL:/group/<gid>/session/<sid>
     TYPE:http/POST
@@ -158,10 +162,10 @@ def doTestSessionAction(gid,sid,uid):
     """
     return testSessionBasicAction(request.json, gid, sid, uid)
 
-@appweb.route('/group/<gid>/session/<sid>', method='GET')
-def doGetSessionAction(gid, sid):
+@appweb.route('/session/<sid>', method='GET')
+def doSessionGET(gid, sid):
     """
-    URL:/group/<gid>/test/<sid>
+    URL:/session/<sid>
     TYPE:http/GET
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
@@ -175,10 +179,10 @@ def doGetSessionAction(gid, sid):
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'data':request.params}
-    return getSessionAction(data, gid, sid)
+    return getSession(data, gid, sid)
 
 @appweb.route('/session/<sid>/case', method='POST', content_type='application/json', data_format=['subc', 'data'])
-def doCaseResultAction(sid):
+def doCasePOST(sid):
     """
     URL:/session/<sid>/case
     TYPE:http/POST
@@ -195,10 +199,10 @@ def doCaseResultAction(sid):
     """
     return caseResultAction(request.json, sid)
 
-@appweb.route('/session/<sid>/case/<tid>/fileupload', method='PUT', content_type=['application/zip', 'image/png'], login=False)
-def doUploadCaseFile(sid, tid):
+@appweb.route('/session/<sid>/case/<tid>/file', method='PUT', content_type=['application/zip', 'image/png'], login=False)
+def doCaseFilePUT(sid, tid):
     """
-    URL:/session/<sid>/case/<tid>/fileupload
+    URL:/session/<sid>/case/<tid>/file
     TYPE:http/PUT
     @fileData type: binary stream
     @param: content of file (zipped log/snapshot)
@@ -216,7 +220,7 @@ def doUploadCaseFile(sid, tid):
     return uploadCaseResultFile(subc, sid, tid, request.body, xtype)
 
 @appweb.route('/file/<fileid>', method='GET')
-def doGetCaseFile(fileid):
+def doFileGET(fileid):
     """
     URL:/file/<fid>
     TYPE:http/GET
@@ -237,8 +241,20 @@ def doGetCaseFile(fileid):
             response.set_header('Content-Disposition', 'attachment; filename=' + data['data']['filename'])
             return result['data']['filedata']
 
-@appweb.route('/group/<gid>/session/<sid>/uploadresult', method='POST', content_type='multipart/form-data')
-def doUploadSessionResult(gid, sid):
+@appweb.route('/file', method='PUT', login=False)
+def doFilePUT():
+    """
+    URL:/file
+    TYPE:http/PUT
+    @rtype: string
+    @return: URL to fetch file back
+    """
+    content_type = request.content_type
+    filedata = request.body
+    return uploadFile(content_type, filedata)
+
+@appweb.route('/session/<sid>/uploadresult', method='POST', content_type='multipart/form-data')
+def doUploadSessionResult(sid):
     """
     URL:/group/<gid>/session/<sid>/uploadresult
     TYPE:http/POST
@@ -252,7 +268,7 @@ def doUploadSessionResult(gid, sid):
     |       |uploadXML   |filedata
     -----------------------------------------------------------------------------------------
     """
-    return uploadSessionResult(request.files.get('file').file, gid, sid)
+    return uploadSessionResult(request.files.get('file').file, sid)
 
 if __name__ == '__main__':
     print 'WebServer Serving on 8080...'

@@ -58,9 +58,9 @@ def accountLogin(data):
         if ret['status'] == 'ok':
             rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': useraccount.uid}, 'ok'
         else:
-            rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
+            rmsg, rdata, rstatus = 'Create token failed!', {}, 'error'
     else:
-        rmsg, rdata, rstatus = 'Incorrect UserName/Password!', {'code': '02'}, 'error'
+        rmsg, rdata, rstatus = 'Incorrect UserName/Password!', {}, 'error'
     return resultWrapper(rstatus, rdata, rmsg)
 
 def accountRegister(data):
@@ -82,12 +82,12 @@ def accountRegister(data):
             rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': userInst.uid}, 'ok'
             #sendVerifyMail(userInst.info.email, userInst.username, ret)
         else:
-            rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
+            rmsg, rdata, rstatus = 'Create token failed!', {}, 'error'
     else:
-        rmsg, rdata, rstatus = 'An account with same email or username already registered!', {'code': '04'}, 'error'
+        rmsg, rdata, rstatus = 'An account with same email or username already registered!', {}, 'error'
     return resultWrapper(rstatus, rdata, rmsg)
 
-def accountForgotPasswd(data):
+def accountRetrievePasswd(data):
     """
     params, data: {'email':(string)mailaddress}
     return, data: {}
@@ -104,16 +104,16 @@ def accountForgotPasswd(data):
             Users.objects(uid = useraccount.uid).update_one(set__password = m.hexdigest())
             useraccount.reload()
         except OperationError:
-            rmsg, rdata, rstatus = 'Save new password failed!', {'code': '04'}, 'error'
+            rmsg, rdata, rstatus = 'Save new password failed!', {}, 'error'
         #Generate a token, then send mail to it.
         ret = createToken(appid = '02', uid = useraccount.uid)
         if ret['status'] == 'ok':
             #sendForgotPasswdMail(data['email'], newpassword, ret)
             rmsg, rdata, rstatus = '', {}, 'ok' 
         else:
-            rmsg, rdata, rstatus = 'Create token failed!', {'code': '04'}, 'error'
+            rmsg, rdata, rstatus = 'Create token failed!', {}, 'error'
     else:
-        rmsg, rdata, rstatus = 'Invalid email!', {'code': '04'}, 'error'
+        rmsg, rdata, rstatus = 'Invalid email!', {}, 'error'
     return resultWrapper(rstatus, rdata, rmsg)
 
 def accountChangepasswd(data, uid):
@@ -192,6 +192,20 @@ def accountUpdate(data, uid):
         if result['status'] == 'ok':
             return resultWrapper('ok', {'token': result['token']}, '')
 
+def accountGetUserList(uid):
+    """
+    params, uid:(int)uid
+    return, data: {'count':(int)count, 'users':[{'uid':(int)uid, 'username':(string)username}...]}
+    """ 
+    #If users exist in database, return all of them or return error
+    if len(Users.objects()) == 0:
+        rmsg, rdata, rstatus = 'no user found!', {}, 'error'
+    else:
+        rmsg, rstatus = '', 'ok'
+        users = [{'uid': d['uid'], 'username': d['username']} for d in list(Users.objects())]
+        rdata = {'count': len(users), 'users': users}
+    return resultWrapper(rstatus, rdata, rmsg)
+
 def accountGetInfo(uid):
     """
     params, uid:(int)uid
@@ -200,15 +214,24 @@ def accountGetInfo(uid):
     #If uid exists, return its username and info, or return error.
     result = Users.objects(uid=uid)
     if len(result) == 0:
-        rmsg, rdata, rstatus = 'Invalid User ID!!', {'code': '04'}, 'error'
+        rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
     else:
         useraccount = result.first()
         uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data'], 'avatar': useraccount.avatar}
-        usersession, usergroup = [], []
-        sessions = Sessions.objects(uid=uid)
-        if sessions:
-            for s in sessions:
-                usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': groups.objects(gid=gid).first().groupname})
+        rdata = {'userinfo': uinfo}
+        rmsg, rstatus = '', 'ok'
+    return resultWrapper(rstatus, rdata, rmsg)
+
+def accountGetGroups(uid):
+    """
+    params, uid:(int)uid
+    return, data: {'groups':[{'gid':(int)gid1,'groupname':(string)name1, 'allsession': (int)count, 'livesession': (int)count},...]}
+    """ 
+    result = Users.objects(uid=uid)
+    if len(result) == 0:
+        rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
+    else:
+        usergroup = []
         group = GroupMembers.objects(uid=uid)
         if group:
             for g in group:
@@ -219,21 +242,20 @@ def accountGetInfo(uid):
                                   'userrole': g.role, 'groupowner': ownername,
                                   'allsession': len(session.objects(gid=g.gid)),
                                   'livesession': len(session.objects(gid=g.gid, endtime=''))})
-        rdata = {'userinfo': uinfo, 'usersession': usersession, 'usergroup': usergroup}
-        rmsg, rstatus = '', 'ok'
-    return resultWrapper(rstatus, rdata, rmsg)
+        return resultWrapper('ok', {'usergroup': usergroup}, '')
 
-def accountGetUserList(uid):
+def accountGetSessions(uid):
     """
     params, uid:(int)uid
-    return, data: {'count':(int)count, 'users':[{'uid':(int)uid, 'username':(string)username}...]}
+    return, data: {'sessions': [{'sid':(int)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
     """ 
-    #If users exist in database, return all of them or return error
-    if len(Users.objects()) == 0:
-        rmsg, rdata, rstatus = 'no user found!', {'code': '04'}, 'error'
+    result = Users.objects(uid=uid)
+    if len(result) == 0:
+        rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
     else:
-        rmsg, rstatus = '', 'ok'
-        users = [{'uid': d['uid'], 'username': d['username']} for d in list(Users.objects())]
-        rdata = {'count': len(users), 'users': users}
-    return resultWrapper(rstatus, rdata, rmsg)
-
+        usersession = []
+        sessions = Sessions.objects(uid=uid)
+        if sessions:
+            for s in sessions:
+                usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': groups.objects(gid=gid).first().groupname})
+        return resultWrapper('ok' ,{'usersession': usersession}, '')

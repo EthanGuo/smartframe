@@ -17,7 +17,7 @@ def saveFile(filedata, content_type, filename=''):
     new.data.close()
     newfile = Files(fileid=fileid, filename=filename, filedata=new, content_type=content_type)
     newfile.save()
-    return fileid
+    return ('/file/' + fileid)
 
 def fetchFileData(fileid):
     """
