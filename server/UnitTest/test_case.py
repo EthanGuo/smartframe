@@ -16,56 +16,44 @@ class TestCase(unittest.TestCase):
         for i in range(1, 10):
             time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             casename = 'wifi.testOpenWifi_' + str(i)
-            self.db['cases'].insert({'tid': i, 'gid': 1, 'sid': 1, 'casename': casename, 'starttime': time})
+            self.db['Cases'].insert({'tid': i, 'gid': 1, 'sid': 1, 'casename': casename, 'starttime': time})
 
     def testcaseresultCreate(self):
-        gid, sid = '1', '1'
+        sid = '1'
         time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         data = {'tid': 1, 'casename': 'wifi.testOpenWifi', 'starttime': time}
-        result = caseresultCreate(data, gid, sid)
+        result = caseresultCreate(data, sid)
         self.assertTrue(result['result'] == 'ok')
-        self.assertTrue(self.db['cases'].find({'casename': 'wifi.testOpenWifi'}).count() == 1)
+        self.assertTrue(self.db['Cases'].find({'casename': 'wifi.testOpenWifi'}).count() == 1)
 
     def testcaseresultUpdate(self):
         self._insertCase()
-        gid, sid = '1', '1'
+        sid = '1'
         data = {'tid': [1,2,3], 'comments': {'issuetype': 'phoneHang', 'caseresult': 'fail'}}
-        caseresultUpdate(data, gid, sid)
-        self.assertTrue(self.db['cases'].find({'comments.caseresult': 'fail'}).count() == 3)
+        caseresultUpdate(data, sid)
+        self.assertTrue(self.db['Cases'].find({'comments.caseresult': 'fail'}).count() == 3)
 
         data = {'tid': 4, 'result': 'block', 'endtime': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'traceinfo': 'test'}
-        caseresultUpdate(data, gid, sid)
-        self.assertTrue(self.db['cases'].find({'result': 'block'}).count() == 1)
+        caseresultUpdate(data, sid)
+        self.assertTrue(self.db['Cases'].find({'result': 'block'}).count() == 1)
 
     def testuploadPng(self):
         self._insertCase()
-        gid, sid, tid = '1', '1', '1'
+        sid, tid = '1', '1'
         imagedata = open('1.png', 'rb').read()
         stype = 'expect:1.png'
 
-        uploadPng(gid, sid, tid, imagedata, stype)
-        self.assertTrue(self.db['cases'].find({'tid': 1})[0]['expectshot'])
+        uploadPng(sid, tid, imagedata, stype)
+        self.assertTrue(self.db['Cases'].find({'tid': 1})[0]['expectshot'])
 
     def testuploadZip(self):
-        #self._insertCase()
-        gid, sid, tid = '1', '1', '1'
+        self._insertCase()
+        sid, tid = '1', '1'
         logdata = open('1.zip', 'rb').read()
         xtype = ''
 
-        uploadZip(gid, sid, tid, logdata, xtype)
-        self.assertTrue(self.db['cases'].find({'tid': 1})[0]['log'])
-
-    def testtestcaseGetSnapshots(self):
-        self._insertCase()
-        gid, sid, tid = '1', '1', '1'
-        result = testcaseGetSnapshots(gid, sid, tid)
-        self.assertTrue(result['result'] == 'error')
-
-    def testtestcaseGetLog(self):
-        self._insertCase()
-        gid, sid, tid = '1', '1', '1'
-        result = testcaseGetLog(gid, sid, tid)
-        self.assertTrue(result['result'] == 'error')    	
+        uploadZip(sid, tid, logdata, xtype)
+        self.assertTrue(self.db['Cases'].find({'tid': 1})[0]['log']) 	
 
     def tearDown(self):
         self._mc.drop_database('smartServer_eth')

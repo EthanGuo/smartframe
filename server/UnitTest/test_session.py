@@ -19,16 +19,16 @@ class TestSession(unittest.TestCase):
         gid, sid, uid = '1', '1', '1'
         data = {'planname': 'testPlan', 'starttime': self._getTime(), 'deviceinfo':{'revision': 'bkb-131022', 'product': 'BKB'}}
         sessionCreate(data, gid, sid, uid)
-        self.assertTrue(self.db['session'].find(gid=1, sid=1).count() == 1)
+        self.assertTrue(self.db['Sessions'].find(gid=1, sid=1).count() == 1)
 
     def testsessionUpdate(self):
         data = {'cid': 0}
         gid, sid, uid = '1', '1', '1'
-        self.db['session'].insert({'gid': 1, 'sid': 1, 'uid': 1})
+        self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'uid': 1})
 
         result = sessionUpdate(data, gid, sid, uid)
         self.assertTrue(result['result'] == 'ok')
-        sids = self.db['cycle'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
+        sids = self.db['Cycles'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
         self.assertTrue(1 in sids)
         result = sessionUpdate(data, gid, sid, uid)
         self.assertTrue(result['result'] == 'error')
@@ -39,46 +39,47 @@ class TestSession(unittest.TestCase):
         result = sessionUpdate(data, gid, sid, uid)
         self.assertTrue(result['result'] == 'error')
 
-        self.db['cycle'].update({'cid': 1, 'gid': 1}, {'$set':{'sids': [1]}})
-        self.db['cycle'].insert({'cid': 2, 'gid': 1, 'sids': []})
+        self.db['Cycles'].update({'cid': 1, 'gid': 1}, {'$set':{'sids': [1]}})
+        self.db['Cycles'].insert({'cid': 2, 'gid': 1, 'sids': []})
         data = {'cid': 2}
         result = sessionUpdate(data, gid, sid, uid)
         self.assertTrue(result['result'] == 'ok')
-        sids = self.db['cycle'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
+        sids = self.db['Cycles'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
         self.assertTrue(1 in sids)
-        sids = self.db['cycle'].find({'gid': 1, 'cid': 1})[0]['sids']
+        sids = self.db['Cycles'].find({'gid': 1, 'cid': 1})[0]['sids']
         self.assertTrue(not 1 in sids)
         
         time = self._getTime()
         data = {'endtime': time}
         sessionUpdate(data, gid, sid, uid)
-        result = self.db['session'].find({'gid': 1, 'sid': 1})[0]['endtime'].strftime('%Y-%m-%d %H:%M:%S')
+        result = self.db['Sessions'].find({'gid': 1, 'sid': 1})[0]['endtime'].strftime('%Y-%m-%d %H:%M:%S')
         self.assertTrue(time == result)
 
     def testsessionDelete(self):
         gid, sid, uid, data = '1', '1', '1', {}
-        self.db['groups'].insert({'groupname': 'testGroup', 'gid': 1,'members':[{'uid': 9, 'role': 9}]})
-        self.db['session'].insert({'gid': 1, 'sid': 1, 'uid': 1})
+        self.db['Groups'].insert({'groupname': 'testGroup', 'gid': 1})
+        self.db['GroupMembers'].insert({'gid': 1, 'uid': 9, 'role': 9})
+        self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'uid': 1})
         
         sessionDelete(data, gid, sid, uid)
-        self.assertTrue(self.db['session'].find({'gid': 1, 'sid': 1}).count() == 0)
+        self.assertTrue(self.db['Sessions'].find({'gid': 1, 'sid': 1}).count() == 0)
 
-        self.db['session'].insert({'gid': 1, 'sid': 1, 'uid': 1})
+        self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'uid': 1})
         uid = '2'
 
         sessionDelete(data, gid, sid, uid)
-        self.assertTrue(self.db['session'].find({'gid': 1, 'sid': 1}).count() == 1)
+        self.assertTrue(self.db['Sessions'].find({'gid': 1, 'sid': 1}).count() == 1)
 
     def testsessionSummary(self):
-        self.db['user'].insert({'username': 'test', 'uid': 1})
-        self.db['session'].insert({'gid': 1, 'sid': 1, 'uid': 1, 'planname': 'Test'})
+        self.db['Users'].insert({'username': 'test', 'uid': 1})
+        self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'uid': 1, 'planname': 'Test'})
 
         result = sessionSummary({}, '1', '1')
         self.assertTrue(result['result'] == 'ok')
 
     def _insertCases(self, count):
         for i in range(1, count):
-            self.db['cases'].insert({'gid': 1, 'sid': 1, 'tid': i, 'casename': 'wifi.testOpenWifi_' + str(i), 'result': 'pass'})
+            self.db['Cases'].insert({'gid': 1, 'sid': 1, 'tid': i, 'casename': 'wifi.testOpenWifi_' + str(i), 'result': 'pass'})
 
     def testsessionPollStatus(self):
         self._insertCases(10)
@@ -107,7 +108,7 @@ class TestSession(unittest.TestCase):
 
     def testsessionGetHistoryCases(self):
     	self._insertCases(200)
-    	self.db['session'].insert({'gid': 1, 'sid': 1, 'casecount': {'totalnum': 200}})
+    	self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'casecount': {'totalnum': 200}})
     	gid, sid = '1', '1'
         data = {'pagenumber': 1, 'pagesize': 20, 'casetype': 'total'}
 

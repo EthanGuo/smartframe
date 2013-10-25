@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from util import resultWrapper, cache, redis_con
 from mongoengine import OperationError
-from db import cases
+from db import Cases
 from filedealer import saveFile
 from datetime import datetime
 import json
@@ -13,7 +13,7 @@ def caseresultCreate(data, sid):
     return, data: {}
     """
     #create a new case if save fail return exception
-    caseInst = cases().from_json(json.dumps({'sid': int(sid),'tid':data['tid'],'casename':data['casename'],'result':'running','starttime':data['starttime']}))
+    caseInst = Cases().from_json(json.dumps({'sid': int(sid),'tid':data['tid'],'casename':data['casename'],'result':'running','starttime':data['starttime']}))
     try:
         caseInst.save()
     except OperationError :
@@ -42,7 +42,7 @@ def caseresultUpdate(data, sid):
     if isinstance(data['tid'], list):
         try:
             for tid in data['tid']:
-                cases.objects(sid=sid, tid=tid).update(set__comments=data['comments'])
+                Cases.objects(sid=sid, tid=tid).update(set__comments=data['comments'])
         except OperationError:
             return resultWrapper('error', {}, 'Failed to update case comments!')
     else:
@@ -54,7 +54,7 @@ def caseresultUpdate(data, sid):
         else:
             snapshots = []
         try:
-            cases.objects(sid=sid, tid=data['tid']).update(set__result=data['result'].lower(), 
+            Cases.objects(sid=sid, tid=data['tid']).update(set__result=data['result'].lower(), 
                                                            set__endtime=data['endtime'], 
                                                            set__traceinfo=data.get('traceinfo',''), 
                                                            push_all__snapshots=snapshots)
@@ -82,7 +82,7 @@ def uploadPng(sid, tid, imagedata, stype):
     if imagetype == 'expect':
         imageid = saveFile(imagedata, 'image/png', imagename)
         try:
-            cases.objects(sid=int(sid), tid=int(tid)).update(set__expectshot=imageid)
+            Cases.objects(sid=int(sid), tid=int(tid)).update(set__expectshot=imageid)
         except OperationError:
             return resultWrapper('error', {}, 'Save image to database failed!')
     elif imagetype == 'current':
@@ -102,6 +102,6 @@ def uploadZip(sid, tid, logdata, xtype):
     try:
         filename = 'log-caseid-%s.zip' %tid
         fileid = saveFile(logdata, 'application/zip', filename)
-        cases.objects(sid=int(sid), tid=int(tid)).update(set__log=fileid)
+        Cases.objects(sid=int(sid), tid=int(tid)).update(set__log=fileid)
     except OperationError:
         return resultWrapper('error', {}, 'Save log to database failed!')

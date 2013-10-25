@@ -15,7 +15,7 @@ account_func = {'register': accountRegister,
                 'invite': accountInvite,
                 'logout': accountLogout, #accountWithUid
                 'info': accountGetInfo,
-                'list': accountGetList, #doAccountGetAction            
+                'list': accountGetUserList, #doAccountGetAction            
             }
 
 group_func = {  'create': groupCreate,
@@ -62,7 +62,7 @@ def uploadSessionResult(filedata, gid, sid):
     """
     return sessionUploadXML(filedata, gid, sid)
 
-def accountWithOutUid(data):
+def accountWithoutUid(data):
     """
        Implement account register/forgotpasswd/login here.
     """

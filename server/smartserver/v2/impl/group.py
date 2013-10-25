@@ -3,7 +3,7 @@
 
 from util import resultWrapper
 from mongoengine import OperationError
-from db import groups, user, cycle, session, GroupMember
+from db import Groups, Users, Cycles, Sessions, GroupMembers
 import json
 
 ROLES = {'OWNER': 10, 'ADMIN': 9, 'MEMBER': 8, 'GUEST': 7}
@@ -14,21 +14,21 @@ def groupCreate(data, uid):
     return, data: {'gid':(int)gid}
     """
     #If groupname has been registered already, return error
-    if len(groups.objects(groupname = data['groupname'])) != 0:
+    if len(Groups.objects(groupname = data['groupname'])) != 0:
         return resultWrapper('error', {}, 'A group with same username exists!')
     #Save group and set current user as its owner.
-    groupInst = groups().from_json(json.dumps({'groupname': data['groupname'], 'info': data['info']}))
+    groupInst = Groups().from_json(json.dumps({'groupname': data['groupname'], 'info': data.get('info', '')}))
     try:
         groupInst.save()
-        gid = groups.objects(groupname = data['groupname']).first().gid
-        memberInst = GroupMember().from_json(json.dumps({'uid': int(uid), 'role': ROLES['OWNER'], 'gid': gid}))
+        gid = Groups.objects(groupname = data['groupname']).first().gid
+        memberInst = GroupMembers().from_json(json.dumps({'uid': int(uid), 'role': ROLES['OWNER'], 'gid': gid}))
         memberInst.save()
     except OperationError:
         return resultWrapper('error', {}, 'save group failed')
     return resultWrapper('ok', {'gid': gid}, '')
 
 def __getUserRole(uid, gid):
-    g = GroupMember.objects(gid = gid, uid=uid).first()
+    g = GroupMembers.objects(gid = gid, uid=uid).first()
     if g:
         return g.role
     else:
@@ -44,8 +44,8 @@ def groupDelete(data, uid):
         return resultWrapper('error', {}, 'Permission denied!')
     else:
         try:
-            groups.objects(gid = data['gid']).delete()
-            GroupMember.objects(gid=data['gid']).delete()
+            Groups.objects(gid = data['gid']).delete()
+            GroupMembers.objects(gid=data['gid']).delete()
         except OperationError:
             return resultWrapper('error', {}, 'Remove group failed!')
         #TODO: Add a task to remove corresponding data of a group
@@ -62,17 +62,19 @@ def setGroupMembers(data, gid, uid):
         return resultWrapper('error', {}, 'Permission denied!')
     else:
         for member in data['members']:
-            target = GroupMember.objects(gid=gid, uid=member['uid']).first()
+            if member['role'] == 10:
+                return resultWrapper('error', {}, 'There should be only one owner!')
+            target = GroupMembers.objects(gid=gid, uid=member['uid']).first()
             try:
                 #If target exists in current group, modify its role.
                 if target:
                     if target.role == 10:
                         return resultWrapper('error', {}, 'Can not modify owner permission!')
                     else:
-                        GroupMember.objects(gid=gid, uid=member['uid']).update(set__role=member['role'])
+                        GroupMembers.objects(gid=gid, uid=member['uid']).update(set__role=member['role'])
                 #If target does not exist in current group, save it to current group.
                 else:
-                    memberInst = GroupMember().from_json(json.dumps({'gid': gid, 'uid': member['uid'], 'role': member['role']}))
+                    memberInst = GroupMembers().from_json(json.dumps({'gid': gid, 'uid': member['uid'], 'role': member['role']}))
                     memberInst.save()
             except OperationError:
                 return resultWrapper('error', {}, 'Operation failed!')
@@ -90,7 +92,7 @@ def delGroupMembers(data, gid, uid):
     else:
         for member in data['members']:
             try:
-                GroupMember.objects(gid=gid, uid=member['uid']).delete()
+                GroupMembers.objects(gid=gid, uid=member['uid']).delete()
             except OperationError:
                 return resultWrapper('error', {}, 'Remove user failed!')
         return resultWrapper('ok', {}, '')
@@ -103,8 +105,8 @@ def groupGetInfo(data, gid, uid):
     #If current user is a member, return all members' info of current group, or return error.
     gid = int(gid)
     groupMembers = []
-    for member in GroupMember.objects(gid=gid):
-        User = user.objects(uid = member.uid).first()
+    for member in GroupMembers.objects(gid=gid):
+        User = Users.objects(uid = member.uid).first()
         info = User.info.__dict__['_data'] if User.info else ''
         groupMembers.append({
             'uid': member.uid,
@@ -121,24 +123,24 @@ def groupGetSessionsSummary(data, gid, uid):
     """
     result = []
     sid_in_cycle = []
-    cycles = cycle.objects(gid=gid)
+    cycles = Cycles.objects(gid=gid)
     for c in cycles:
         sessions = []
         livecount = 0
         for sid in c.sids:
-            s = session.objects(sid=sid).first()
+            s = Sessions.objects(sid=sid).first()
             if not s.endtime:
                 livecount += 1
             sessions.append({'gid': s.gid, 'product': s.deviceinfo.product, 
                              'revision': s.deviceinfo.revision, 'deviceid': s.deviceid,
                              'starttime': s.starttime, 'endtime': s.endtime,
                              'runtime': s.updatetime, 
-                             'tester': user.objects(uid=s.uid).first().username})
+                             'tester': Users.objects(uid=s.uid).first().username})
             sid_in_cycle.append(sid)
         result.append({'cid': c.cid, 'livecount': livecount, 
                        'devicecount': len(c.sids),
                        'sessions': sessions})
-    sessions = session.objects(gid=gid)
+    sessions = Sessions.objects(gid=gid)
     sess = []
     for s in sessions:
         if not (s.sid in sid_in_cycle):
@@ -146,7 +148,7 @@ def groupGetSessionsSummary(data, gid, uid):
                          'revision': s.deviceinfo.revision, 'deviceid': s.deviceid,
                          'starttime': s.starttime, 'endtime': s.endtime,
                          'runtime': s.updatetime, 
-                         'tester': user.objects(uid=s.uid).first().username})
+                         'tester': Users.objects(uid=s.uid).first().username})
     result.append({'cid': '', 'livecount': '', 
                    'devicecount': '',
                    'sessions': sess})

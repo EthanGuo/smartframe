@@ -14,23 +14,27 @@ class Files(Document):
     filename = StringField()
     filedata = EmbeddedDocumentField(File)
 
-class userinfo(EmbeddedDocument):
+    meta = {'collection': 'Files'}
+
+class UserInfo(EmbeddedDocument):
     email = EmailField(max_length=50)
     phonenumber = StringField()
     company = StringField()
 
-class user(Document):
+class Users(Document):
     """
     db schema of collection user in mongodb
     """
     username = StringField()
     password = StringField()
-    info = EmbeddedDocumentField(userinfo)
+    info = EmbeddedDocumentField(UserInfo)
     uid = SequenceField()
     appid = StringField()
     avatar = StringField()
 
-class usetoken(Document):
+    meta = {'collection': 'Users'}
+
+class UserTokens(Document):
     """
     db schema of collection usetoken in mongodb
     """
@@ -39,7 +43,9 @@ class usetoken(Document):
     appid = StringField()
     expires = IntField()
 
-class GroupMember(Document):
+    meta = {'collection': 'UserTokens'}
+
+class GroupMembers(Document):
     """
     db schema of collection groupMember in mongodb
     """
@@ -47,7 +53,9 @@ class GroupMember(Document):
     role = IntField()
     gid = IntField()
 
-class groups(Document):
+    meta = {'collection': 'GroupMembers'}
+
+class Groups(Document):
     """
     db schema of collection group in mongodb
     """
@@ -55,19 +63,21 @@ class groups(Document):
     gid = SequenceField()
     info = StringField()
 
+    meta = {'collection': 'Groups'}
+
 class CountNumber(EmbeddedDocument):
     totalnum = IntField()
     passnum = IntField()
     failnum = IntField()
     errornum = IntField()
 
-class device(EmbeddedDocument):
+class Device(EmbeddedDocument):
     revision = StringField()
     product = StringField()
     width = StringField()
     height = StringField()
 
-class session(Document):
+class Sessions(Document):
     """
     db schema of collection session in mongodb
     """
@@ -80,9 +90,11 @@ class session(Document):
     updatetime = DateTimeField()
     casecount = EmbeddedDocumentField(CountNumber)
     deviceid = StringField()
-    deviceinfo = EmbeddedDocumentField(device)
+    deviceinfo = EmbeddedDocumentField(Device)
 
-class cycle(Document):
+    meta = {'collection': 'Sessions'}
+
+class Cycles(Document):
     """
     db schema of collection cycle in mongodb
     """
@@ -90,13 +102,15 @@ class cycle(Document):
     sids = ListField(IntField())
     cid = SequenceField()
 
-class commentInfo(EmbeddedDocument):
+    meta = {'collection': 'Cycles'}
+
+class CommentInfo(EmbeddedDocument):
     issuetype = StringField()
     commentinfo = StringField()
     caseresult = StringField()
     endsession = StringField()
 
-class cases(Document):
+class Cases(Document):
     """
     db schema of collection case in mongodb
     """
@@ -111,7 +125,9 @@ class cases(Document):
     log = StringField()
     expectshot = StringField()
     snapshots = ListField(StringField())
-    comments = EmbeddedDocumentField(commentInfo)
+    comments = EmbeddedDocumentField(CommentInfo)
+
+    meta = {'collection': 'Cases'}
 
 class connector(object):
     """

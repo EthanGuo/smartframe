@@ -21,7 +21,7 @@ appweb.install(login_plugin)
 
 
 @appweb.route('/account', method='POST', content_type='application/json', data_format=['subc', 'data'], login=False)
-def doAccountWithOutUid():
+def doAccountWithoutUid():
     """
     URL:/account
     TYPE:http/POST
@@ -37,7 +37,7 @@ def doAccountWithOutUid():
     |       |login         |{'appid':(string)appid, 'username':(string)username, 'password':(string)password}
     ---------------------------------------------------------------------------------------
     """
-    return accountWithOutUid(request.json)
+    return accountWithoutUid(request.json)
 
 @appweb.route('/account/<uid>', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
 def doAccountWithUid(uid):
