@@ -34,43 +34,46 @@ class TestGroup(unittest.TestCase):
     def testgroupDelete(self):
         self.__insertGroup()
 
-        data = {'gid': 5}
-        result = groupDelete(data, 2)
+        data = {}
+        result = groupDelete(data, 5, 2)
         self.assertTrue(result['result'] == 'error')
 
-        data = {'gid': 5}
-        result = groupDelete(data, 0)
+        data = {}
+        result = groupDelete(data, 5, 0)
         self.assertTrue(self.db['Groups'].find({'gid': 5}).count() == 0)
 
-    def testsetGroupMembers(self):
+    def testgroupSetMembers(self):
         self.__insertGroup()
 
         data = {'members':[{'uid': 2, 'role': 10}]}
-        setGroupMembers(data, 5, 2)
+        groupSetMembers(data, 5, 2)
         self.assertTrue(self.db['GroupMembers'].find({'gid': 5, 'uid': 2})[0]['role'] == 8)
 
         data = {'members':[{'uid': 2, 'role': 9}]}
-        setGroupMembers(data, 5, 0)
+        groupSetMembers(data, 5, 0)
         self.assertTrue(self.db['GroupMembers'].find({'gid': 5, 'uid': 2})[0]['role'] == 9)
 
-    def testdelGroupMembers(self):
+    def testgroupDelMembers(self):
         self.__insertGroup()
 
         data = {'members':[{'uid': 2, 'role': 8}]}
-        delGroupMembers(data, 5, 2)
+        groupDelMembers(data, 5, 2)
         self.assertTrue(self.db['GroupMembers'].find({'gid': 5, 'uid': 2}).count() == 1)
 
         data = {'members':[{'uid': 2, 'role': 8}]}
-        delGroupMembers(data, 5, 0)
+        groupDelMembers(data, 5, 0)
         self.assertTrue(self.db['GroupMembers'].find({'gid': 5, 'uid': 2}).count() == 0)
 
-    def testgroupGetInfo(self):
+    def testgroupGetMembers(self):
         self.__insertGroup()
 
-        result = groupGetInfo({}, 5, 2)
+        result = groupGetMembers({}, 5, 2)
         self.assertTrue(len(result['data']['members']) == 3)
 
-    def test_groupGetSessionsSummary(self):
+    def testgroupGetSessions(self):
+        pass
+
+    def testgroupGetCycles(self):
         pass
 
     def tearDown(self):

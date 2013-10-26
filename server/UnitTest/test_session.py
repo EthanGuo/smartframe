@@ -25,35 +25,40 @@ class TestSession(unittest.TestCase):
         data = {'cid': 0}
         gid, sid, uid = '1', '1', '1'
         self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'uid': 1})
-
-        result = sessionUpdate(data, gid, sid, uid)
-        self.assertTrue(result['result'] == 'ok')
-        sids = self.db['Cycles'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
-        self.assertTrue(1 in sids)
-        result = sessionUpdate(data, gid, sid, uid)
-        self.assertTrue(result['result'] == 'error')
-
-        data = {'cid': -1}
-        result = sessionUpdate(data, gid, sid, uid)
-        self.assertTrue(result['result'] == 'ok')
-        result = sessionUpdate(data, gid, sid, uid)
-        self.assertTrue(result['result'] == 'error')
-
-        self.db['Cycles'].update({'cid': 1, 'gid': 1}, {'$set':{'sids': [1]}})
-        self.db['Cycles'].insert({'cid': 2, 'gid': 1, 'sids': []})
-        data = {'cid': 2}
-        result = sessionUpdate(data, gid, sid, uid)
-        self.assertTrue(result['result'] == 'ok')
-        sids = self.db['Cycles'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
-        self.assertTrue(1 in sids)
-        sids = self.db['Cycles'].find({'gid': 1, 'cid': 1})[0]['sids']
-        self.assertTrue(not 1 in sids)
         
         time = self._getTime()
         data = {'endtime': time}
         sessionUpdate(data, gid, sid, uid)
         result = self.db['Sessions'].find({'gid': 1, 'sid': 1})[0]['endtime'].strftime('%Y-%m-%d %H:%M:%S')
         self.assertTrue(time == result)
+
+    def testsessionCycle(self):
+        data = {'cid': 0}
+        gid, sid, uid = '1', '1', '1'
+        self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'uid': 1})
+
+        result = sessionCycle(data, gid, sid, uid)
+        self.assertTrue(result['result'] == 'ok')
+        sids = self.db['Cycles'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
+        self.assertTrue(1 in sids)
+        result = sessionCycle(data, gid, sid, uid)
+        self.assertTrue(result['result'] == 'error')
+
+        data = {'cid': -1}
+        result = sessionCycle(data, gid, sid, uid)
+        self.assertTrue(result['result'] == 'ok')
+        result = sessionCycle(data, gid, sid, uid)
+        self.assertTrue(result['result'] == 'error')
+
+        self.db['Cycles'].update({'cid': 1, 'gid': 1}, {'$set':{'sids': [1]}})
+        self.db['Cycles'].insert({'cid': 2, 'gid': 1, 'sids': []})
+        data = {'cid': 2}
+        result = sessionCycle(data, gid, sid, uid)
+        self.assertTrue(result['result'] == 'ok')
+        sids = self.db['Cycles'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
+        self.assertTrue(1 in sids)
+        sids = self.db['Cycles'].find({'gid': 1, 'cid': 1})[0]['sids']
+        self.assertTrue(not 1 in sids)
 
     def testsessionDelete(self):
         gid, sid, uid, data = '1', '1', '1', {}

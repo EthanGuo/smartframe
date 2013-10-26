@@ -49,13 +49,13 @@ class TestAccount(unittest.TestCase):
         result = accountLogin(dataWrongUsername)
         self.assertTrue(result['result'] == 'error')
 
-    def testaccountForgotPasswd(self):
+    def testaccountRetrievePasswd(self):
         self.db['Users'].insert({'appid':'02', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
 
-        result = accountForgotPasswd({'email': 'test@borqs.com'})
+        result = accountRetrievePasswd({'email': 'test@borqs.com'})
         self.assertTrue(result['result'] == 'ok')
 
-        result = accountForgotPasswd({'email': 'test1@borqs.com'})
+        result = accountRetrievePasswd({'email': 'test1@borqs.com'})
         self.assertTrue(result['result'] == 'error')
 
     def testaccountChangepasswd(self):
