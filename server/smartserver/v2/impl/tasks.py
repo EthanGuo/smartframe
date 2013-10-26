@@ -6,7 +6,7 @@
 
 from __future__ import absolute_import
 from ..worker import worker as w
-from impl import account, case, session, group 
+import session
 
 
 @w.task(ignore_result=True)
@@ -54,8 +54,8 @@ def ws_validate_testcase_endtime():
 
 
 @w.task(ignore_result=True)
-def ws_update_testsession_summary(sid):
-    store.updateTestsessionSummary(sid)
+def ws_update_testsession_summary(sid, tid, result):
+    session.sessionUpdateSummary(sid, tid, result)
 
 @w.task(ignore_result=True)
 def ws_validate_token_expiretime():

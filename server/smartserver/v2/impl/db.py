@@ -89,6 +89,7 @@ class Sessions(Document):
     endtime = DateTimeField()
     updatetime = DateTimeField()
     casecount = EmbeddedDocumentField(CountNumber)
+    domaincount = DictField()
     deviceid = StringField()
     deviceinfo = EmbeddedDocumentField(Device)
 
@@ -117,7 +118,6 @@ class Cases(Document):
     sid = IntField()
     tid = IntField()
     casename = StringField()
-    domain = StringField()
     starttime = DateTimeField()
     endtime = DateTimeField()
     traceinfo = StringField()

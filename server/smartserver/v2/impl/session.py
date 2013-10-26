@@ -17,7 +17,8 @@ def sessionCreate(data, gid, sid, uid):
     #create a new session if save fail return exception
     sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': int(sid),'uid':int(uid),
                                       'planname':data.get('planname', 'test'),'starttime':data.get('starttime'),
-                                      'deviceinfo':data.get('deviceinfo'), 'deviceid': data.get('deviceid', 'N/A')}))
+                                      'deviceinfo':data.get('deviceinfo'), 'deviceid': data.get('deviceid', 'N/A'),
+                                      'casecount': {'totalnum': 0, 'passnum': 0, 'failnum': 0, 'errornum': 0}}))
     try:
         sessionInst.save()
     except OperationError :
@@ -214,3 +215,39 @@ def sessionGetHistoryCases(data, gid, sid):
                        'starttime': starttime, 'result': c.result, 
                        'traceinfo': c.traceinfo, 'comments': comments})
     return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')
+
+def sessionUpdateSummary(sid, tid, result):
+    # Update casecount here.
+    try:
+        #Use signal to update total, need optimise
+        Sessions.objects(sid=sid).update(inc__casecount__totalnum=1)
+        if result == 'pass':
+            Sessions.objects(sid=sid).update(inc__casecount__passnum=1)
+        elif result == 'fail':
+            Sessions.objects(sid=sid).update(inc__casecount__failnum=1)
+        elif result == 'error':
+            Sessions.objects(sid=sid).update(inc__casecount__errornum=1)
+    except OperationError:
+        #Use signal to update total, need optimise
+        Sessions.objects(sid=sid).update(inc__casecount__totalnum=1)
+        if result == 'pass':
+            Sessions.objects(sid=sid).update(inc__casecount__passnum=1)
+        elif result == 'fail':
+            Sessions.objects(sid=sid).update(inc__casecount__failnum=1)
+        elif result == 'error':
+            Sessions.objects(sid=sid).update(inc__casecount__errornum=1)
+
+    #Update domaincount here.
+    casename = Cases.objects(sid=sid, tid=tid).first().casename
+    domain = casename.strip().split('.')[0]
+    domaincount = Sessions.objects(sid=sid).first().domaincount
+    if domain in domaincount.keys():
+        domaincount[domain]['total'] += 1
+        domaincount[domain][result] += 1
+    else:
+        domaincount[domain] = {'total': 1, 'pass': 0, 'fail': 0, 'error': 0}
+        domaincount[domain][result] += 1
+    try:
+        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
+    except OperationError:
+        Sessions.objects(sid=sid).update(set__domaincount=domaincount)

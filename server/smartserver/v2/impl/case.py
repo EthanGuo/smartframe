@@ -5,6 +5,7 @@ from mongoengine import OperationError
 from db import Cases
 from filedealer import saveFile
 from datetime import datetime
+from tasks import ws_update_testsession_summary
 import json
 
 def caseresultCreate(data, sid):
@@ -18,7 +19,7 @@ def caseresultCreate(data, sid):
         caseInst.save()
     except OperationError :
         return resultWrapper('error',{},'Failed to create the testcase!')
-    #TODO: Set session alive here, clear endtime in another way. 
+    #TODO: Set session alive here, clear endtime in another way.
     return resultWrapper('ok',{},'') 
 
 def handleSnapshots(snapshots):
@@ -46,6 +47,10 @@ def caseresultUpdate(data, sid):
         except OperationError:
             return resultWrapper('error', {}, 'Failed to update case comments!')
     elif isinstance(data.get('tid'), int):
+        # Case should be updated for one time only.
+        targetcase = Cases.objects(sid=sid, tid=data['tid']).first()
+        if targetcase and targetcase.result != 'running':
+            return resultWrapper('error', {}, 'This case has been updated already, please double check!')
         # Fetch all the images saved to memcache before then clear the cache.
         # If case failed, save all the images fetched from memcache to database
         if data.get('result').lower() == 'fail':
@@ -62,11 +67,12 @@ def caseresultUpdate(data, sid):
             return resultWrapper('error', {}, 'update caseresult failed!')
         finally:
             cache.clearCache(str('sid:' + str(sid) + ':tid:' + str(data['tid']) + ':snaps'))
-    #TODO: trigger the task to update session summary here.
-    #TODO: Set session alive here, clear endtime in another way.
-    #publish heart beat to session watcher here.
-    redis_con.publish("session:heartbeat", json.dumps({'sid': sid}))
-    return resultWrapper('ok', {},'')
+        #TODO: trigger the task to update session summary here.
+        ws_update_testsession_summary.delay(sid, data['tid'], data['result'].lower())
+        #TODO: Set session alive here, clear endtime in another way.
+        #publish heart beat to session watcher here.
+        redis_con.publish("session:heartbeat", json.dumps({'sid': sid}))
+        return resultWrapper('ok', {},'')
 
 def uploadPng(sid, tid, imagedata, stype):
     """
