@@ -37,7 +37,7 @@ def doAccount():
     |       |login          |{'appid':(string)appid, 'username':(string)username, 'password':(string)password}
     ---------------------------------------------------------------------------------------
     """
-    return accountWithoutUid(request.json)
+    return accountBasic(request.json)
 
 @appweb.route('/account', method='POST',content_type=['application/json','multipart/form-data'], data_format=['subc', 'data'])
 def doAccountPOST(uid):
@@ -62,7 +62,7 @@ def doAccountPOST(uid):
         data['data'] = {'file': request.files.get('data')}
     else:
         data = request.json
-    return accountWithUid(data, uid)
+    return accountPOST(data, uid)
 
 @appweb.route('/account', method='GET')
 def doAccountGET(uid):
@@ -83,7 +83,7 @@ def doAccountGET(uid):
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc')}
-    return getAccountInfo(data, uid)
+    return accountGet(data, uid)
 
 @appweb.route('/group', method='POST',content_type='application/json', data_format=['subc', 'data'])
 def doGroup(uid):
@@ -100,7 +100,7 @@ def doGroup(uid):
     |       |create        |{'groupname':(string)name, 'info': }
     -----------------------------------------------------------------------------------------
     """
-    return groupBasicAction(request.json, uid)
+    return groupBasic(request.json, uid)
 
 @appweb.route('/group/<gid>', method='POST', content_type='application/json', data_format=['subc', 'data'])
 def doGroupPOST(gid, uid):
@@ -119,7 +119,7 @@ def doGroupPOST(gid, uid):
     |       |delmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
     -----------------------------------------------------------------------------------------
     """
-    return groupMemberAction(request.json, gid, uid)
+    return groupPOST(request.json, gid, uid)
 
 @appweb.route('/group/<gid>', method='GET')
 def doGroupGET(gid, uid):
@@ -140,7 +140,7 @@ def doGroupGET(gid, uid):
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'cid': request.params.get('cid', '')}
-    return getGroupInfo(data, gid, uid)
+    return groupGet(data, gid, uid)
 
 @appweb.route('/group/<gid>/session/<sid>', method='POST', content_type='application/json', data_format=['subc', 'data'])
 def doSessionPOST(gid,sid,uid):
@@ -160,7 +160,7 @@ def doSessionPOST(gid,sid,uid):
     |       |delete |{}
     -----------------------------------------------------------------------------------------
     """
-    return testSessionBasicAction(request.json, gid, sid, uid)
+    return sessionPOST(request.json, gid, sid, uid)
 
 @appweb.route('/session/<sid>', method='GET')
 def doSessionGET(gid, sid):
@@ -179,7 +179,7 @@ def doSessionGET(gid, sid):
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'data':request.params}
-    return getSession(data, gid, sid)
+    return sessionGET(data, gid, sid)
 
 @appweb.route('/session/<sid>/case', method='POST', content_type='application/json', data_format=['subc', 'data'])
 def doCasePOST(sid):
@@ -197,7 +197,7 @@ def doCasePOST(sid):
     |       |update  |{'tid':(int)/(list)tid, 'result':['Pass'/'Fail'/'Error'],'endtime':(string)endtime, 'traceinfo':(string)traceinfo, 'comments': (dict)comments}
     -----------------------------------------------------------------------------------------
     """
-    return caseResultAction(request.json, sid)
+    return casePOST(request.json, sid)
 
 @appweb.route('/session/<sid>/case/<tid>/file', method='PUT', content_type=['application/zip', 'image/png'], login=False)
 def doCaseFilePUT(sid, tid):
@@ -217,7 +217,7 @@ def doCaseFilePUT(sid, tid):
     """
     subc = 'uploadpng' if 'image/png' in request.content_type else 'uploadzip'
     xtype = request.headers.get('Ext-Type') or ''
-    return uploadCaseResultFile(subc, sid, tid, request.body, xtype)
+    return uploadCaseFile(subc, sid, tid, request.body, xtype)
 
 @appweb.route('/file/<fileid>', method='GET')
 def doFileGET(fileid):
@@ -229,7 +229,7 @@ def doFileGET(fileid):
     @rtype: image/png, application/zip
     @return: image(bytes), attachment
     """
-    data = getFileData(fileid)
+    data = getFile(fileid)
     if data['result'] == 'error':
         return data
     else:

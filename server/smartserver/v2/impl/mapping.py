@@ -60,7 +60,7 @@ def uploadFile(content_type, filedata):
     """
     return saveFile(filedata, content_type)
 
-def getFileData(fileid):
+def getFile(fileid):
     """
        Used to get the image/log data of testcase. 
     """
@@ -72,62 +72,62 @@ def uploadSessionResult(filedata, gid, sid):
     """
     return sessionUploadXML(filedata, gid, sid)
 
-def accountWithoutUid(data):
+def accountBasic(data):
     """
        Implement account register/forgotpasswd/login here.
     """
     return account_func.get(data['subc'])(data['data'])
 
-def accountWithUid(data, uid):
+def accountPOST(data, uid):
     """
        Implement account changepasswd/update/invite/logout here.
     """
     return account_func.get(data['subc'])(data['data'], uid)
 
-def getAccountInfo(data, uid):
+def accountGet(data, uid):
     """
        Implement account info/list here.
     """
     return account_func.get(data['subc'])(uid)
 
 
-def groupBasicAction(data, uid):
+def groupBasic(data, uid):
     """
        Implement group create/delete here.
     """
     return group_func.get(data['subc'])(data['data'], uid)
 
-def groupMemberAction(data, gid, uid):
+def groupPOST(data, gid, uid):
     """
        Implement group add member/set member role/remove member here.
     """
     return group_func.get(data['subc'])(data['data'], gid, uid)
 
-def getGroupInfo(data, gid, uid):
+def groupGet(data, gid, uid):
     """
        Implement group get info/get related session summary/get report here.
     """
     return group_func.get(data['subc'])(data['cid'], gid, uid)
 
-def testSessionBasicAction(data, gid, sid, uid):
+def sessionPOST(data, gid, sid, uid):
     """
     Implement session create/update/delete.
     """
     return session_func.get(data['subc'])(data['data'], gid, sid, uid)
 
-def getSessionAction(data, gid, sid):
+def sessionGET(data, gid, sid):
     """
     Implement get session summary
     """
     return session_func.get(data['subc'])(data['data'], gid, sid)
 
-def caseResultAction(data, sid):
+def casePOST(data, sid):
     """
     Implement case results create/update.
     """
     return case_func.get(data['subc'])(data['data'], gid, sid)
 
-def uploadCaseResultFile(subc, sid, tid, data, xtype):
+def uploadCaseFile(subc, sid, tid, data, xtype):
     """
     Implement case log, snapshot upload.
     """
