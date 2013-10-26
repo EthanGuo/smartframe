@@ -44,8 +44,8 @@ def accountLogin(data):
     """
     #Check whether data['username'] is username or email address.
     #Find user by email/password or username/password
-    if '@' in data['username']:
-        data = {'appid': data['appid'], 'password': data['password'], 'info':{'email': data['username']}}
+    if '@' in data.get('username'):
+        data = {'appid': data.get('appid'), 'password': data.get('password'), 'info':{'email': data['username']}}
         userInst = Users().from_json(json.dumps(data))
         result = Users.objects(info__email = userInst.info.email,password = userInst.password)
     else:
@@ -93,7 +93,7 @@ def accountRetrievePasswd(data):
     return, data: {}
     """    
     # Find user by email, if user exists, update its password, generate a token, then send mail to it, or return error.
-    result = Users.objects(info__email = data['email'])
+    result = Users.objects(info__email = data.get('email'))
     if len(result) == 1:
         newpassword = ''.join([choice(string.ascii_letters + string.digits) for i in range(8)])
         m = hashlib.md5()
@@ -123,11 +123,11 @@ def accountChangepasswd(data, uid):
     """  
     #oldpassword/newpassword should be encrypted already.
     #Find user by user uid and oldpassword
-    result = Users.objects(uid = uid, password = data['oldpassword'])
+    result = Users.objects(uid = uid, password = data.get('oldpassword'))
     #If user exist, update its password, or return error
     if len(result) == 1:
         try:
-            Users.objects(uid = uid).update_one(set__password = data['newpassword'])
+            Users.objects(uid = uid).update_one(set__password = data.get('newpassword'))
             list(result)[0].reload()
             rmsg, rdata, rstatus = '', {}, 'ok'
         except OperationError:
@@ -165,10 +165,10 @@ def accountUpdate(data, uid):
     return, data: {'token': (string)token}
     """ 
     if 'file' in data.keys():
-        filetype = data['file']['filename'].split('.')[-1]
+        filetype = data['file'].get('filename').split('.')[-1]
         if not filetype in ['png', 'jpg', 'jpeg']:
             return resultWrapper('error', {}, 'Support png/jpg/jpeg image only!')
-        filedata = data['file']['file']
+        filedata = data['file'].get('file')
         u = Users.objects(uid=uid).first()
         if u.avatar:
             u.avatar.image.delete()

@@ -16,12 +16,8 @@ def sessionCreate(data, gid, sid, uid):
     """
     #create a new session if save fail return exception
     sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': int(sid),'uid':int(uid),
-                                      'planname':data['planname'],'starttime':data['starttime'],
-                                      'deviceinfo':data['deviceinfo']}))
-    if not data.get('deviceid'):
-        sessionInst.deviceid = 'N/A'
-    else:
-        sessionInst.deviceid = data['deviceid']
+                                      'planname':data.get('planname', 'test'),'starttime':data.get('starttime'),
+                                      'deviceinfo':data.get('deviceinfo'), 'deviceid': data.get('deviceid', 'N/A')}))
     try:
         sessionInst.save()
     except OperationError :
@@ -40,7 +36,7 @@ def sessionUpdate(data, gid, sid, uid):
         cache.clearCache(str('sid:' + str(sid) + ':snap'))
         cache.clearCache(str('sid:' + str(sid) + ':snaptime'))
         try:
-            Sessions.objects(sid=sid).update(set__endtime=data['endtime'])
+            Sessions.objects(sid=sid).update(set__endtime=data.get('endtime'))
         except OperationError:
             return resultWrapper('error', {}, 'Update session endtime failed!')
         # send session heart to sessionwatcher and remove current sid from the watcher list.
@@ -49,7 +45,7 @@ def sessionUpdate(data, gid, sid, uid):
 
 def sessionCycle(data, gid, sid, uid):
     # If cid = 0, create a new cycle and add sid to it.
-    Cid = data['cid']
+    Cid = data.get('cid')
     if (Cid == 0):
         if Cycles.objects(sids=sid):
             return resultWrapper('error', {}, 'Please remove session from current cycle first!')
@@ -158,7 +154,7 @@ def sessionPollStatus(data, gid, sid):
     return, data: {}
     """
     #return 'ok' means session has been updated already, 'error' means not yet.
-    if Cases.objects(sid=int(sid), tid__gt=data['tid']):
+    if Cases.objects(sid=int(sid), tid__gt=data.get('tid')):
         return resultWrapper('ok', {}, 'Session has been updated!')
     else:
         return resultWrapper('error', {}, 'Session has NOT been updated yet!')

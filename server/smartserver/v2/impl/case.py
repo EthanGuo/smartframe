@@ -13,7 +13,7 @@ def caseresultCreate(data, sid):
     return, data: {}
     """
     #create a new case if save fail return exception
-    caseInst = Cases().from_json(json.dumps({'sid': int(sid),'tid':data['tid'],'casename':data['casename'],'result':'running','starttime':data['starttime']}))
+    caseInst = Cases().from_json(json.dumps({'sid': int(sid),'tid':data.get('tid'),'casename':data.get('casename'),'result':'running','starttime':data.get('starttime')}))
     try:
         caseInst.save()
     except OperationError :
@@ -39,23 +39,23 @@ def caseresultUpdate(data, sid):
     #update case result or add case comments
     #If tid is list, do add case comments,else update case result.
     sid = int(sid)
-    if isinstance(data['tid'], list):
+    if isinstance(data.get('tid'), list):
         try:
             for tid in data['tid']:
-                Cases.objects(sid=sid, tid=tid).update(set__comments=data['comments'])
+                Cases.objects(sid=sid, tid=tid).update(set__comments=data.get('comments'))
         except OperationError:
             return resultWrapper('error', {}, 'Failed to update case comments!')
-    else:
+    elif isinstance(data.get('tid'), int):
         # Fetch all the images saved to memcache before then clear the cache.
         # If case failed, save all the images fetched from memcache to database
-        if data['result'].lower() == 'fail':
+        if data.get('result').lower() == 'fail':
             snapshots = cache.getCache(str('sid:' + str(sid) + ':tid:' + str(data['tid']) + ':snaps'))
             snapshots = handleSnapshots(snapshots)
         else:
             snapshots = []
         try:
-            Cases.objects(sid=sid, tid=data['tid']).update(set__result=data['result'].lower(), 
-                                                           set__endtime=data['endtime'], 
+            Cases.objects(sid=sid, tid=data['tid']).update(set__result=data.get('result').lower(), 
+                                                           set__endtime=data.get('endtime'), 
                                                            set__traceinfo=data.get('traceinfo',''), 
                                                            push_all__snapshots=snapshots)
         except OperationError:

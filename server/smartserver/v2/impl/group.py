@@ -14,7 +14,7 @@ def groupCreate(data, uid):
     return, data: {'gid':(int)gid}
     """
     #If groupname has been registered already, return error
-    if len(Groups.objects(groupname = data['groupname'])) != 0:
+    if len(Groups.objects(groupname = data.get('groupname'))) != 0:
         return resultWrapper('error', {}, 'A group with same username exists!')
     #Save group and set current user as its owner.
     groupInst = Groups().from_json(json.dumps({'groupname': data['groupname'], 'info': data.get('info', '')}))
@@ -62,7 +62,7 @@ def groupSetMembers(data, gid, uid):
     if __getUserRole(uid, gid) < 9:
         return resultWrapper('error', {}, 'Permission denied!')
     else:
-        for member in data['members']:
+        for member in data.get('members'):
             if member['role'] == 10:
                 return resultWrapper('error', {}, 'There should be only one owner!')
             target = GroupMembers.objects(gid=gid, uid=member['uid']).first()
@@ -91,7 +91,7 @@ def groupDelMembers(data, gid, uid):
     if __getUserRole(uid, gid) < 9:
         return resultWrapper('error', {}, 'Permission denied!')
     else:
-        for member in data['members']:
+        for member in data.get('members'):
             try:
                 GroupMembers.objects(gid=gid, uid=member['uid']).delete()
             except OperationError:
@@ -160,6 +160,6 @@ def groupGetCycles(data, gid, uid):
         i += 1
     return resultWrapper('ok', {'cycles': cycles}, '')
 
-def groupGetCycleReport(data, gid, uid):
+def groupGetReport(data, gid, uid):
     # data is cid itself
     pass
