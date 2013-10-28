@@ -10,14 +10,14 @@ class File(EmbeddedDocument):
     data = FileField()
 
 class Files(Document):
-    fileid = StringField()
+    fileid = StringField(required=True, unique=True)
     filename = StringField()
     filedata = EmbeddedDocumentField(File)
 
     meta = {'collection': 'Files'}
 
 class UserInfo(EmbeddedDocument):
-    email = EmailField(max_length=50)
+    email = EmailField(required=True, unique=True)
     phonenumber = StringField()
     company = StringField()
 
@@ -25,10 +25,10 @@ class Users(Document):
     """
     db schema of collection user in mongodb
     """
-    username = StringField()
-    password = StringField()
+    username = StringField(required=True, unique=True)
+    password = StringField(required=True)
     info = EmbeddedDocumentField(UserInfo)
-    uid = SequenceField()
+    uid = SequenceField(primary_key=True)
     appid = StringField()
     avatar = StringField()
     active = BooleanField(default=False)
@@ -39,8 +39,8 @@ class UserTokens(Document):
     """
     db schema of collection usetoken in mongodb
     """
-    uid = IntField()
-    token = StringField()
+    uid = IntField(required=True)
+    token = StringField(required=True, unique=True)
     appid = StringField()
     expires = IntField()
 
@@ -50,9 +50,9 @@ class GroupMembers(Document):
     """
     db schema of collection groupMember in mongodb
     """
-    uid = IntField()
-    role = IntField()
-    gid = IntField()
+    uid = IntField(required=True)
+    role = IntField(required=True)
+    gid = IntField(required=True)
 
     meta = {'collection': 'GroupMembers'}
 
@@ -60,16 +60,16 @@ class Groups(Document):
     """
     db schema of collection group in mongodb
     """
-    groupname = StringField()
-    gid = SequenceField()
+    groupname = StringField(required=True, unique=True)
+    gid = SequenceField(primary_key=True)
     info = StringField()
 
     meta = {'collection': 'Groups'}
 
 class Device(EmbeddedDocument):
-    deviceid = StringField()
-    revision = StringField()
-    product = StringField()
+    deviceid = StringField(default='N/A')
+    revision = StringField(default='N/A')
+    product = StringField(default='N/A')
     width = StringField()
     height = StringField()
 
@@ -77,8 +77,8 @@ class Sessions(Document):
     """
     db schema of collection session in mongodb
     """
-    gid = IntField()
-    sid = IntField()
+    gid = IntField(required=True)
+    sid = IntField(required=True, unique=True, primary_key=True)
     uid = IntField()
     planname = StringField()
     starttime = DateTimeField()
@@ -94,7 +94,7 @@ class Cycles(Document):
     """
     db schema of collection cycle in mongodb
     """
-    gid = IntField()
+    gid = IntField(required=True)
     sids = ListField(IntField())
     cid = SequenceField()
 
@@ -110,13 +110,15 @@ class Cases(Document):
     """
     db schema of collection case in mongodb
     """
-    sid = IntField()
-    tid = IntField()
-    casename = StringField()
+    choices=('pass', 'fail', 'error')
+
+    sid = IntField(required=True)
+    tid = IntField(required=True, unique=True, primary_key=True)
+    casename = StringField(required=True)
     starttime = DateTimeField()
     endtime = DateTimeField()
     traceinfo = StringField()
-    result = StringField()
+    result = StringField(choices=choices)
     log = StringField()
     expectshot = StringField()
     snapshots = ListField(StringField())
