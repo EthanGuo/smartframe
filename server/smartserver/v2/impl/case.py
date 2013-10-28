@@ -5,7 +5,7 @@ from mongoengine import OperationError
 from db import Cases
 from filedealer import saveFile
 from datetime import datetime
-from tasks import ws_update_testsession_summary
+from ..tasks import ws_update_testsession_summary, ws_active_testsession
 import json
 
 def caseresultCreate(data, sid):
@@ -17,9 +17,12 @@ def caseresultCreate(data, sid):
     caseInst = Cases().from_json(json.dumps({'sid': int(sid),'tid':data.get('tid'),'casename':data.get('casename'),'result':'running','starttime':data.get('starttime')}))
     try:
         caseInst.save()
-    except OperationError :
+    except OperationError:
         return resultWrapper('error',{},'Failed to create the testcase!')
-    #TODO: Set session alive here, clear endtime in another way.
+    #Set session alive here, clear endtime in another way.
+    ws_active_testsession.delay(int(sid))
+    #publish heart beat to session watcher here.
+    redis_con.publish("session:heartbeat", json.dumps({'sid': int(sid)}))
     return resultWrapper('ok',{},'') 
 
 def handleSnapshots(snapshots):
@@ -67,11 +70,12 @@ def caseresultUpdate(data, sid):
             return resultWrapper('error', {}, 'update caseresult failed!')
         finally:
             cache.clearCache(str('sid:' + str(sid) + ':tid:' + str(data['tid']) + ':snaps'))
-        #TODO: trigger the task to update session summary here.
+        #Trigger the task to update session summary here.
         ws_update_testsession_summary.delay(sid, data['tid'], data['result'].lower())
-        #TODO: Set session alive here, clear endtime in another way.
+        #Set session alive here, clear endtime in another way.
+        ws_active_testsession.delay(sid)
         #publish heart beat to session watcher here.
-        redis_con.publish("session:heartbeat", json.dumps({'sid': sid}))
+        redis_con.publish("session:heartbeat", json.dumps({'sid': int(sid)}))
         return resultWrapper('ok', {},'')
 
 def uploadPng(sid, tid, imagedata, stype):

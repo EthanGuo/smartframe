@@ -5,17 +5,19 @@ import redis
 import threading
 from Queue import Queue
 import time, types, json
-from smartserver.config import REDIS_URI
+from smartserver.config import REDIS_HOST, REDIS_PORT
+from smartserver.v2 import tasks
 
 queue = Queue()
 sessionlist = {}
 
 def checkSessionList():
-    print "Checking session list now..."
-    for session in sessionlist.keys():
-        if (time.time() - sessionlist[session]) > 600:
-            print "Session %s has not been updated in 10mins, surppose its dead" %session
-            sessionlist.pop(session)
+    print "Checking..."
+    for sess in sessionlist.keys():
+        if (time.time() - sessionlist[sess]) > 600:
+            print "Session %s has not been updated in 10mins, surppose its dead" %sess
+            tasks.ws_set_session_endtime.delay(sess)
+            sessionlist.pop(sess)
 
 def updateSessionList(msg):
     '''
@@ -28,8 +30,7 @@ def updateSessionList(msg):
         sessionlist.pop(msg['clear']) 
 
 def addHeartBeat(queue):
-    #con = redis.StrictRedis(REDIS_URI.strip().replace(""))
-    con = redis.StrictRedis('127.0.0.1')
+    con = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
     pubs = con.pubsub()
     pubs.subscribe('session:heartbeat')
     for msg in pubs.listen():

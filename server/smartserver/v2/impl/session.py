@@ -22,7 +22,9 @@ def sessionCreate(data, gid, sid, uid):
     try:
         sessionInst.save()
     except OperationError :
-        return resultWrapper('error',{},'Failed to create session!') 
+        return resultWrapper('error',{},'Failed to create session!')
+    #publish heart beat to session watcher here.
+    redis_con.publish("session:heartbeat", json.dumps({'sid': int(sid)})) 
     return resultWrapper('ok',{},'')
 
 def sessionUpdate(data, gid, sid, uid):
@@ -216,7 +218,12 @@ def sessionGetHistoryCases(data, gid, sid):
                        'traceinfo': c.traceinfo, 'comments': comments})
     return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')
 
+
+
 def sessionUpdateSummary(sid, tid, result):
+    """
+       Task func to update session casecount summary and domain summary
+    """
     # Update casecount here.
     try:
         #Use signal to update total, need optimise
@@ -227,6 +234,7 @@ def sessionUpdateSummary(sid, tid, result):
             Sessions.objects(sid=sid).update(inc__casecount__failnum=1)
         elif result == 'error':
             Sessions.objects(sid=sid).update(inc__casecount__errornum=1)
+        #Update session updatetime here.
     except OperationError:
         #Use signal to update total, need optimise
         Sessions.objects(sid=sid).update(inc__casecount__totalnum=1)
@@ -236,6 +244,7 @@ def sessionUpdateSummary(sid, tid, result):
             Sessions.objects(sid=sid).update(inc__casecount__failnum=1)
         elif result == 'error':
             Sessions.objects(sid=sid).update(inc__casecount__errornum=1)
+        #Update session updatetime here.
 
     #Update domaincount here.
     casename = Cases.objects(sid=sid, tid=tid).first().casename
@@ -251,3 +260,31 @@ def sessionUpdateSummary(sid, tid, result):
         Sessions.objects(sid=sid).update(set__domaincount=domaincount)
     except OperationError:
         Sessions.objects(sid=sid).update(set__domaincount=domaincount)
+
+def sessionActiveSession(sid):
+    """
+       Task function to clear session endtime if it has been set.
+    """
+    session = Sessions.objects(sid=sid).first()
+    if session.endtime:
+        try:
+            Sessions.objects(sid=sid).update(set__endtime='')
+        except OperationError:
+            Sessions.objects(sid=sid).update(set__endtime='')
+
+def sessionSetEndTime(sid):
+    """
+       Task function to set session endtime.
+    """
+    if not Cases.objects(sid=sid):
+        endtime = Sessions.objects(sid=sid).first().starttime
+    else:
+        case = Cases.objects(sid=sid).order_by('-tid').first()
+        endtime = case.endtime if case.endtime else case.starttime
+
+    cache.clearCache(str('sid:' + str(sid) + ':snap'))
+    cache.clearCache(str('sid:' + str(sid) + ':snaptime'))
+    try:
+        Sessions.objects(sid=sid).update(set__endtime=endtime)
+    except OperationError:
+        Sessions.objects(sid=sid).update(set__endtime=endtime)
