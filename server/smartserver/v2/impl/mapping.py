@@ -72,6 +72,12 @@ def uploadSessionResult(filedata, gid, sid):
     """
     return sessionUploadXML(filedata, gid, sid)
 
+def accountActive(uid):
+    """
+       Used to active user account
+    """
+    return accountActiveUser(uid)
+
 def accountBasic(data):
     """
        Implement account register/retrievepswd/login here.

@@ -11,8 +11,9 @@ from db import Users, UserTokens, Groups, Sessions, GroupMembers
 from filedealer import saveFile
 import time
 
-TOKEN_EXPIRES = {'01': 30*24*3600, # For client end upload result purpose 
+TOKEN_EXPIRES = {'01': 30*24*3600, #For client end upload result purpose 
                  '02': 7*24*3600, #For browser user.
+                 '03': 24*3600, #For user to active itself by email. 
                  }
 
 def createToken(appid, uid):
@@ -37,6 +38,21 @@ def accountValidToken(token):
     else:
         return userToken.uid
 
+def tokenValidateExpireTime():
+    """
+       Used to validate token expire time and clear dirty users.
+    """
+    #If user has not activated itself before its token's expire time, remove this user. 
+    users = Users.objects(active=False)
+    for user in users:
+        if (time.time() - UserTokens.objects(uid=user.uid).first().expires) <= 0:
+            user.delete()
+            user.reload()
+    #If token has expired, remove it from database.
+    for usertoken in UserTokens.objects():
+        if (time.time() - usertoken.expires) <= 0:
+            UserTokens.objects(token=usertoken.token).delete()
+
 def accountLogin(data):
     """
     params, data: {'appid':(string), 'username':(string), 'password':(string)}
@@ -50,8 +66,10 @@ def accountLogin(data):
         result = Users.objects(username=data['username'], password=data['password'])
     #If user exists, create a token for it and return, or return error.
     if len(result) != 0:
-        #TODO: check the active status of user here.
         useraccount = result.first()
+        #Check the active status of user here, if not activated, forbit login.
+        if not useraccount.active:
+            return resultWrapper('error', {}, 'Your account has not been activated yet!')
         ret = createToken(appid=useraccount.appid, uid=useraccount.uid)
         if ret['status'] == 'ok':
             rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': useraccount.uid}, 'ok'
@@ -264,3 +282,16 @@ def accountGetSessions(uid):
             for s in sessions:
                 usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': groups.objects(gid=gid).first().groupname})
         return resultWrapper('ok' ,{'usersession': usersession}, '')
+
+def accountActiveUser(uid):
+    """
+       Active current user and remove the original token
+    """
+    try:
+        Users.objects(uid=uid).update(set__active=True)
+    except OperationError:
+        Users.objects(uid=uid).update(set__active=True)
+    result = accountLogout({}, uid)
+    if result['status'] != 'ok':
+        accountLogout({}, uid)
+    return resultWrapper('ok', {}, '')

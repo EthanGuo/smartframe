@@ -19,7 +19,6 @@ login_plugin = LoginPlugin(getuserid=getUserId,
                            login=True)  # login is required by default
 appweb.install(login_plugin)
 
-
 @appweb.route('/accountbasic', method='POST', content_type='application/json', data_format=['subc', 'data'], login=False)
 def doAccount():
     """
@@ -275,6 +274,23 @@ def doUploadSessionResult(sid):
     -----------------------------------------------------------------------------------------
     """
     return uploadSessionResult(request.files.get('file').file, sid)
+
+@appweb.route('/account/active', method='POST')
+def doAccountActive(uid):
+    """
+    URL:/account/active
+    TYPE:http/POST
+    @data type: JSON
+    @param: token
+    @rtype: JSON
+    @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
+             error-{'result':'error', 'data':{}, 'msg': '(string)info'}
+    ----------------------------------------------------------------------------------------
+    |support|subc        |data                   
+    -----------------------------------------------------------------------------------------
+    """
+    return accountActive(uid)
+
 
 if __name__ == '__main__':
     print 'WebServer Serving on 8080...'

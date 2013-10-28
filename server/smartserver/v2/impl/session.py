@@ -18,7 +18,7 @@ def sessionCreate(data, gid, sid, uid):
     sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': int(sid),'uid':int(uid),
                                       'planname':data.get('planname', 'test'),'starttime':data.get('starttime'),
                                       'deviceinfo':data.get('deviceinfo'),
-                                      'casecount': {'totalnum': 0, 'passnum': 0, 'failnum': 0, 'errornum': 0}}))
+                                      'casecount': {'total': 0, 'pass': 0, 'fail': 0, 'error': 0}}))
     try:
         sessionInst.save()
     except OperationError :
@@ -150,7 +150,7 @@ def sessionSummary(data, gid, sid):
                'deviceinfo':deviceinfo,
                'starttime':result.starttime.strftime(TIME_FORMAT),
                'runtime':result.runtime,
-               'summary':result.casecount.__dict__['_data'],
+               'summary':result.casecount,
                'gid': gid, 'sid': sid}
         return resultWrapper('ok',data,'')
     else:
@@ -199,7 +199,7 @@ def sessionGetHistoryCases(data, gid, sid):
         return resultWrapper('error', {}, 'Invalid session ID!')
     #To calculate how many pages are there in this session, for frontend display purpose
     pagesize = data.get('pagesize', 100)
-    totalamount = sess.first().casecount.totalnum
+    totalamount = sess.first().casecount['total']
     if (totalamount % pagesize != 0):
         totalpageamount = totalamount / pagesize + 1
     else:
@@ -230,26 +230,19 @@ def sessionUpdateSummary(sid, tid, result):
        Task func to update session casecount summary and domain summary
     """
     # Update casecount here.
+    session = Sessions.objects(sid=sid).first()
+    casecount = session.casecount
+    casecount['total'] += 1
+    casecount[result] += 1
+
+    cases = Cases.objects(sid=sid).order_by('-tid')
+    minstarttime = cases[(len(cases) - 1)].starttime
+    maxendtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
+    runtime = (maxendtime - minstarttime).total_seconds()
     try:
-        #Use signal to update total, need optimise
-        Sessions.objects(sid=sid).update(inc__casecount__totalnum=1)
-        if result == 'pass':
-            Sessions.objects(sid=sid).update(inc__casecount__passnum=1)
-        elif result == 'fail':
-            Sessions.objects(sid=sid).update(inc__casecount__failnum=1)
-        elif result == 'error':
-            Sessions.objects(sid=sid).update(inc__casecount__errornum=1)
-        #Update session runtime here.
+        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
     except OperationError:
-        #Use signal to update total, need optimise
-        Sessions.objects(sid=sid).update(inc__casecount__totalnum=1)
-        if result == 'pass':
-            Sessions.objects(sid=sid).update(inc__casecount__passnum=1)
-        elif result == 'fail':
-            Sessions.objects(sid=sid).update(inc__casecount__failnum=1)
-        elif result == 'error':
-            Sessions.objects(sid=sid).update(inc__casecount__errornum=1)
-        #Update session runtime here.
+        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
 
     #Update domaincount here.
     casename = Cases.objects(sid=sid, tid=tid).first().casename

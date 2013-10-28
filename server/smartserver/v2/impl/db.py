@@ -31,6 +31,7 @@ class Users(Document):
     uid = SequenceField()
     appid = StringField()
     avatar = StringField()
+    active = BooleanField(default=False)
 
     meta = {'collection': 'Users'}
 
@@ -65,12 +66,6 @@ class Groups(Document):
 
     meta = {'collection': 'Groups'}
 
-class CountNumber(EmbeddedDocument):
-    totalnum = IntField()
-    passnum = IntField()
-    failnum = IntField()
-    errornum = IntField()
-
 class Device(EmbeddedDocument):
     deviceid = StringField()
     revision = StringField()
@@ -89,7 +84,7 @@ class Sessions(Document):
     starttime = DateTimeField()
     endtime = DateTimeField()
     runtime = IntField()
-    casecount = EmbeddedDocumentField(CountNumber)
+    casecount = DictField()
     domaincount = DictField()
     deviceinfo = EmbeddedDocumentField(Device)
 
