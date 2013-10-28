@@ -10,6 +10,10 @@ def generateUniqueID():
     return m.hexdigest()
 
 def saveFile(filedata, content_type, filename=''):
+    """
+    params, data: {'filedata':(bytes), 'content_type':(string), 'filename':(string)}
+    return, data: url to fetch file
+    """
     fileid = generateUniqueID()
     new = File()
     new.data.new_file()

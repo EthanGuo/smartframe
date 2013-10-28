@@ -32,9 +32,10 @@ def doAccount():
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ---------------------------------------------------------------------------------------
     |support|subc           |data
-    |       |register       |{'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
-    |       |retrievepswd   |{'email':(string)mailaddress}
-    |       |login          |{'appid':(string)appid, 'username':(string)username, 'password':(string)password}
+    |       |register       |{'username':(string), 'password':(string), 'appid':(string),
+    |       |               | 'info':{'email':(string), 'telephone':(string), 'company':(string)}
+    |       |retrievepswd   |{'email':(string)}
+    |       |login          |{'appid':(string), 'username':(string), 'password':(string)}
     ---------------------------------------------------------------------------------------
     """
     return accountBasic(request.json)
@@ -51,9 +52,9 @@ def doAccountPOST(uid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data
-    |       |changepswd    |{'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword }
-    |       |update        |{'username':(string), 'telephone':(string)telephone, 'company':(string)company}
-    |       |invite        |{'email':(string)email}
+    |       |changepswd    |{'oldpassword':(string), 'newpassword':(string)}
+    |       |update        |{'appid': (string), 'username':(string), 'telephone':(string), 'company':(string)}
+    |       |invite        |{'email':(string)target email, 'username':(string)target name}
     |       |logout        |{}
     -----------------------------------------------------------------------------------------
     """
@@ -75,11 +76,11 @@ def doAccountGET(uid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc          |data  |return data 
-    |       |accountlist   |null  |{'count':(int)value, 'users':[{'uid':(string)uid,'username':(string)username},{'uid':(string)uid,'username':(string)username}]}}
-    |       |accountinfo   |null  |{'username':(string)username,'info':{'email':(string)email, 'telephone':(string)telephone, 'company':(string)company}}
-    |       |groups        |null  |{'groups':[{'gid':(int)gid1,'groupname':(string)name1, 'allsession': (int)count, 'livesession': (int)count},...]}
-    |       |sessions      |null  |{'sessions': [{'sid':(int)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
+    |support|subc          |return data 
+    |       |accountlist   |{'count':(int), 'users':[{'uid':(string),'username':(string)},...]}}
+    |       |accountinfo   |{'username':(string),'info':{'email':(string), 'telephone':(string), 'company':(string)}}
+    |       |groups        |{'groups':[{'gid':(int),'groupname':(string), 'allsession': (int)count, 'livesession': (int)count},...]}
+    |       |sessions      |{'sessions': [{'sid':(int), 'gid':(int), 'groupname':(string)},...]}
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc')}
@@ -97,7 +98,7 @@ def doGroup(uid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
-    |       |create        |{'groupname':(string)name, 'info': }
+    |       |create        |{'groupname':(string), 'info':(string)}
     -----------------------------------------------------------------------------------------
     """
     return groupBasic(request.json, uid)
@@ -115,8 +116,8 @@ def doGroupPOST(gid, uid):
     ----------------------------------------------------------------------------------------
     |support|subc          |data 
     |       |delete        |{}
-    |       |setmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
-    |       |delmember     |{'members':[{'uid':(int)uid,'role':(int)roleId}]}
+    |       |setmember     |{'members':[{'uid':(int),'role':(int)roleId}]}
+    |       |delmember     |{'members':[{'uid':(int),'role':(int)roleId}]}
     -----------------------------------------------------------------------------------------
     """
     return groupPOST(request.json, gid, uid)
@@ -132,11 +133,14 @@ def doGroupGET(gid, uid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc            |data 
-    |       |members         |{}   
-    |       |sessions        |{}
-    |       |cycles          |{}
-    |       |report          |{}   
+    |support|subc        |return data 
+    |       |members     |{'members':[{'uid':(int), 'username':(string), 'role':(int), 'info':(dict)},...]   
+    |       |sessions    |{'sessions': [{'gid':(int), 'product':(string), 'revision':(string), 
+    |       |            |               'deviceid':(string), 'starttime':(string), 'endtime':(string),
+    |       |            |               'runtime':(int), 'tester':(string)name},...]}
+    |       |cycles      |{'cycles': [{'cid':(int), 'devicecount':(int), 'livecount':(int),
+    |       |            |             'product':(string), 'revision':(string)},...]}
+    |       |report      |{}   
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'cid': request.params.get('cid', '')}
@@ -154,8 +158,9 @@ def doSessionPOST(gid,sid,uid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc   |data                   
-    |       |create |{'planname':(string)value,'starttime':(string)value,'deviceinfo':{'id':(string)id,'revision':(string)revision,'product':(string)product, 'width':(int)width, 'height':(int)height}}
-    |       |update |{'endtime':(string)endtime, 'status':(string)status}
+    |       |create |{'planname':(string),'starttime':(string),
+    |       |       | 'deviceinfo':{'deviceid':(string),'revision':(string),'product':(string), 'width':(int), 'height':(int)}}
+    |       |update |{'endtime':(string)}
     |       |cycle  |{'cid':(int)cid}
     |       |delete |{}
     -----------------------------------------------------------------------------------------
@@ -171,11 +176,11 @@ def doSessionGET(gid, sid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc         |data 
-    |       |latest       |{'amount': (int)value}
-    |       |history      |{'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
-    |       |poll         |{'tid': (int)value}
-    |       |summary      |{}   
+    |support|subc       |data 
+    |       |latest     |{'amount': (int)value}
+    |       |history    |{'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
+    |       |poll       |{'tid': (int)value}
+    |       |summary    |{}   
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'data':request.params}
@@ -193,8 +198,9 @@ def doCasePOST(sid):
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
     |support|subc    |data                                                          
-    |       |create  |{'tid':(int)tid, 'casename':(string)value, 'starttime':(string)timestamp}
-    |       |update  |{'tid':(int)/(list)tid, 'result':['Pass'/'Fail'/'Error'],'endtime':(string)endtime, 'traceinfo':(string)traceinfo, 'comments': (dict)comments}
+    |       |create  |{'tid':(int), 'casename':(string), 'starttime':(string)}
+    |       |update  |{'tid':(int)/(list), 'result':['Pass'/'Fail'/'Error'],
+    |       |        | 'endtime':(string), 'traceinfo':(string), 'comments': (dict)}
     -----------------------------------------------------------------------------------------
     """
     return casePOST(request.json, sid)
@@ -210,14 +216,14 @@ def doCaseFilePUT(sid, tid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc           |data                                                          
-    |       |uploadpng      |{}
-    |       |uploadzip      |{}
+    |support|subc         |data                                                          
+    |       |uploadpng    |{}
+    |       |uploadzip    |{}
     -----------------------------------------------------------------------------------------
     """
     subc = 'uploadpng' if 'image/png' in request.content_type else 'uploadzip'
     xtype = request.headers.get('Ext-Type') or ''
-    return uploadCaseFile(subc, sid, tid, request.body, xtype)
+    return caseFilePUT(subc, sid, tid, request.body, xtype)
 
 @appweb.route('/file/<fileid>', method='GET')
 def doFileGET(fileid):
@@ -229,7 +235,7 @@ def doFileGET(fileid):
     @rtype: image/png, application/zip
     @return: image(bytes), attachment
     """
-    data = getFile(fileid)
+    data = fileGET(fileid)
     if data['result'] == 'error':
         return data
     else:
@@ -251,7 +257,7 @@ def doFilePUT():
     """
     content_type = request.content_type
     filedata = request.body
-    return uploadFile(content_type, filedata)
+    return filePUT(content_type, filedata)
 
 @appweb.route('/session/<sid>/uploadresult', method='POST', content_type='multipart/form-data')
 def doUploadSessionResult(sid):

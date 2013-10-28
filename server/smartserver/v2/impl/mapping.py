@@ -9,43 +9,43 @@ from filedealer import *
 
 account_func = {'register': accountRegister,
                 'login': accountLogin,
-                'retrievepswd': accountRetrievePasswd, #accountWithOutUid
+                'retrievepswd': accountRetrievePasswd, #accountBasic
                 'changepswd': accountChangepasswd,
                 'update': accountUpdate,
                 'invite': accountInvite,
-                'logout': accountLogout, #accountWithUid
+                'logout': accountLogout, #accountPOST
                 'accountlist': accountGetUserList,                 
                 'accountinfo': accountGetInfo,
                 'groups': accountGetGroups,
-                'sessions': accountGetSessions,#getAccountInfo            
+                'sessions': accountGetSessions,#accountGet           
             }
 
-group_func = {  'create': groupCreate, #groupBasicAction
+group_func = {  'create': groupCreate, #groupBasic
                 'delete': groupDelete, 
                 'setmember': groupSetMembers,
-                'delmember': groupDelMembers, #groupMemeberAction
+                'delmember': groupDelMembers, #groupPOST
                 'members': groupGetMembers,
                 'sessions': groupGetSessions,
                 'cycles': groupGetCycles,
-                'report': groupGetReport,#getGroupInfo
+                'report': groupGetReport,#groupGET
             }
 
 session_func ={ 'create': sessionCreate,
                 'update':sessionUpdate,
                 'cycle': sessionCycle,
-                'delete':sessionDelete, #doTestSessionBasicAction
+                'delete':sessionDelete, #sessionPOST
                 'summary':sessionSummary,
                 'poll':sessionPollStatus,
                 'latest':sessionGetLatestCases,
-                'history': sessionGetHistoryCases, #getSessionAction
+                'history': sessionGetHistoryCases, #sessionGET
             }
 
 case_func = {   'create':caseresultCreate,
-                'update':caseresultUpdate, #caseResultAction
+                'update':caseresultUpdate, #casePOST
             }
 
 caseupload_func = {'uploadpng': uploadPng,
-                   'uploadzip': uploadZip, #uploadCaseResultFile
+                   'uploadzip': uploadZip, #caseFilePUT
             }
 
 def getUserId(token):
@@ -54,13 +54,13 @@ def getUserId(token):
     """
     return accountValidToken(token)
 
-def uploadFile(content_type, filedata):
+def filePUT(content_type, filedata):
     """
        Used to upload file and upload file only
     """
     return saveFile(filedata, content_type)
 
-def getFile(fileid):
+def fileGET(fileid):
     """
        Used to get the image/log data of testcase. 
     """
@@ -74,32 +74,32 @@ def uploadSessionResult(filedata, gid, sid):
 
 def accountBasic(data):
     """
-       Implement account register/forgotpasswd/login here.
+       Implement account register/retrievepswd/login here.
     """
     return account_func.get(data['subc'])(data['data'])
 
 def accountPOST(data, uid):
     """
-       Implement account changepasswd/update/invite/logout here.
+       Implement account changepswd/update/invite/logout here.
     """
     return account_func.get(data['subc'])(data['data'], uid)
 
 def accountGet(data, uid):
     """
-       Implement account info/list here.
+       Implement account get user list/user info/joined groups/started sessions here.
     """
     return account_func.get(data['subc'])(uid)
 
 
 def groupBasic(data, uid):
     """
-       Implement group create/delete here.
+       Implement group create here.
     """
     return group_func.get(data['subc'])(data['data'], uid)
 
 def groupPOST(data, gid, uid):
     """
-       Implement group add member/set member role/remove member here.
+       Implement group delete/(add/set) (member/role)/remove member here.
     """
     return group_func.get(data['subc'])(data['data'], gid, uid)
 
@@ -111,7 +111,7 @@ def groupGet(data, gid, uid):
 
 def sessionPOST(data, gid, sid, uid):
     """
-    Implement session create/update/delete.
+    Implement session create/update/cycle/delete.
     """
     return session_func.get(data['subc'])(data['data'], gid, sid, uid)
 
@@ -127,7 +127,7 @@ def casePOST(data, sid):
     """
     return case_func.get(data['subc'])(data['data'], gid, sid)
 
-def uploadCaseFile(subc, sid, tid, data, xtype):
+def caseFilePUT(subc, sid, tid, data, xtype):
     """
     Implement case log, snapshot upload.
     """

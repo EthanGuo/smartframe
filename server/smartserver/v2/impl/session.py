@@ -3,21 +3,21 @@
 
 from util import resultWrapper, cache, redis_con
 from mongoengine import OperationError
-from datetime import datetime
+from ..config import TIME_FORMAT
 from db import Sessions, Cycles, Users, Cases, GroupMembers
 import json
 
 def sessionCreate(data, gid, sid, uid):
     """
-    params, data: {'planname':(string)value,'starttime':(string)value,
-                   'deviceinfo':{'revision':(string)revision,'product':(string)product, 
-                                 'width':(int)width, 'height':(int)height}}
+    params, data: {'planname':(string),'starttime':(string),'deviceinfo':
+                      {'deviceid':(string),'revision':(string),'product':(string), 
+                       'width':(int), 'height':(int)}}
     return, data: {}
     """
     #create a new session if save fail return exception
     sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': int(sid),'uid':int(uid),
                                       'planname':data.get('planname', 'test'),'starttime':data.get('starttime'),
-                                      'deviceinfo':data.get('deviceinfo'), 'deviceid': data.get('deviceid', 'N/A'),
+                                      'deviceinfo':data.get('deviceinfo'),
                                       'casecount': {'totalnum': 0, 'passnum': 0, 'failnum': 0, 'errornum': 0}}))
     try:
         sessionInst.save()
@@ -29,13 +29,13 @@ def sessionCreate(data, gid, sid, uid):
 
 def sessionUpdate(data, gid, sid, uid):
     """
-    params, data: {'cid':(int)cid,'endtime':(datetime)endtime,'status':(string)status}
+    params, data: {'endtime':(datetime)endtime}
     return, data: {}
     """
-    #update session cid or endtime
+    #update session endtime
     gid, sid = int(gid), int(sid)
-    # Update endtime here.
     if 'endtime' in data:
+        #Clear the cached image for screen monitor
         cache.clearCache(str('sid:' + str(sid) + ':snap'))
         cache.clearCache(str('sid:' + str(sid) + ':snaptime'))
         try:
@@ -47,6 +47,10 @@ def sessionUpdate(data, gid, sid, uid):
         return resultWrapper('ok', {}, '')
 
 def sessionCycle(data, gid, sid, uid):
+    """
+    params, data: {'cid':(int)cid}
+    return, data: {}
+    """
     # If cid = 0, create a new cycle and add sid to it.
     Cid = data.get('cid')
     if (Cid == 0):
@@ -134,19 +138,20 @@ def sessionSummary(data, gid, sid):
     """
     params, data: {}
     return, data: {'planname':(string)planname,'tester':(string)tester,
-                   'starttime':(datetime)starttime,'updatetime':updatetime,
+                   'starttime':(datetime)starttime,'runtime':runtime,
                    'gid':(int)gid, 'sid':(int)sid, 
                    'deviceid':deviceid, summary':casecount,'deviceinfo':deviceinfo}
     """
-    result = Sessions.objects(sid = int(sid)).first()
+    result = Sessions.objects(sid=int(sid)).first()
     if result:
-        tester = Users.objects(uid =result.uid).first().username
+        tester = Users.objects(uid=result.uid).first().username
         deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
-        casecount = result.casecount.__dict__['_data'] if result.casecount else ''
         data ={'planname':result.planname,'tester':tester,
-               'deviceid':result.deviceid, 'deviceinfo':deviceinfo,
-               'starttime':result.starttime,'updatetime':result.updatetime,
-               'summary':casecount,'gid': gid, 'sid': sid}
+               'deviceinfo':deviceinfo,
+               'starttime':result.starttime.strftime(TIME_FORMAT),
+               'runtime':result.runtime,
+               'summary':result.casecount.__dict__['_data'],
+               'gid': gid, 'sid': sid}
         return resultWrapper('ok',data,'')
     else:
         return resultWrapper('error', {}, 'Invalid session ID!')
@@ -174,7 +179,7 @@ def sessionGetLatestCases(data, gid, sid):
     result = []
     for case in Cases.objects(sid=int(sid)).order_by('-tid')[:amount]:
         comments = case.comments.__dict__['_data'] if case.comments else ''
-        starttime = case.starttime.strftime("%Y-%m-%d %H:%M:%S") if case.starttime else ''
+        starttime = case.starttime.strftime(TIME_FORMAT) if case.starttime else ''
         result.append({'tid': case.tid, 'casename': case.casename, 
                        'starttime': starttime,'result': case.result, 
                        'traceinfo': case.traceinfo,'comments': comments})
@@ -194,7 +199,7 @@ def sessionGetHistoryCases(data, gid, sid):
         return resultWrapper('error', {}, 'Invalid session ID!')
     #To calculate how many pages are there in this session, for frontend display purpose
     pagesize = data.get('pagesize', 100)
-    totalamount = sess.first().casecount.totalnum if sess.first() else 0
+    totalamount = sess.first().casecount.totalnum
     if (totalamount % pagesize != 0):
         totalpageamount = totalamount / pagesize + 1
     else:
@@ -212,7 +217,7 @@ def sessionGetHistoryCases(data, gid, sid):
     result = []
     for c in case:
         comments = c.comments.__dict__['_data'] if c.comments else ''
-        starttime = c.starttime.strftime("%Y-%m-%d %H:%M:%S") if c.starttime else ''
+        starttime = c.starttime.strftime(TIME_FORMAT) if c.starttime else ''
         result.append({'tid': c.tid, 'casename': c.casename, 
                        'starttime': starttime, 'result': c.result, 
                        'traceinfo': c.traceinfo, 'comments': comments})
@@ -234,7 +239,7 @@ def sessionUpdateSummary(sid, tid, result):
             Sessions.objects(sid=sid).update(inc__casecount__failnum=1)
         elif result == 'error':
             Sessions.objects(sid=sid).update(inc__casecount__errornum=1)
-        #Update session updatetime here.
+        #Update session runtime here.
     except OperationError:
         #Use signal to update total, need optimise
         Sessions.objects(sid=sid).update(inc__casecount__totalnum=1)
@@ -244,7 +249,7 @@ def sessionUpdateSummary(sid, tid, result):
             Sessions.objects(sid=sid).update(inc__casecount__failnum=1)
         elif result == 'error':
             Sessions.objects(sid=sid).update(inc__casecount__errornum=1)
-        #Update session updatetime here.
+        #Update session runtime here.
 
     #Update domaincount here.
     casename = Cases.objects(sid=sid, tid=tid).first().casename

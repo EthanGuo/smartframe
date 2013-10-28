@@ -72,6 +72,7 @@ class CountNumber(EmbeddedDocument):
     errornum = IntField()
 
 class Device(EmbeddedDocument):
+    deviceid = StringField()
     revision = StringField()
     product = StringField()
     width = StringField()
@@ -87,10 +88,9 @@ class Sessions(Document):
     planname = StringField()
     starttime = DateTimeField()
     endtime = DateTimeField()
-    updatetime = DateTimeField()
+    runtime = IntField()
     casecount = EmbeddedDocumentField(CountNumber)
     domaincount = DictField()
-    deviceid = StringField()
     deviceinfo = EmbeddedDocumentField(Device)
 
     meta = {'collection': 'Sessions'}

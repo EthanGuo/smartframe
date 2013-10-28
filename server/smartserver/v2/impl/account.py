@@ -31,30 +31,28 @@ def createToken(appid, uid):
         return {'status': 'error', 'token': ''}
 
 def accountValidToken(token):
-    userToken = UserTokens.objects(token=token)
-    if len(userToken) == 0:
+    userToken = UserTokens.objects(token=token).first()
+    if userToken == 0:
         return None
     else:
-        return userToken.first().uid
+        return userToken.uid
 
 def accountLogin(data):
     """
-    params, data: {'appid':(int)appid, 'username':(string)username, 'password':(string)password}
+    params, data: {'appid':(string), 'username':(string), 'password':(string)}
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
     #Check whether data['username'] is username or email address.
     #Find user by email/password or username/password
     if '@' in data.get('username'):
-        data = {'appid': data.get('appid'), 'password': data.get('password'), 'info':{'email': data['username']}}
-        userInst = Users().from_json(json.dumps(data))
-        result = Users.objects(info__email = userInst.info.email,password = userInst.password)
+        result = Users.objects(info__email=data['username'], password=data['password'])
     else:
-        userInst = Users().from_json(json.dumps(data))
-        result = Users.objects(username = userInst.username,password = userInst.password)
+        result = Users.objects(username=data['username'], password=data['password'])
     #If user exists, create a token for it and return, or return error.
     if len(result) != 0:
+        #TODO: check the active status of user here.
         useraccount = result.first()
-        ret = createToken(appid = useraccount.appid, uid = useraccount.uid)
+        ret = createToken(appid=useraccount.appid, uid=useraccount.uid)
         if ret['status'] == 'ok':
             rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': useraccount.uid}, 'ok'
         else:
@@ -65,19 +63,20 @@ def accountLogin(data):
 
 def accountRegister(data):
     """
-    params, data: {'username':(string)username, 'password':(string)password, 'appid':(string)appid,'info':{'email':(string), 'telephone':(string)telephone, 'company':(string)company}
+    params, data: {'username':(string), 'password':(string), 'appid':(string),
+                   'info':{'email':(string), 'telephone':(string), 'company':(string)}
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
-    userInst = Users().from_json(json.dumps(data))
     # If both username and email have not been registered, create a new user, generate a token, send a mail then return, or return error.
-    if (len(Users.objects(username = userInst.username)) == 0) & (len(Users.objects(info__email = userInst.info.email)) == 0):
+    if (len(Users.objects(username=data['username'])) == 0) & (len(Users.objects(info__email=data['info']['email'])) == 0):
         #Password should be encryped already.
         try:
+            userInst = Users().from_json(json.dumps(data))
             userInst.save()
         except OperationError:
             rmsg, rdata, rstatus = 'Save user failed!', {}, 'error'
             return resultWrapper(rstatus, rdata, rmsg)
-        ret = createToken(appid = userInst.appid, uid = userInst.uid)
+        ret = createToken(appid=userInst.appid, uid=userInst.uid)
         if ret['status'] == 'ok':
             rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': userInst.uid}, 'ok'
             #sendVerifyMail(userInst.info.email, userInst.username, ret)
@@ -93,7 +92,7 @@ def accountRetrievePasswd(data):
     return, data: {}
     """    
     # Find user by email, if user exists, update its password, generate a token, then send mail to it, or return error.
-    result = Users.objects(info__email = data.get('email'))
+    result = Users.objects(info__email=data.get('email'))
     if len(result) == 1:
         newpassword = ''.join([choice(string.ascii_letters + string.digits) for i in range(8)])
         m = hashlib.md5()
@@ -101,12 +100,12 @@ def accountRetrievePasswd(data):
         m.hexdigest()
         useraccount = result.first()
         try:
-            Users.objects(uid = useraccount.uid).update_one(set__password = m.hexdigest())
+            Users.objects(uid=useraccount.uid).update_one(set__password=m.hexdigest())
             useraccount.reload()
         except OperationError:
             rmsg, rdata, rstatus = 'Save new password failed!', {}, 'error'
         #Generate a token, then send mail to it.
-        ret = createToken(appid = '02', uid = useraccount.uid)
+        ret = createToken(appid='02', uid=useraccount.uid)
         if ret['status'] == 'ok':
             #sendForgotPasswdMail(data['email'], newpassword, ret)
             rmsg, rdata, rstatus = '', {}, 'ok' 
@@ -123,11 +122,11 @@ def accountChangepasswd(data, uid):
     """  
     #oldpassword/newpassword should be encrypted already.
     #Find user by user uid and oldpassword
-    result = Users.objects(uid = uid, password = data.get('oldpassword'))
+    result = Users.objects(uid=uid, password=data.get('oldpassword'))
     #If user exist, update its password, or return error
     if len(result) == 1:
         try:
-            Users.objects(uid = uid).update_one(set__password = data.get('newpassword'))
+            Users.objects(uid=uid).update_one(set__password=data.get('newpassword'))
             list(result)[0].reload()
             rmsg, rdata, rstatus = '', {}, 'ok'
         except OperationError:
@@ -138,7 +137,7 @@ def accountChangepasswd(data, uid):
 
 def accountInvite(data, uid):
     """
-    params, data: {'email':(string)email, 'appid':(string)appid, 'username':(string)username, 'gid':(string)groupid}
+    params, data: {'email':(string)email, 'username':(string)username}
     return, data: {}
     """ 
     #Send a mail to the invited user, or return error.
@@ -148,16 +147,34 @@ def accountInvite(data, uid):
 
 def accountLogout(data, uid):
     """
-    params, data: {'token':(string)token}
+    params, data: {}
     return, data: {}
     """ 
     #Remove the token then return
     try:
-        UserTokens.objects(uid = uid).delete()
+        UserTokens.objects(uid=uid).delete()
         rmsg, rdata, rstatus = '', {}, 'ok'
     except OperationError:
         rmsg, rdata, rstatus = 'Remove token failed!', {}, 'error'
     return resultWrapper(rstatus, rdata, rmsg)
+
+def __updateAvatar(data, uid):
+    """
+       Update avatar here
+    """
+    filetype = data['file'].get('filename').split('.')[-1]
+    if not filetype in ['png', 'jpg', 'jpeg']:
+        return resultWrapper('error', {}, 'Support png/jpg/jpeg image only!')
+    filedata = data['file'].get('file')
+    u = Users.objects(uid=uid).first()
+    if u.avatar:
+        u.avatar.image.delete()
+    imageid = saveFile(filedata, 'image/' + filetype, data['file']['filename'])
+    try:
+        Users.objects(uid=uid).update(set__avatar=imageid)
+    except OperationError:
+        return resultWrapper('error', {}, 'Update avatar failed!')
+    return resultWrapper('ok', {}, 'Upload successfully!')
 
 def accountUpdate(data, uid):
     """
@@ -165,19 +182,7 @@ def accountUpdate(data, uid):
     return, data: {'token': (string)token}
     """ 
     if 'file' in data.keys():
-        filetype = data['file'].get('filename').split('.')[-1]
-        if not filetype in ['png', 'jpg', 'jpeg']:
-            return resultWrapper('error', {}, 'Support png/jpg/jpeg image only!')
-        filedata = data['file'].get('file')
-        u = Users.objects(uid=uid).first()
-        if u.avatar:
-            u.avatar.image.delete()
-        imageid = saveFile(filedata, 'image/' + filetype, data['file']['filename'])
-        try:
-            Users.objects(uid=uid).update(set__avatar=imageid)
-        except OperationError:
-            return resultWrapper('error', {}, 'Update avatar failed!')
-        return resultWrapper('ok', {}, 'Upload successfully!')
+        return __updateAvatar(data, uid)
     else:
         try:
             if data.has_key('username'):
@@ -198,11 +203,11 @@ def accountGetUserList(uid):
     return, data: {'count':(int)count, 'users':[{'uid':(int)uid, 'username':(string)username}...]}
     """ 
     #If users exist in database, return all of them or return error
-    if len(Users.objects()) == 0:
+    if not Users.objects():
         rmsg, rdata, rstatus = 'no user found!', {}, 'error'
     else:
         rmsg, rstatus = '', 'ok'
-        users = [{'uid': d['uid'], 'username': d['username']} for d in list(Users.objects())]
+        users = [{'uid': d['uid'], 'username': d['username']} for d in Users.objects()]
         rdata = {'count': len(users), 'users': users}
     return resultWrapper(rstatus, rdata, rmsg)
 
@@ -213,7 +218,7 @@ def accountGetInfo(uid):
     """ 
     #If uid exists, return its username and info, or return error.
     result = Users.objects(uid=uid)
-    if len(result) == 0:
+    if not result:
         rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
     else:
         useraccount = result.first()
@@ -228,7 +233,7 @@ def accountGetGroups(uid):
     return, data: {'groups':[{'gid':(int)gid1,'groupname':(string)name1, 'allsession': (int)count, 'livesession': (int)count},...]}
     """ 
     result = Users.objects(uid=uid)
-    if len(result) == 0:
+    if not result:
         rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
     else:
         usergroup = []
@@ -250,7 +255,7 @@ def accountGetSessions(uid):
     return, data: {'sessions': [{'sid':(int)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
     """ 
     result = Users.objects(uid=uid)
-    if len(result) == 0:
+    if not result:
         rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
     else:
         usersession = []

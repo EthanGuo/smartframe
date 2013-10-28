@@ -4,23 +4,24 @@
 from util import resultWrapper
 from mongoengine import OperationError
 from db import Groups, Users, Cycles, Sessions, GroupMembers
+from ..config import TIME_FORMAT
 import json
 
 ROLES = {'OWNER': 10, 'ADMIN': 9, 'MEMBER': 8, 'GUEST': 7}
 
 def groupCreate(data, uid):
     """
-    params, data: {'groupname':(string)name, 'info': (string)info} 
+    params, data: {'groupname':(string), 'info':(string)}
     return, data: {'gid':(int)gid}
     """
     #If groupname has been registered already, return error
-    if len(Groups.objects(groupname = data.get('groupname'))) != 0:
+    if Groups.objects(groupname=data.get('groupname')):
         return resultWrapper('error', {}, 'A group with same username exists!')
     #Save group and set current user as its owner.
     groupInst = Groups().from_json(json.dumps({'groupname': data['groupname'], 'info': data.get('info', '')}))
     try:
         groupInst.save()
-        gid = Groups.objects(groupname = data['groupname']).first().gid
+        gid = Groups.objects(groupname=data['groupname']).first().gid
         memberInst = GroupMembers().from_json(json.dumps({'uid': int(uid), 'role': ROLES['OWNER'], 'gid': gid}))
         memberInst.save()
     except OperationError:
@@ -28,7 +29,7 @@ def groupCreate(data, uid):
     return resultWrapper('ok', {'gid': gid}, '')
 
 def __getUserRole(uid, gid):
-    g = GroupMembers.objects(gid = gid, uid=uid).first()
+    g = GroupMembers.objects(gid=gid, uid=uid).first()
     if g:
         return g.role
     else:
@@ -40,8 +41,8 @@ def groupDelete(data, gid, uid):
     return, data: {}
     """
     #If current user is admin or owner, permit delete or return error.
-    gid = int(gid)
-    if __getUserRole(int(uid), gid) < 10:
+    gid, uid = int(gid), int(uid)
+    if __getUserRole(uid, gid) < 10:
         return resultWrapper('error', {}, 'Permission denied!')
     else:
         try:
@@ -58,7 +59,7 @@ def groupSetMembers(data, gid, uid):
     return, data: {}
     """
     #If current user is admin or owner, continue or return error.
-    gid = int(gid)
+    gid, uid = int(gid), int(uid)
     if __getUserRole(uid, gid) < 9:
         return resultWrapper('error', {}, 'Permission denied!')
     else:
@@ -87,7 +88,7 @@ def groupDelMembers(data, gid, uid):
     return, data: {}
     """
     #If current user is admin or owner, permit remove member or return error.
-    gid = int(gid)
+    gid, uid = int(gid), int(uid)
     if __getUserRole(uid, gid) < 9:
         return resultWrapper('error', {}, 'Permission denied!')
     else:
@@ -107,13 +108,12 @@ def groupGetMembers(data, gid, uid):
     gid = int(gid)
     groupMembers = []
     for member in GroupMembers.objects(gid=gid):
-        User = Users.objects(uid = member.uid).first()
-        info = User.info.__dict__['_data'] if User.info else ''
+        User = Users.objects(uid=member.uid).first()
         groupMembers.append({
             'uid': member.uid,
             'role': member.role,
             'username': User.username,
-            'info': info
+            'info': User.info.__dict__['_data']
             })
     return resultWrapper('ok', {'members': groupMembers}, '')
 
@@ -123,18 +123,23 @@ def groupGetSessions(data, gid, uid):
     return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 
                                 'revision':(String)revision, 'deviceid':(string)deviceid,
                                 'starttime': (String)time, 'endtime': (String)time,
-                                'runtime': (String)time, 'tester': (String)name},...]}
+                                'runtime': (int)time, 'tester': (String)name},...]}
     """
     gid, sessions = int(gid), []
     for session in Sessions.objects(gid=gid):
-        product = session.deviceinfo.product if session.deviceinfo else ''
-        revision = session.deviceinfo.revision if session.deviceinfo else ''
+        if session.deviceinfo:
+            product = session.deviceinfo.product
+            revision = session.deviceinfo.revision
+            deviceid = session.deviceinfo.deviceid
+        else:
+            product, revision, deviceid = '', '', ''
         user = Users.objects(uid=session.uid).first()
         tester = user.username if user else ''
         sessions.append({'gid': gid, 'product': product, 'revision': revision,
-                         'deviceid': session.deviceid, 'starttime': session.starttime,
-                         'endtime': session.endtime, 'runtime': session.updatetime,
-                         'tester': tester})
+                         'deviceid': deviceid, 
+                         'starttime': session.starttime.strftime(TIME_FORMAT),
+                         'endtime': session.endtime.strftime(TIME_FORMAT), 
+                         'runtime': session.runtime, 'tester': tester})
     return resultWrapper('ok', {'sessions': sessions}, '')
 
 def groupGetCycles(data, gid, uid):

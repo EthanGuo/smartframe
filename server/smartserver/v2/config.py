@@ -26,3 +26,4 @@ else:
 
 PORT = 27017
 DB_NAME = 'smartServer_eth'
+TIME_FORMAT = '%Y-%m-%d %H:%M:%S'

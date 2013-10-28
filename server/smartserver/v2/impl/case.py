@@ -5,25 +5,27 @@ from mongoengine import OperationError
 from db import Cases
 from filedealer import saveFile
 from datetime import datetime
+from ..config import TIME_FORMAT
 from ..tasks import ws_update_testsession_summary, ws_active_testsession
 import json
 
 def caseresultCreate(data, sid):
     """
-    params, data: {'tid':tid,'casename':casename,'starttime':starttime}
+    params, data: {'tid':(int), 'casename':(string), 'starttime':(string)}
     return, data: {}
     """
-    #create a new case if save fail return exception
-    caseInst = Cases().from_json(json.dumps({'sid': int(sid),'tid':data.get('tid'),'casename':data.get('casename'),'result':'running','starttime':data.get('starttime')}))
+    sid = int(sid)
+    #create a new case if save failed return error
+    caseInst = Cases().from_json(json.dumps({'sid': sid,'tid':data.get('tid'),'casename':data.get('casename'),'result':'running','starttime':data.get('starttime')}))
     try:
         caseInst.save()
     except OperationError:
         return resultWrapper('error',{},'Failed to create the testcase!')
     #Set session alive here, clear endtime in another way.
-    ws_active_testsession.delay(int(sid))
+    ws_active_testsession.delay(sid)
     #publish heart beat to session watcher here.
-    redis_con.publish("session:heartbeat", json.dumps({'sid': int(sid)}))
-    return resultWrapper('ok',{},'') 
+    redis_con.publish("session:heartbeat", json.dumps({'sid': sid}))
+    return resultWrapper('ok',{},'')
 
 def handleSnapshots(snapshots):
     if not snapshots:
@@ -41,7 +43,7 @@ def caseresultUpdate(data, sid):
     return, data: {}
     """
     #update case result or add case comments
-    #If tid is list, do add case comments,else update case result.
+    #If tid is list, do add case comments, or update case result.
     sid = int(sid)
     if isinstance(data.get('tid'), list):
         try:
@@ -52,7 +54,7 @@ def caseresultUpdate(data, sid):
     elif isinstance(data.get('tid'), int):
         # Case should be updated for one time only.
         targetcase = Cases.objects(sid=sid, tid=data['tid']).first()
-        if targetcase and targetcase.result != 'running':
+        if targetcase.result != 'running':
             return resultWrapper('error', {}, 'This case has been updated already, please double check!')
         # Fetch all the images saved to memcache before then clear the cache.
         # If case failed, save all the images fetched from memcache to database
@@ -97,8 +99,8 @@ def uploadPng(sid, tid, imagedata, stype):
             return resultWrapper('error', {}, 'Save image to database failed!')
     elif imagetype == 'current':
         snaps.append({'imagename': imagename, 'image': imagedata})
-        timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        #Following two caches are used
+        #Following two caches are used for screen monitor
+        timenow = datetime.now().strftime(TIME_FORMAT)
         cache.setCache(str('sid:' + sid + ':snap'), imagedata)
         cache.setCache(str('sid:' + sid + ':snaptime'), timenow)
         #Cache history snapshots for a testcase
