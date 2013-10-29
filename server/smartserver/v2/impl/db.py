@@ -10,11 +10,12 @@ class File(EmbeddedDocument):
     data = FileField()
 
 class Files(Document):
-    fileid = StringField(required=True, unique=True)
+    fileid = StringField(required=True, primary_key=True)
     filename = StringField()
     filedata = EmbeddedDocumentField(File)
 
-    meta = {'collection': 'Files'}
+    meta = {'collection': 'Files',
+            'index_background': True}
 
 class UserInfo(EmbeddedDocument):
     email = EmailField(required=True, unique=True)
@@ -33,7 +34,8 @@ class Users(Document):
     avatar = StringField()
     active = BooleanField(default=False)
 
-    meta = {'collection': 'Users'}
+    meta = {'collection': 'Users',
+            'index_background': True}
 
 class UserTokens(Document):
     """
@@ -64,7 +66,8 @@ class Groups(Document):
     gid = SequenceField(primary_key=True)
     info = StringField()
 
-    meta = {'collection': 'Groups'}
+    meta = {'collection': 'Groups',
+            'index_background': True}
 
 class Device(EmbeddedDocument):
     deviceid = StringField(default='N/A')
@@ -78,7 +81,7 @@ class Sessions(Document):
     db schema of collection session in mongodb
     """
     gid = IntField(required=True)
-    sid = IntField(required=True, unique=True, primary_key=True)
+    sid = IntField(required=True, primary_key=True)
     uid = IntField()
     planname = StringField()
     starttime = DateTimeField()
@@ -88,7 +91,8 @@ class Sessions(Document):
     domaincount = DictField()
     deviceinfo = EmbeddedDocumentField(Device)
 
-    meta = {'collection': 'Sessions'}
+    meta = {'collection': 'Sessions',
+            'index_background': True}
 
 class Cycles(Document):
     """
@@ -113,7 +117,7 @@ class Cases(Document):
     choices=('pass', 'fail', 'error')
 
     sid = IntField(required=True)
-    tid = IntField(required=True, unique=True, primary_key=True)
+    tid = IntField(required=True)
     casename = StringField(required=True)
     starttime = DateTimeField()
     endtime = DateTimeField()
@@ -124,7 +128,9 @@ class Cases(Document):
     snapshots = ListField(StringField())
     comments = EmbeddedDocumentField(CommentInfo)
 
-    meta = {'collection': 'Cases'}
+    meta = {'collection': 'Cases',
+            'indexes': [{'fields': ['sid', '-tid'], 'unique': True}],
+            'index_background': True}
 
 class connector(object):
     """
