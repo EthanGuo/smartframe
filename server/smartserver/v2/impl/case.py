@@ -6,7 +6,8 @@ from db import Cases
 from filedealer import saveFile
 from datetime import datetime
 from ..config import TIME_FORMAT
-from ..tasks import ws_update_testsession_summary, ws_active_testsession
+from ..tasks import ws_update_session_domainsummary, ws_active_testsession
+import session
 import json
 
 def caseresultCreate(data, sid):
@@ -44,18 +45,21 @@ def caseresultUpdate(data, sid):
     """
     #update case result or add case comments
     #If tid is list, do add case comments, or update case result.
-    sid = int(sid)
+    sid, domains = int(sid), []
     if isinstance(data.get('tid'), list):
         try:
+            result = data['comments']['caseresult'] if data['comments'] else ''
             for tid in data['tid']:
                 Cases.objects(sid=sid, tid=tid).update(set__comments=data.get('comments'))
+                domains.append([tid, result.lower()])
         except OperationError:
             return resultWrapper('error', {}, 'Failed to update case comments!')
+        #Trigger to update domain summary here.
+        ws_update_session_domainsummary.delay(sid, domains)
+
     elif isinstance(data.get('tid'), int):
-        # Case should be updated for one time only.
-        targetcase = Cases.objects(sid=sid, tid=data['tid']).first()
-        if targetcase.result != 'running':
-            return resultWrapper('error', {}, 'This case has been updated already, please double check!')
+        case = Cases.objects(sid=sid, tid=data['tid']).first()
+        status = ['updated', case.result] if case.result != 'running' else ['notyet', '']
         # Fetch all the images saved to memcache before then clear the cache.
         # If case failed, save all the images fetched from memcache to database
         if data.get('result').lower() == 'fail':
@@ -72,8 +76,9 @@ def caseresultUpdate(data, sid):
             return resultWrapper('error', {}, 'update caseresult failed!')
         finally:
             cache.clearCache(str('sid:' + str(sid) + ':tid:' + str(data['tid']) + ':snaps'))
-        #Trigger the task to update session summary here.
-        ws_update_testsession_summary.delay(sid, data['tid'], data['result'].lower())
+        session.sessionUpdateSummary(sid, [data['result'].lower()], status)
+        #Trigger to update domain summary here.
+        ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower()]], status)
         #Set session alive here, clear endtime in another way.
         ws_active_testsession.delay(sid)
         #publish heart beat to session watcher here.
@@ -117,3 +122,10 @@ def uploadZip(sid, tid, logdata, xtype):
         Cases.objects(sid=int(sid), tid=int(tid)).update(set__log=fileid)
     except OperationError:
         return resultWrapper('error', {}, 'Save log to database failed!')
+
+def caseValidateEndtime():
+    """
+       Used to validate case endtime
+    """
+    # I dont think this is a reasonable function.
+    pass

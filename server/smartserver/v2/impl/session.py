@@ -5,6 +5,7 @@ from util import resultWrapper, cache, redis_con
 from mongoengine import OperationError
 from ..config import TIME_FORMAT
 from db import Sessions, Cycles, Users, Cases, GroupMembers
+from ..tasks import ws_update_session_domainsummary
 import json
 
 def sessionCreate(data, gid, sid, uid):
@@ -89,6 +90,51 @@ def sessionCycle(data, gid, sid, uid):
         return resultWrapper('error', {}, 'Add current session to cycle failed!')
     return resultWrapper('ok', {'cid': cid}, '')
 
+def sessionUpdateSummary(sid, result, status=[]):
+    """
+       Func to update session casecount summary and domain summary
+    """
+    # Update casecount here.
+    session = Sessions.objects(sid=sid).first()
+    casecount = session.casecount
+    if status and status[0] == 'updated':
+        casecount['total'] -= 1
+        casecount[status[1]] -=1
+    for re in result:
+        casecount['total'] += 1
+        casecount[re] += 1
+    # Update session endtime here.
+    cases = Cases.objects(sid=sid).order_by('-tid')
+    minstarttime = cases[(len(cases) - 1)].starttime
+    maxendtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
+    runtime = (maxendtime - minstarttime).total_seconds()
+    try:
+        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
+    except OperationError:
+        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
+
+def sessionUpdateDomainSummary(sid, results, status=[]):
+    """
+       Task func to update session domain count
+    """
+    domaincount = Sessions.objects(sid=sid).first().domaincount
+    if status and status[0] == 'updated':
+        casename = Cases.objects(sid=sid, tid=results[0][0]).first().casename
+        domaincount[casename]['total'] -= 1
+        domaincount[casename][status[1]] -= 1
+    for result in results:
+        casename = Cases.objects(sid=sid, tid=result[0]).first().casename
+        if casename in domaincount.keys():
+            domaincount[casename]['total'] += 1
+            domaincount[casename][result[1]] += 1
+        else:
+            domaincount[casename] = {'total': 1, 'pass': 0, 'fail': 0, 'error': 0}
+            domaincount[casename][result[1]] += 1      
+    try:
+        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
+    except OperationError:
+        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
+
 def sessionUploadXML(data, gid, sid):
     """
     params, data: stream data of xml uploaded
@@ -99,6 +145,7 @@ def sessionUploadXML(data, gid, sid):
     except ImportError:
         import xml.etree.ElementTree as ET
     #Parse the xml file to get case result data then save into database one by one.
+    summarys, domains = [], []
     for testcase in ET.parse(data).getroot().iter('testcase'):
         caseId = testcase.attrib['order']
         casename = ''.join([testcase.attrib['component'],'.',testcase.attrib['id'].split('_')[0]])
@@ -111,9 +158,14 @@ def sessionUploadXML(data, gid, sid):
                                                      'casename': casename,'result': result,
                                                      'starttime': starttime, 'endtime': endtime,}))
             caseInst.save()
+            summarys.append(result)
+            domains.append([int(caseId), result])
         except OperationError:
             return resultWrapper('error', {}, 'Create case failed!')
-    #TODO: update session summary here.
+    #update session summary here.
+    sessionUpdateSummary(int(sid), summarys)
+    #Trigger task to update domain summary here.
+    ws_update_session_domainsummary.delay(int(sid), domains)
 
 def sessionDelete(data, gid, sid, uid):
     """
@@ -222,42 +274,6 @@ def sessionGetHistoryCases(data, gid, sid):
                        'starttime': starttime, 'result': c.result, 
                        'traceinfo': c.traceinfo, 'comments': comments})
     return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')
-
-
-
-def sessionUpdateSummary(sid, tid, result):
-    """
-       Task func to update session casecount summary and domain summary
-    """
-    # Update casecount here.
-    session = Sessions.objects(sid=sid).first()
-    casecount = session.casecount
-    casecount['total'] += 1
-    casecount[result] += 1
-
-    cases = Cases.objects(sid=sid).order_by('-tid')
-    minstarttime = cases[(len(cases) - 1)].starttime
-    maxendtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
-    runtime = (maxendtime - minstarttime).total_seconds()
-    try:
-        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
-    except OperationError:
-        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
-
-    #Update domaincount here.
-    casename = Cases.objects(sid=sid, tid=tid).first().casename
-    domain = casename.strip().split('.')[0]
-    domaincount = Sessions.objects(sid=sid).first().domaincount
-    if domain in domaincount.keys():
-        domaincount[domain]['total'] += 1
-        domaincount[domain][result] += 1
-    else:
-        domaincount[domain] = {'total': 1, 'pass': 0, 'fail': 0, 'error': 0}
-        domaincount[domain][result] += 1
-    try:
-        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
-    except OperationError:
-        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
 
 def sessionActiveSession(sid):
     """
