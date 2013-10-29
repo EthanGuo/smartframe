@@ -3,7 +3,7 @@
 
 from util import resultWrapper
 from mongoengine import OperationError
-from db import Groups, Users, Cycles, Sessions, GroupMembers
+from db import Groups, Users, Cycles, Sessions, GroupMembers, Cases
 from ..config import TIME_FORMAT
 import json
 
@@ -166,5 +166,42 @@ def groupGetCycles(data, gid, uid):
     return resultWrapper('ok', {'cycles': cycles}, '')
 
 def groupGetReport(data, gid, uid):
-    # data is cid itself
-    pass
+    """
+    params, data: {'cid'}
+    return, data: report data
+    """
+    gid, cid, sessionresult = int(gid), data, []
+    sids = Cycles.objects(cid=cid).first().sids
+    for sid in sids:
+        session = Sessions.objects(gid=gid, sid=sid).first()
+        cases = Cases.objects(sid=sid).order_by('+tid')
+        deviceid = session.deviceinfo.deviceid if session.deviceinfo else ''
+        starttime = session.starttime
+        endtime = session.endtime
+        if not endtime:
+            index = len(cases) - 1
+            endtime = cases[index].endtime if cases[index].endtime else cases[index].starttime
+        failurecount, firstfailureuptime, blocktime, issues = 0, 0, 0, []
+        for case in cases:
+            if case.get('comments'):
+                if case['comments']['caseresult'] == 'fail':
+                    failurecount += 1
+                    issues.append({'casename': case.casename, 'starttime': case.starttime.strftime(TIME_FORMAT),
+                                   'issueType': case['comments']['issuetype'], 'comments': case['comments']['commentinfo']})
+                    if not firstfailureuptime:
+                        caseendtime = case.endtime if case.endtime else case.starttime
+                        firstfailureuptime = (caseendtime - starttime).total_seconds()
+                if case['comments']['caseresult'] == 'block':
+                    blocktime += (case.endtime - case.starttime).total_seconds()
+                if case['comments']['endsession'] == 1:
+                    endtime = case.endtime if case.endtime else case.starttime
+                    break
+        totaluptime = (endtime - starttime).total_seconds() - blocktime
+        sessionresult.append({'deviceid': deviceid, 'starttime': starttime.strftime(TIME_FORMAT),
+                              'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,
+                              'firstuptime': firstfailureuptime, 'totaluptime': totaluptime,
+                              'issues': issues, 'domains': session.domaincount})
+
+
+
+
