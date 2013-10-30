@@ -6,7 +6,7 @@
 
 from __future__ import absolute_import
 from .worker import worker as w
-from .impl import session, account, case
+from .impl import taskimpl
 
 # @w.task(ignore_result=True)
 # def ws_del_session(sid):
@@ -39,20 +39,20 @@ from .impl import session, account, case
 
 @w.task(ignore_result=True)
 def ws_set_session_endtime(sid):
-	session.sessionSetEndTime(sid)
+	taskimpl.sessionSetEndTime(sid)
 
 @w.task(ignore_result=True)
 def ws_active_testsession(sid):
-    session.sessionActiveSession(sid)
+    taskimpl.sessionActiveSession(sid)
 
 @w.task(ignore_result=True)
 def ws_validate_testcase_endtime():
-	case.caseValidateEndtime()
+	taskimpl.caseValidateEndtime()
 
 @w.task(ignore_result=True)
-def ws_update_session_domainsummary(sid, results, status):
-    session.sessionUpdateDomainSummary(sid, results, status)
+def ws_update_session_domainsummary(sid, results):
+    taskimpl.sessionUpdateDomainSummary(sid, results)
 
 @w.task(ignore_result=True)
 def ws_validate_token_expiretime():
-	account.tokenValidateExpireTime()
+	taskimpl.tokenValidateExpireTime()

@@ -90,19 +90,20 @@ def sessionCycle(data, gid, sid, uid):
         return resultWrapper('error', {}, 'Add current session to cycle failed!')
     return resultWrapper('ok', {'cid': cid}, '')
 
-def sessionUpdateSummary(sid, result, status=[]):
+def sessionUpdateSummary(sid, results):
     """
        Func to update session casecount summary and domain summary
     """
     # Update casecount here.
     session = Sessions.objects(sid=sid).first()
     casecount = session.casecount
-    if status and status[0] == 'updated':
-        casecount['total'] -= 1
-        casecount[status[1]] -=1
-    for re in result:
-        casecount['total'] += 1
-        casecount[re] += 1
+    for result in results:
+        if result[1] == 'running':
+            casecount['total'] += 1
+            casecount[result[0]] += 1
+        else:
+            casecount[result[1]] -= 1
+            casecount[result[0]] += 1
     # Update session endtime here.
     cases = Cases.objects(sid=sid).order_by('-tid')
     minstarttime = cases[(len(cases) - 1)].starttime
@@ -112,28 +113,6 @@ def sessionUpdateSummary(sid, result, status=[]):
         Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
     except OperationError:
         Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
-
-def sessionUpdateDomainSummary(sid, results, status=[]):
-    """
-       Task func to update session domain count
-    """
-    domaincount = Sessions.objects(sid=sid).first().domaincount
-    if status and status[0] == 'updated':
-        casename = Cases.objects(sid=sid, tid=results[0][0]).first().casename
-        domaincount[casename]['total'] -= 1
-        domaincount[casename][status[1]] -= 1
-    for result in results:
-        casename = Cases.objects(sid=sid, tid=result[0]).first().casename
-        if casename in domaincount.keys():
-            domaincount[casename]['total'] += 1
-            domaincount[casename][result[1]] += 1
-        else:
-            domaincount[casename] = {'total': 1, 'pass': 0, 'fail': 0, 'error': 0}
-            domaincount[casename][result[1]] += 1      
-    try:
-        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
-    except OperationError:
-        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
 
 def sessionUploadXML(data, gid, sid):
     """
@@ -158,8 +137,8 @@ def sessionUploadXML(data, gid, sid):
                                                      'casename': casename,'result': result,
                                                      'starttime': starttime, 'endtime': endtime,}))
             caseInst.save()
-            summarys.append(result)
-            domains.append([int(caseId), result])
+            summarys.append([result, 'running'])
+            domains.append([int(caseId), result, ''])
         except OperationError:
             return resultWrapper('error', {}, 'Create case failed!')
     #update session summary here.
@@ -274,31 +253,3 @@ def sessionGetHistoryCases(data, gid, sid):
                        'starttime': starttime, 'result': c.result, 
                        'traceinfo': c.traceinfo, 'comments': comments})
     return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')
-
-def sessionActiveSession(sid):
-    """
-       Task function to clear session endtime if it has been set.
-    """
-    session = Sessions.objects(sid=sid).first()
-    if session.endtime:
-        try:
-            Sessions.objects(sid=sid).update(set__endtime='')
-        except OperationError:
-            Sessions.objects(sid=sid).update(set__endtime='')
-
-def sessionSetEndTime(sid):
-    """
-       Task function to set session endtime.
-    """
-    if not Cases.objects(sid=sid):
-        endtime = Sessions.objects(sid=sid).first().starttime
-    else:
-        case = Cases.objects(sid=sid).order_by('-tid').first()
-        endtime = case.endtime if case.endtime else case.starttime
-
-    cache.clearCache(str('sid:' + str(sid) + ':snap'))
-    cache.clearCache(str('sid:' + str(sid) + ':snaptime'))
-    try:
-        Sessions.objects(sid=sid).update(set__endtime=endtime)
-    except OperationError:
-        Sessions.objects(sid=sid).update(set__endtime=endtime)

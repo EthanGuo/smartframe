@@ -195,10 +195,9 @@ def __calculateResult(sessionresult):
             domain = casename.strip().split('.')[0]
             if domain in table4.keys():
                 if casename in table4[domain].keys():
-                    table4[domain][casename]['total'] += session.domains.casename['total']
                     table4[domain][casename]['pass'] += session.domains.casename['pass']
                     table4[domain][casename]['fail'] += session.domains.casename['fail']
-                    table4[domain][casename]['error'] += session.domains.casename['error']
+                    table4[domain][casename]['block'] += session.domains.casename['block']
                 else:
                     table4[domain][casename] = session.domains.casename
             else:

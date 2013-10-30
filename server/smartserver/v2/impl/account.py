@@ -38,21 +38,6 @@ def accountValidToken(token):
     else:
         return userToken.uid
 
-def tokenValidateExpireTime():
-    """
-       Used to validate token expire time and clear dirty users.
-    """
-    #If user has not activated itself before its token's expire time, remove this user. 
-    users = Users.objects(active=False)
-    for user in users:
-        if (time.time() - UserTokens.objects(uid=user.uid).first().expires) <= 0:
-            user.delete()
-            user.reload()
-    #If token has expired, remove it from database.
-    for usertoken in UserTokens.objects():
-        if (time.time() - usertoken.expires) <= 0:
-            UserTokens.objects(token=usertoken.token).delete()
-
 def accountLogin(data):
     """
     params, data: {'appid':(string), 'username':(string), 'password':(string)}
