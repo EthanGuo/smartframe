@@ -10,11 +10,12 @@ class File(EmbeddedDocument):
     data = FileField()
 
 class Files(Document):
-    fileid = StringField(required=True, primary_key=True)
+    fileid = StringField(required=True)
     filename = StringField()
     filedata = EmbeddedDocumentField(File)
 
     meta = {'collection': 'Files',
+            'indexes': [{'fields': ['fileid'], 'unique': True}],
             'index_background': True}
 
 class UserInfo(EmbeddedDocument):
@@ -29,12 +30,13 @@ class Users(Document):
     username = StringField(required=True, unique=True)
     password = StringField(required=True)
     info = EmbeddedDocumentField(UserInfo)
-    uid = SequenceField(primary_key=True)
+    uid = SequenceField()
     appid = StringField()
     avatar = StringField()
     active = BooleanField(default=False)
 
     meta = {'collection': 'Users',
+            'indexes': [{'fields': ['uid'], 'unique': True}],
             'index_background': True}
 
 class UserTokens(Document):
@@ -63,10 +65,11 @@ class Groups(Document):
     db schema of collection group in mongodb
     """
     groupname = StringField(required=True, unique=True)
-    gid = SequenceField(primary_key=True)
+    gid = SequenceField()
     info = StringField()
 
     meta = {'collection': 'Groups',
+            'indexes': [{'fields': ['gid'], 'unique': True}],
             'index_background': True}
 
 class Device(EmbeddedDocument):
@@ -81,7 +84,7 @@ class Sessions(Document):
     db schema of collection session in mongodb
     """
     gid = IntField(required=True)
-    sid = IntField(required=True, primary_key=True)
+    sid = IntField(required=True)
     uid = IntField()
     planname = StringField()
     starttime = DateTimeField()
@@ -92,6 +95,7 @@ class Sessions(Document):
     deviceinfo = EmbeddedDocumentField(Device)
 
     meta = {'collection': 'Sessions',
+            'indexes': [{'fields': ['sid'], 'unique': True}],
             'index_background': True}
 
 class Cycles(Document):
@@ -114,7 +118,7 @@ class Cases(Document):
     """
     db schema of collection case in mongodb
     """
-    choices=('pass', 'fail', 'error')
+    choices=('pass', 'fail', 'error', 'running')
 
     sid = IntField(required=True)
     tid = IntField(required=True)

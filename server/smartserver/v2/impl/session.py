@@ -177,9 +177,10 @@ def sessionSummary(data, gid, sid):
     if result:
         tester = Users.objects(uid=result.uid).first().username
         deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
+        starttime = result.starttime.strftime(TIME_FORMAT) if result.starttime else ''
         data ={'planname':result.planname,'tester':tester,
                'deviceinfo':deviceinfo,
-               'starttime':result.starttime.strftime(TIME_FORMAT),
+               'starttime':starttime,
                'runtime':result.runtime,
                'summary':result.casecount,
                'gid': gid, 'sid': sid}

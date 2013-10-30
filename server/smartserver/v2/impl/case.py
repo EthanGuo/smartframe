@@ -80,7 +80,7 @@ def caseresultUpdate(data, sid):
             return resultWrapper('error', {}, 'update caseresult failed!')
         finally:
             cache.clearCache(str('sid:' + str(sid) + ':tid:' + str(data['tid']) + ':snaps'))
-        session.sessionUpdateSummary(sid, [data['result'].lower(), orgresult])
+        session.sessionUpdateSummary(sid, [[data['result'].lower(), orgresult]])
         ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
         ws_active_testsession.delay(sid)
         #publish heart beat to session watcher here.

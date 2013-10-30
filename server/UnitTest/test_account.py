@@ -17,7 +17,8 @@ class TestAccount(unittest.TestCase):
 
     def testaccountRegister(self):
         data = {'username': 'test', 'password': '123456', 'appid': '02', 'info': {'email': 'test@borqs.com'}}
-        token = accountRegister(data)['data']['token']
+        result =accountRegister(data)
+        token = result['data']['token']
         self.assertTrue(self.db['Users'].find({'username': 'test', 'appid': '02', 'info.email': 'test@borqs.com'}).count())
         self.assertTrue(self.db['UserTokens'].find({'token': token}).count())
 
@@ -33,7 +34,7 @@ class TestAccount(unittest.TestCase):
         self.assertTrue(result['result'] == 'error') 
 
     def testaccountLogin(self):
-        self.db['Users'].insert({'appid':'02', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
+        self.db['Users'].insert({'appid':'02', 'username':'test', 'uid': 9,'password':'123456', 'active': True , 'info': {'email': 'test@borqs.com'}})
 
         dataUsername = {'appid':'02', 'username':'test', 'password':'123456'}
         result = accountLogin(dataUsername)

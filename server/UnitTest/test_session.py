@@ -77,7 +77,8 @@ class TestSession(unittest.TestCase):
 
     def testsessionSummary(self):
         self.db['Users'].insert({'username': 'test', 'uid': 1})
-        self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'uid': 1, 'planname': 'Test'})
+        self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'uid': 1, 
+                                    'planname': 'Test'})
 
         result = sessionSummary({}, '1', '1')
         self.assertTrue(result['result'] == 'ok')
@@ -113,7 +114,7 @@ class TestSession(unittest.TestCase):
 
     def testsessionGetHistoryCases(self):
     	self._insertCases(200)
-    	self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'casecount': {'totalnum': 200}})
+    	self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'casecount': {'total': 200}})
     	gid, sid = '1', '1'
         data = {'pagenumber': 1, 'pagesize': 20, 'casetype': 'total'}
 

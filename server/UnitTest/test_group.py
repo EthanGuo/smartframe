@@ -70,12 +70,6 @@ class TestGroup(unittest.TestCase):
         result = groupGetMembers({}, 5, 2)
         self.assertTrue(len(result['data']['members']) == 3)
 
-    def testgroupGetSessions(self):
-        pass
-
-    def testgroupGetCycles(self):
-        pass
-
     def tearDown(self):
         self._mc.drop_database('smartServer_eth')
 
