@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__all__ = ["v0", "v2"]
-
+#__all__ = ["v0", "v2"]
+__all__ = ["v2"]
 
 def __load_api_v0():
     from .v0.groupapis import appweb
@@ -16,6 +16,6 @@ def __load_api_v2():
     from .v2.groupapis import appweb
     return appweb
 
-v0 = __load_api_v0()
+#v0 = __load_api_v0()
 
 v2 = __load_api_v2()
