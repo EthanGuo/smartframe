@@ -70,9 +70,9 @@ class Groups(Document):
             'index_background': True}
 
 class Device(EmbeddedDocument):
-    deviceid = StringField(default='N/A')
-    revision = StringField(default='N/A')
-    product = StringField(default='N/A')
+    deviceid = StringField()
+    revision = StringField()
+    product = StringField()
     width = StringField()
     height = StringField()
 

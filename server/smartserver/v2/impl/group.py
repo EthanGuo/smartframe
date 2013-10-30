@@ -165,6 +165,48 @@ def groupGetCycles(data, gid, uid):
         i += 1
     return resultWrapper('ok', {'cycles': cycles}, '')
 
+def __calculateResult(sessionresult):
+    """
+       Return the data frontend required.
+    """
+    table1, table2, table3, table4 = {}, {}, {}, {}
+    table1['totalfailure'], table1['totaluptime'] = 0, 0
+    table1['devicecount'] = len(sessionresult)
+
+    for session in sessionresult:
+        if not table1['product']:
+            table1['product'] = session.product
+        if not table1['revision']:
+            table1['revision'] = session.revision
+        table1['totalfailure'] += session.failurecount
+        table1['totaluptime'] += session.totaluptime
+
+        for issue in session.issues:
+            if issue['issueType'] in table2.keys():
+                table2[issue['issueType']] += 1
+            else:
+                table2.update({issue['issueType']: 1})
+
+        table3[session.deviceid] = {'starttime': session.starttime, 'endtime': session.endtime,
+                                    'failurecount': session.failurecount, 'firstuptime': session.firstuptime,
+                                    'uptime': session.totaluptime}
+
+        for casename in session.domains.keys():
+            domain = casename.strip().split('.')[0]
+            if domain in table4.keys():
+                if casename in table4[domain].keys():
+                    table4[domain][casename]['total'] += session.domains.casename['total']
+                    table4[domain][casename]['pass'] += session.domains.casename['pass']
+                    table4[domain][casename]['fail'] += session.domains.casename['fail']
+                    table4[domain][casename]['error'] += session.domains.casename['error']
+                else:
+                    table4[domain][casename] = session.domains.casename
+            else:
+                table4[domain] = {casename: session.domains.casename}
+    
+    return resultWrapper('ok', {'table1': table1, 'table2': table2, 
+                                'table3': table3, 'table4': table4}, '')
+
 def groupGetReport(data, gid, uid):
     """
     params, data: {'cid'}
@@ -175,6 +217,12 @@ def groupGetReport(data, gid, uid):
     for sid in sids:
         session = Sessions.objects(gid=gid, sid=sid).first()
         cases = Cases.objects(sid=sid).order_by('+tid')
+        if session.deviceinfo:
+            deviceid = session.deviceinfo.deviceid
+            revision = session.deviceinfo.revision
+            product = session.deviceinfo.product
+        else:
+            deviceid, revision, product = '', '', ''
         deviceid = session.deviceinfo.deviceid if session.deviceinfo else ''
         starttime = session.starttime
         endtime = session.endtime
@@ -197,11 +245,9 @@ def groupGetReport(data, gid, uid):
                     endtime = case.endtime if case.endtime else case.starttime
                     break
         totaluptime = (endtime - starttime).total_seconds() - blocktime
-        sessionresult.append({'deviceid': deviceid, 'starttime': starttime.strftime(TIME_FORMAT),
+        sessionresult.append({'deviceid': deviceid, 'product': product, 'revision': revision,
+                              'starttime': starttime.strftime(TIME_FORMAT),
                               'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,
                               'firstuptime': firstfailureuptime, 'totaluptime': totaluptime,
                               'issues': issues, 'domains': session.domaincount})
-
-
-
-
+    return __calculateResult(sessionresult)
