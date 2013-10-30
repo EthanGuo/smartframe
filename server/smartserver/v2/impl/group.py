@@ -174,9 +174,9 @@ def __calculateResult(sessionresult):
     table1['devicecount'] = len(sessionresult)
 
     for session in sessionresult:
-        if not table1['product']:
+        if not table1.get('product'):
             table1['product'] = session.product
-        if not table1['revision']:
+        if not table1.get('revision'):
             table1['revision'] = session.revision
         table1['totalfailure'] += session.failurecount
         table1['totaluptime'] += session.totaluptime
@@ -189,7 +189,7 @@ def __calculateResult(sessionresult):
 
         table3[session.deviceid] = {'starttime': session.starttime, 'endtime': session.endtime,
                                     'failurecount': session.failurecount, 'firstuptime': session.firstuptime,
-                                    'uptime': session.totaluptime}
+                                    'uptime': session.totaluptime, 'issues': session.issues}
 
         for casename in session.domains.keys():
             domain = casename.strip().split('.')[0]
@@ -222,7 +222,6 @@ def groupGetReport(data, gid, uid):
             product = session.deviceinfo.product
         else:
             deviceid, revision, product = '', '', ''
-        deviceid = session.deviceinfo.deviceid if session.deviceinfo else ''
         starttime = session.starttime
         endtime = session.endtime
         if not endtime:
@@ -239,7 +238,8 @@ def groupGetReport(data, gid, uid):
                         caseendtime = case.endtime if case.endtime else case.starttime
                         firstfailureuptime = (caseendtime - starttime).total_seconds()
                 if case['comments']['caseresult'] == 'block':
-                    blocktime += (case.endtime - case.starttime).total_seconds()
+                    if case.endtime:
+                        blocktime += (case.endtime - case.starttime).total_seconds()
                 if case['comments']['endsession'] == 1:
                     endtime = case.endtime if case.endtime else case.starttime
                     break

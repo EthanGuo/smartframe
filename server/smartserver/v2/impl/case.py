@@ -47,18 +47,19 @@ def caseresultUpdate(data, sid):
     #If tid is list, do add case comments, or update case result.
     sid, domains = int(sid), []
     if isinstance(data.get('tid'), list):
-        try:
-            result = data['comments']['caseresult'] if data['comments'] else ''
-            for tid in data['tid']:
-                case = Cases.objects(sid=sid, tid=tid).first()
-                orgcommentresult = case.comments.caseresult if case.comments else ''
-                Cases.objects(sid=sid, tid=tid).update(set__comments=data.get('comments'))
-                domains.append([tid, result.lower(), orgcommentresult])
-        except OperationError:
-            return resultWrapper('error', {}, 'Failed to update case comments!')
-        #Trigger to update domain summary here.
-        ws_update_session_domainsummary.delay(sid, domains)
-
+        if data.get('comments'):
+            try:
+                result = data['comments']['caseresult']
+                for tid in data['tid']:
+                    case = Cases.objects(sid=sid, tid=tid).first()
+                    orgcommentresult = case.comments.caseresult if case.comments else ''
+                    Cases.objects(sid=sid, tid=tid).update(set__comments=data.get('comments'))
+                    domains.append([tid, result.lower(), orgcommentresult])
+            except OperationError:
+                return resultWrapper('error', {}, 'Failed to update case comments!')
+            ws_update_session_domainsummary.delay(sid, domains)
+        else:
+            return resultWrapper('error',{}, 'Comments can not be empty!')
     elif isinstance(data.get('tid'), int):
         case = Cases.objects(sid=sid, tid=data['tid']).first()
         orgresult = case.result
@@ -80,9 +81,7 @@ def caseresultUpdate(data, sid):
         finally:
             cache.clearCache(str('sid:' + str(sid) + ':tid:' + str(data['tid']) + ':snaps'))
         session.sessionUpdateSummary(sid, [data['result'].lower(), orgresult])
-        #Trigger to update domain summary here.
         ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
-        #Set session alive here, clear endtime in another way.
         ws_active_testsession.delay(sid)
         #publish heart beat to session watcher here.
         redis_con.publish("session:heartbeat", json.dumps({'sid': int(sid)}))
