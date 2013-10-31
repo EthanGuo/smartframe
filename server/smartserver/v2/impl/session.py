@@ -53,6 +53,7 @@ def sessionCycle(data, gid, sid, uid):
     return, data: {}
     """
     # If cid = 0, create a new cycle and add sid to it.
+    #TODO: only group admin, group owner and session generator can do cycle setting?
     Cid = data.get('cid')
     if (Cid == 0):
         if Cycles.objects(sids=sid):
