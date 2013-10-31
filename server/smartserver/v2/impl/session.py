@@ -5,7 +5,7 @@ from util import resultWrapper, cache, redis_con
 from mongoengine import OperationError
 from ..config import TIME_FORMAT
 from db import Sessions, Cycles, Users, Cases, GroupMembers
-from ..tasks import ws_update_session_domainsummary
+from ..tasks import ws_update_session_domainsummary, ws_del_session
 import json
 
 def sessionCreate(data, gid, sid, uid):
@@ -158,11 +158,15 @@ def sessionDelete(data, gid, sid, uid):
     if Sessions.objects(sid=sid, uid=uid) or (role > 8):
         try:
             Sessions.objects(sid=sid).delete()
-            if Cycles.objects(gid=gid, sids=sid):
+            cycle = Cycles.objects(gid=gid, sids=sid).first()
+            if cycle:
                 Cycles.objects(sids=sid).update(pull__sids=sid)
+                cycle.reload()
+                if not cycle.sids:
+                    cycle.delete()
         except OperationError :
             return resultWrapper('error', {}, 'Failed to remove the session!')
-        #Task to remove all the cases in this session.
+        ws_del_session(sid)
         return resultWrapper('ok',{},'')
     return resultWrapper('error', {}, 'Permission denied!')
 

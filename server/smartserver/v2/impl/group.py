@@ -5,6 +5,7 @@ from util import resultWrapper
 from mongoengine import OperationError
 from db import Groups, Users, Cycles, Sessions, GroupMembers, Cases
 from ..config import TIME_FORMAT
+from ..tasks import ws_del_group
 import json
 
 ROLES = {'OWNER': 10, 'ADMIN': 9, 'MEMBER': 8, 'GUEST': 7}
@@ -48,9 +49,10 @@ def groupDelete(data, gid, uid):
         try:
             Groups.objects(gid=gid).delete()
             GroupMembers.objects(gid=gid).delete()
+            Cycles.objects(gid=gid).delete()
         except OperationError:
             return resultWrapper('error', {}, 'Remove group failed!')
-        #TODO: Add a task to remove corresponding data of a group
+        ws_del_group(gid)
         return resultWrapper('ok', {}, '')
 
 def groupSetMembers(data, gid, uid):

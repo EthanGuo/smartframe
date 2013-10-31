@@ -19,10 +19,10 @@ CELERY_TASK_RESULT_EXPIRES = 3600
 
 # Scheduled tasks
 CELERYBEAT_SCHEDULE = {
-    # 'cleardirty-every-week': {
-    #     'task': 'smartserver.tasks.ws_del_dirty',
-    #     'schedule': crontab(minute=0, hour=0, day_of_month=1)
-    # },
+    'cleardirty-every-month': {
+        'task': 'smartserver.v2.tasks.ws_del_dirty',
+        'schedule': crontab(minute=0, hour=0, day_of_month=1)
+    },
     'validate-testcase-endtime-every-30-minutes': {
         'task': 'smartserver.v2.tasks.ws_validate_testcase_endtime',
         'schedule': crontab(minute='*/30')

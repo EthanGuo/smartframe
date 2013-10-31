@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from db import Files, File
 import uuid, hashlib
+from mongoengine import OperationError
 from util import resultWrapper
 
 def generateUniqueID():
@@ -37,3 +38,18 @@ def fetchFileData(fileid):
         return resultWrapper('ok', {'filedata': filedata, 'filename': filename, 'content_type': content_type}, '')
     else:
         return resultWrapper('error', {}, 'Invalid ID!')
+
+def deleteFile(fids):
+    """
+    params, data: {'fids': (list) list of file id}
+    return, data: {}
+    """
+    for fid in fids:
+        f = Files.objects(fileid=fid).first()
+        if f:
+            try:
+                f.filedata.data.delete()
+                f.delete()
+            except OperationError:
+                f.filedata.data.delete()
+                f.delete()                
