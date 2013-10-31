@@ -15,9 +15,9 @@ gevent-websocket==0.3.6
 greenlet==0.4.0
 gunicorn==0.17.2
 kombu==2.5.10
-mongoengine==0.7.9
+mongoengine==0.8.4
 nose==1.2.1
-pymongo==2.4.2
+pymongo==2.6.3
 python-dateutil==2.1
 python-memcached==1.48
 pytz==2013b

@@ -13,7 +13,7 @@
 
 - Python Packages. It's strongly recommended to install python packages using virtual environment.
 
-        $ pip install -r requirements.txt --use-mirrors
+        $ sudo pip install -r requirements.txt --use-mirrors
 
 - Virtual environment
 

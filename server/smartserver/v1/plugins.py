@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# -*- coding: utf-8 -*-
 from bottle import PluginError, request
 import inspect
 
-__all__ = ["err", "ContentTypePlugin", "LoginPlugin"]
+__all__ = ["err", "ContentTypePlugin", "LoginPlugin", "DataFormatPlugin"]
 
 
 def err(code='500', msg='Unknown error!'):
@@ -47,6 +48,36 @@ class ContentTypePlugin(object):
 
         return wrapper
 
+#This plugin checks the format of request.json, if required keys dont exist, return error message. 
+class DataFormatPlugin(object):
+    '''This plugin checks the request data-format'''
+    name = 'data-Format'
+    api = 2
+
+    def setup(self, app):
+        ''' Make sure that other installed plugins don't affect the same
+            keyword argument.'''
+        for other in app.plugins:
+            if not isinstance(other, DataFormatPlugin):
+                continue
+            raise PluginError("Found another Content-Type plugin with "
+                              "conflicting settings (non-unique keyword).")
+
+    def apply(self, callback, route):
+        format = route.config.get('data_format', [])
+        if not isinstance(format, list):
+            format = [format]
+
+        if len(format) == 0:
+            return callback
+
+        def wrapper(*args, **kwargs):
+            if 'application/json' in request.content_type:
+                for key in format:
+                    if request.json.get(key, 'badkey') == 'badkey':
+                        return err(code='500', msg='Invalid request data-format!')
+            return callback(*args, **kwargs)
+        return wrapper
 
 # Plugin to check if the request contrains a valid token. The token param may be in query, form or json
 # If yes, put the uid in the **kwargs
@@ -109,6 +140,7 @@ class LoginPlugin(object):
                     kwargs[self.uid_keyword] = uid
                 if has_token:
                     kwargs[self.token_keyword] = token
+                #TODO: increase token expire time here after every valid request.
                 return callback(*args, **kwargs)
 
         # Replace the route callback with the wrapped one.

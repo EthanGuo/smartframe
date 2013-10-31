@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__all__ = ["v0"]
+__all__ = ["v1"]
 
-
-def __load_api_v0():
-    from .v0.groupapis import appweb
-    from .v0.liveapis import appws
-    from .v0.fileapis import appfs
-    appweb.mount("/ws", appws)
-    appweb.mount("/fs", appfs)
+def __load_api_v1():
+    from .v1.apis import appweb
     return appweb
 
-v0 = __load_api_v0()
+v1 = __load_api_v1()
