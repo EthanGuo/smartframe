@@ -8,7 +8,7 @@ from sendmail import *
 from util import resultWrapper
 from mongoengine import OperationError
 from db import Users, UserTokens, Groups, Sessions, GroupMembers
-from filedealer import saveFile
+from filedealer import saveFile, deleteFile
 import time
 
 TOKEN_EXPIRES = {'01': 30*24*3600, #For client end upload result purpose 
@@ -71,7 +71,7 @@ def accountRegister(data):
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
     # If both username and email have not been registered, create a new user, generate a token, send a mail then return, or return error.
-    if (len(Users.objects(username=data['username'])) == 0) & (len(Users.objects(info__email=data['info']['email'])) == 0):
+    if (not Users.objects(username=data['username'])) and (not Users.objects(info__email=data['info']['email'])):
         #Password should be encryped already.
         try:
             userInst = Users().from_json(json.dumps(data))
@@ -103,7 +103,7 @@ def accountRetrievePasswd(data):
         m.hexdigest()
         useraccount = result.first()
         try:
-            Users.objects(uid=useraccount.uid).update_one(set__password=m.hexdigest())
+            useraccount.update(set__password=m.hexdigest())
             useraccount.reload()
         except OperationError:
             rmsg, rdata, rstatus = 'Save new password failed!', {}, 'error'
@@ -129,8 +129,9 @@ def accountChangepasswd(data, uid):
     #If user exist, update its password, or return error
     if len(result) == 1:
         try:
-            Users.objects(uid=uid).update_one(set__password=data.get('newpassword'))
-            list(result)[0].reload()
+            useraccount = result.first()
+            useraccount.update(set__password=data.get('newpassword'))
+            useraccount.reload()
             rmsg, rdata, rstatus = '', {}, 'ok'
         except OperationError:
             rmsg, rdata, rstatus = 'Save new password failed!', {}, 'error'
@@ -171,10 +172,12 @@ def __updateAvatar(data, uid):
     filedata = data['file'].get('file')
     u = Users.objects(uid=uid).first()
     if u.avatar:
-        u.avatar.image.delete()
+        fileid = u.avatar.strip().replace('/file/', '')
+        deleteFile(fileid)
     imageid = saveFile(filedata, 'image/' + filetype, data['file']['filename'])
     try:
-        Users.objects(uid=uid).update(set__avatar=imageid)
+        u.update(set__avatar=imageid)
+        u.reload()
     except OperationError:
         return resultWrapper('error', {}, 'Update avatar failed!')
     return resultWrapper('ok', {}, 'Upload successfully!')
@@ -187,13 +190,17 @@ def accountUpdate(data, uid):
     if 'file' in data.keys():
         return __updateAvatar(data, uid)
     else:
+        useraccount = Users.objects(uid=uid).first()
         try:
             if data.has_key('username'):
-                Users.objects(uid=uid).update(set__username=data['username'])
+                useraccount.update(set__username=data['username'])
+                useraccount.reload()
             if data.has_key('company'):
-                Users.objects(uid=uid).update(set__info__company=data['company'])
+                useraccount.update(set__info__company=data['company'])
+                useraccount.reload()
             if data.has_key('telephone'):
-                Users.objects(uid=uid).update(set__info__phonenumber=data['telephone'])
+                useraccount.update(set__info__phonenumber=data['telephone'])
+                useraccount.reload()
         except OperationError:
             return resultWrapper('error', {}, 'Update user info failed!')
         result = createToken(data['appid'], uid)
@@ -219,15 +226,12 @@ def accountGetInfo(uid):
     params, uid:(int)uid
     return, data: {'uid':(int)uid, 'username':(string)username, 'info': (dict)userinfo}
     """ 
-    #If uid exists, return its username and info, or return error.
+    #Return uid's username and info.
     result = Users.objects(uid=uid)
-    if not result:
-        rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
-    else:
-        useraccount = result.first()
-        uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data'], 'avatar': useraccount.avatar}
-        rdata = {'userinfo': uinfo}
-        rmsg, rstatus = '', 'ok'
+    useraccount = result.first()
+    uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data'], 'avatar': useraccount.avatar}
+    rdata = {'userinfo': uinfo}
+    rmsg, rstatus = '', 'ok'
     return resultWrapper(rstatus, rdata, rmsg)
 
 def accountGetGroups(uid):
@@ -235,38 +239,30 @@ def accountGetGroups(uid):
     params, uid:(int)uid
     return, data: {'groups':[{'gid':(int)gid1,'groupname':(string)name1, 'allsession': (int)count, 'livesession': (int)count},...]}
     """ 
-    result = Users.objects(uid=uid)
-    if not result:
-        rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
-    else:
-        usergroup = []
-        group = GroupMembers.objects(uid=uid)
-        if group:
-            for g in group:
-                ownerid = GroupMembers.objects(role=10, gid=g.gid).first().uid
-                ownername = Users.objects(uid=ownerid).first().username
-                targetgroupname = Groups.objects(gid=g.gid).first().groupname
-                usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
-                                  'userrole': g.role, 'groupowner': ownername,
-                                  'allsession': len(session.objects(gid=g.gid)),
-                                  'livesession': len(session.objects(gid=g.gid, endtime=''))})
-        return resultWrapper('ok', {'usergroup': usergroup}, '')
+    usergroup = []
+    group = GroupMembers.objects(uid=uid)
+    if group:
+        for g in group:
+            ownerid = GroupMembers.objects(role=10, gid=g.gid).first().uid
+            ownername = Users.objects(uid=ownerid).first().username
+            targetgroupname = Groups.objects(gid=g.gid).first().groupname
+            usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
+                              'userrole': g.role, 'groupowner': ownername,
+                              'allsession': len(session.objects(gid=g.gid)),
+                              'livesession': len(session.objects(gid=g.gid, endtime=''))})
+    return resultWrapper('ok', {'usergroup': usergroup}, '')
 
 def accountGetSessions(uid):
     """
     params, uid:(int)uid
     return, data: {'sessions': [{'sid':(int)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
     """ 
-    result = Users.objects(uid=uid)
-    if not result:
-        rmsg, rdata, rstatus = 'Invalid User ID!!', {}, 'error'
-    else:
-        usersession = []
-        sessions = Sessions.objects(uid=uid)
-        if sessions:
-            for s in sessions:
-                usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': groups.objects(gid=gid).first().groupname})
-        return resultWrapper('ok' ,{'usersession': usersession}, '')
+    usersession = []
+    sessions = Sessions.objects(uid=uid)
+    if sessions:
+        for s in sessions:
+            usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': groups.objects(gid=gid).first().groupname})
+    return resultWrapper('ok' ,{'usersession': usersession}, '')
 
 def accountActiveUser(uid):
     """

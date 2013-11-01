@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from smartserver.v2.impl.session import *
+from smartserver.v1.impl.session import *
 import unittest
 from pymongo import MongoClient
-from smartserver.v2.config import MONGODB_URI
+from smartserver.v1.config import MONGODB_URI
 from datetime import datetime
 
 class TestSession(unittest.TestCase):

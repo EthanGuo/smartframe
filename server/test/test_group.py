@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from smartserver.v2.impl.group import *
-from smartserver.v2.config import MONGODB_URI
+from smartserver.v1.impl.group import *
+from smartserver.v1.config import MONGODB_URI
 from pymongo import MongoClient
 import unittest
 

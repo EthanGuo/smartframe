@@ -53,7 +53,8 @@ def caseresultUpdate(data, sid):
                 for tid in data['tid']:
                     case = Cases.objects(sid=sid, tid=tid).first()
                     orgcommentresult = case.comments.caseresult if case.comments else ''
-                    Cases.objects(sid=sid, tid=tid).update(set__comments=data.get('comments'))
+                    case.update(set__comments=data.get('comments'))
+                    case.reload()
                     domains.append([tid, result.lower(), orgcommentresult])
             except OperationError:
                 return resultWrapper('error', {}, 'Failed to update case comments!')
@@ -72,10 +73,11 @@ def caseresultUpdate(data, sid):
         else:
             snapshots = []
         try:
-            Cases.objects(sid=sid, tid=data['tid']).update(set__result=data.get('result').lower(), 
-                                                           set__endtime=data.get('endtime'), 
-                                                           set__traceinfo=data.get('traceinfo',''), 
-                                                           push_all__snapshots=snapshots)
+            case.update(set__result=data.get('result').lower(), 
+                        set__endtime=data.get('endtime'), 
+                        set__traceinfo=data.get('traceinfo',''), 
+                        push_all__snapshots=snapshots)
+            case.reload()
         except OperationError:
             return resultWrapper('error', {}, 'update caseresult failed!')
         finally:

@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from smartserver.v2.impl.case import *
+from smartserver.v1.impl.case import *
 from pymongo import MongoClient
-from smartserver.v2.config import MONGODB_URI
+from smartserver.v1.config import MONGODB_URI
 from datetime import datetime 
 
 class TestCase(unittest.TestCase):

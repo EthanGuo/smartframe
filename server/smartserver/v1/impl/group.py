@@ -22,12 +22,11 @@ def groupCreate(data, uid):
     groupInst = Groups().from_json(json.dumps({'groupname': data['groupname'], 'info': data.get('info', '')}))
     try:
         groupInst.save()
-        gid = Groups.objects(groupname=data['groupname']).first().gid
-        memberInst = GroupMembers().from_json(json.dumps({'uid': int(uid), 'role': ROLES['OWNER'], 'gid': gid}))
+        memberInst = GroupMembers().from_json(json.dumps({'uid': int(uid), 'role': ROLES['OWNER'], 'gid': groupInst.gid}))
         memberInst.save()
     except OperationError:
         return resultWrapper('error', {}, 'save group failed')
-    return resultWrapper('ok', {'gid': gid}, '')
+    return resultWrapper('ok', {'gid': groupInst.gid}, '')
 
 def __getUserRole(uid, gid):
     g = GroupMembers.objects(gid=gid, uid=uid).first()
@@ -75,7 +74,8 @@ def groupSetMembers(data, gid, uid):
                     if target.role == 10:
                         return resultWrapper('error', {}, 'Can not modify owner permission!')
                     else:
-                        GroupMembers.objects(gid=gid, uid=member['uid']).update(set__role=member['role'])
+                        target.update(set__role=member['role'])
+                        target.reload()
                 #If target does not exist in current group, save it to current group.
                 else:
                     memberInst = GroupMembers().from_json(json.dumps({'gid': gid, 'uid': member['uid'], 'role': member['role']}))

@@ -62,34 +62,38 @@ def sessionCycle(data, gid, sid, uid):
             cycleinst = Cycles().from_json(json.dumps({'gid': gid, 'sids': [sid]}))
             try:
                 cycleinst.save()
-                cid = Cycles.objects(sids=sid).first().cid
             except OperationError:
                 return resultWrapper('error', {}, 'Create new cycle failed!')
-            return resultWrapper('ok', {'cid': cid}, '')
+            return resultWrapper('ok', {'cid': cycleinst.cid}, '')
 
     # If cid = -1, remove current session from cycle it belongs.
     if (Cid == -1):
-        if not Cycles.objects(sids=sid):
+        cycle = Cycles.objects(sids=sid).first() 
+        if not cycle:
             return resultWrapper('error', {}, 'This session does not belong to any cycle!')
         else:
             try:
-                Cycles.objects(sids=sid).update(pull__sids=sid)
+                cycle.update(pull__sids=sid)
+                cycle.reload()
             except OperationError:
                 return resultWrapper('error', {}, 'Remove session from current cycle failed!')
             return resultWrapper('ok', {}, '')
 
     # For other case, remove session from current session then add it to new cycle.
-    if Cycles.objects(sids=sid):
+    cycle = Cycles.objects(sids=sid).first()
+    if cycle:
         try:
-            Cycles.objects(sids=sid).update(pull__sids=sid)
+            cycle.update(pull__sids=sid)
+            cycle.reload()
         except OperationError:
             return resultWrapper('error', {}, 'Remove session from current cycle failed!')
     try:
-        Cycles.objects(cid=Cid).update(push__sids=sid)
-        cid = Cycles.objects(sids=sid).first().cid
+        cycle = Cycles.objects(cid=Cid).first()
+        cycle.update(push__sids=sid)
+        cycle.reload()
     except OperationError:
         return resultWrapper('error', {}, 'Add current session to cycle failed!')
-    return resultWrapper('ok', {'cid': cid}, '')
+    return resultWrapper('ok', {'cid': cycle.cid}, '')
 
 def sessionUpdateSummary(sid, results):
     """
@@ -155,9 +159,10 @@ def sessionDelete(data, gid, sid, uid):
     gid, sid, uid = int(gid), int(sid), int(uid)
     member = GroupMembers.objects(gid=gid, uid=uid).first()
     role = member.role if member else -1
-    if Sessions.objects(sid=sid, uid=uid) or (role > 8):
+    session = Sessions.objects(sid=sid, uid=uid).first()
+    if session or (role > 8):
         try:
-            Sessions.objects(sid=sid).delete()
+            session.delete()
             cycle = Cycles.objects(gid=gid, sids=sid).first()
             if cycle:
                 Cycles.objects(sids=sid).update(pull__sids=sid)

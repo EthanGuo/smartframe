@@ -79,6 +79,9 @@ def tokenValidateExpireTime():
         if (time.time() - usertoken.expires) <= 0:
             UserTokens.objects(token=usertoken.token).delete()
 
+def _getID(url):
+    return url.strip().replace('/file/', '')
+
 def sessionRemoveAll(sid):
     """
        Task to remove all the cases of a session and case log/snapshots 
@@ -87,11 +90,12 @@ def sessionRemoveAll(sid):
     fid = []
     for case in Cases.objects(sid=sid, result='fail'):
         if case.log:
-            fid.append(case.log)
+            fid.append(_getID(case.log))
         if case.expectshot:
-            fid.append(case.expectshot)
+            fid.append(_getID(case.expectshot))
         if case.snapshots:
-            fid += case.snapshots
+            for snap in case.snapshots:
+                fid.append(_getID(snap))
     try:
         Cases.objects(sid=sid).delete()
     except OperationError:
@@ -117,14 +121,15 @@ def _dirtyFileRemoveAll():
         fileids.append(f.fileid)
     for case in Cases.objects(result='fail'):
         if case.log:
-            casefileids.append(case.log)
+            casefileids.append(_getID(case.log))
         if case.expectshot:
-            casefileids.append(case.expectshot)
+            casefileids.append(_getID(case.expectshot))
         if case.snapshots:
-            casefileids += case.snapshots
+            for snap in case.snapshots:
+                casefileids.append(_getID(snap))
     for user in Users.objects():
         if user.avatar:
-            avatarids.append(user.avatar)
+            avatarids.append(_getID(user.avatar))
 
     dirtyids = fileids - casefileids - avatarids
     deleteFile(dirtyids)

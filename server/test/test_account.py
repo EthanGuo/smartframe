@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from smartserver.v2.impl.account import *
-from smartserver.v2.config import MONGODB_URI
+from smartserver.v1.impl.account import *
+from smartserver.v1.config import MONGODB_URI
 from pymongo import MongoClient
 import unittest
 
@@ -85,9 +85,6 @@ class TestAccount(unittest.TestCase):
         result = accountGetInfo(9)
         self.assertTrue(self.db['Users'].find({'uid': result['data']['userinfo']['uid']}).count() == 1)
         self.assertTrue(self.db['Users'].find({'username': result['data']['userinfo']['username']}).count() == 1)
-
-        result = accountGetInfo(8)
-        self.assertTrue(result['result'] == 'error')
 
     def testaccountGetUserList(self):
         self.db['Users'].insert({'appid':'02', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}})
