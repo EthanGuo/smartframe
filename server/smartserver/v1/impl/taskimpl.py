@@ -60,7 +60,7 @@ def caseValidateEndtime():
     """
        Used to validate case endtime
     """
-    # I dont think this is a reasonable function.
+    # Maybe this is not a reasonable function.
     pass
 
 def tokenValidateExpireTime():
@@ -111,7 +111,7 @@ def groupRemoveAll(gid):
         Sessions.objects(gid=gid).delete()
 
 def _dirtyFileRemoveAll():
-    #Remove dirty files.
+    #Remove dirty records in Files.
     fileids, casefileids, avatarids = [], [], []
     for f in Files.objects():
         fileids.append(f.fileid)
@@ -130,12 +130,11 @@ def _dirtyFileRemoveAll():
     deleteFile(dirtyids)
 
 def _dirtyCaseRemoveAll():
-    #Remove dirty cases
+    #Remove dirty records in Cases
     casesids = Cases.objects().distinct('sid')
     sessionids = Sessions.objects().distinct('sid')
 
     dirtyids = casesids - sessionids
-
     for sid in dirtyids:
         try:
             Cases.objects(sid=sid).delete()
@@ -143,22 +142,57 @@ def _dirtyCaseRemoveAll():
             Cases.objects(sid=sid).delete()
 
 def _dirtySessionRemoveAll():
-    #Remove dirty sessions.
+    #Remove dirty records in Sessions.
     sessiongids = Sessions.objects().distinct('gid')
     groupids = Groups.objects().distinct('gid')
 
     dirtyids = sessiongids - groupids
-
     for gid in dirtyids:
         try:
             Sessions.objects(gid=gid).delete()
         except OperationError:
             Sessions.objects(gid=gid).delete()
 
+def _dirtyGroupMemberRemoveAll():
+    #Remove dirty records in GroupMembers.
+    membergids = GroupMembers.objects().distinct('gid')
+    groupids = Groups.objects().distinct('gid')
+
+    dirtyids = membergids - groupids
+    for gid in dirtyids:
+        try:
+            GroupMembers.objects(gid=gid).delete()
+        except OperationError:
+            GroupMembers.objects(gid=gid).delete()
+
+def _dirtyCyclesRemoveAll():
+    #Remove dirty records in Cycles.
+    cyclesids=[]
+    for cycle in Cycles.objects():
+        for sid in cycle.sids:
+            cyclesids.append(sid)
+    sessionids = Sessions.objects().distinct('sid')
+
+    dirtyids = cyclesids - sessionids
+    for sid in dirtyids:
+        cycle = Cycles.objects(sids=sid).first()
+        try:
+            cycle.update(pull__sids=sid)
+            cycle.reload()
+            if not cycle.sids:
+                cycle.delete()
+        except OperationError:
+            cycle.update(pull__sids=sid)
+            cycle.reload()
+            if not cycle.sids:
+                cycle.delete()            
+
 def dirtyDataRemoveAll():
     """
-       Scheduled task to remove all the dirty data(file, case, session, group) from database
+       Scheduled task to remove all the dirty data(file, case, session) from database
     """
-    _dirtyFileRemoveAll()
-    _dirtyCaseRemoveAll()
+    _dirtyGroupMemberRemoveAll()
+    _dirtyCyclesRemoveAll()
     _dirtySessionRemoveAll()
+    _dirtyCaseRemoveAll()
+    _dirtyFileRemoveAll()
