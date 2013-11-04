@@ -97,7 +97,7 @@ def sessionCycle(data, gid, sid, uid):
 
 def sessionUpdateSummary(sid, results):
     """
-       Func to update session casecount summary and domain summary
+       Func to update session casecount summary.
     """
     # Update casecount here.
     session = Sessions.objects(sid=sid).first()
