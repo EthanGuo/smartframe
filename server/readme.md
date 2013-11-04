@@ -59,7 +59,7 @@ Or we can define env in command line:
 
 If we want to use gunicorn, we can also run below command:
 
-    $ MONGODB_URI=mongodb://localhost:27017 REDIS_URI=redis://localhost:6379/0 MEMCACHED_URI=localhost:11211 gunicorn -k "geventwebsocket.gunicorn.workers.GeventWebSocketWorker" --workers=2 --bind=localhost:8080 app:app --daemon --pid /tmp/smart-web.pid
+    $ MONGODB_URI=mongodb://localhost:27017 REDIS_URI=redis://localhost:6379/0 MEMCACHED_URI=localhost:11211 gunicorn -k "geventwebsocket.gunicorn.workers.GeventWebSocketWorker" --workers=2 --bind=:8080 app:app --daemon --pid /tmp/smart-web.pid
 
 It's simple for us to start multiple processes and serve on the same port.
 
@@ -77,7 +77,7 @@ It's simple for us to start multiple processes and serve on the same port.
 
 - Multi nodes of worker server
 
-    Run below command to start 4 nodes of workers (in case the server has 4 CPUs):
+    Run below command to start 4 nodes of workers (in case the server CPU has 4 cores):
 
         $ REDIS_URI=redis://localhost:6379/0 celery multi start 4 --app=smartserver.worker:worker -P gevent -l info -c:1-4 1000
 
