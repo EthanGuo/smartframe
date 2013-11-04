@@ -12,6 +12,7 @@ class File(EmbeddedDocument):
 class Files(Document):
     fileid = StringField(required=True)
     filename = StringField()
+    content_type = StringField()
     filedata = EmbeddedDocumentField(File)
 
     meta = {'collection': 'Files',

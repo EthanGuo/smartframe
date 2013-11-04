@@ -21,7 +21,10 @@ def saveFile(filedata, content_type, filename=''):
     new.data.write(filedata)
     new.data.close()
     newfile = Files(fileid=fileid, filename=filename, filedata=new, content_type=content_type)
-    newfile.save()
+    try:
+        newfile.save()
+    except OperationError:
+        newfile.save()
     return ('/file/' + fileid)
 
 def fetchFileData(fileid):
@@ -44,6 +47,8 @@ def deleteFile(fids):
     params, data: {'fids': (list) list of file id}
     return, data: {}
     """
+    if not isinstance(fids, list):
+        fids = [fids]
     for fid in fids:
         f = Files.objects(fileid=fid).first()
         if f:
