@@ -248,8 +248,8 @@ def accountGetGroups(uid):
             targetgroupname = Groups.objects(gid=g.gid).first().groupname
             usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
                               'userrole': g.role, 'groupowner': ownername,
-                              'allsession': len(session.objects(gid=g.gid)),
-                              'livesession': len(session.objects(gid=g.gid, endtime=''))})
+                              'allsession': len(Sessions.objects(gid=g.gid)),
+                              'livesession': len(Sessions.objects(gid=g.gid, endtime=''))})
     return resultWrapper('ok', {'usergroup': usergroup}, '')
 
 def accountGetSessions(uid):
@@ -261,7 +261,7 @@ def accountGetSessions(uid):
     sessions = Sessions.objects(uid=uid)
     if sessions:
         for s in sessions:
-            usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': groups.objects(gid=gid).first().groupname})
+            usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': Groups.objects(gid=s.gid).first().groupname})
     return resultWrapper('ok' ,{'usersession': usersession}, '')
 
 def accountActiveUser(uid):
