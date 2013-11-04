@@ -12,7 +12,7 @@ def sessionCreate(data, gid, sid, uid):
     """
     params, data: {'planname':(string),'starttime':(string),'deviceinfo':
                       {'deviceid':(string),'revision':(string),'product':(string), 
-                       'width':(int), 'height':(int)}}
+                       'width':(string), 'height':(string)}}
     return, data: {}
     """
     #create a new session if save fail return exception
