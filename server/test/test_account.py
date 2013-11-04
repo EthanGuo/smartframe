@@ -101,6 +101,31 @@ class TestAccount(unittest.TestCase):
         result = accountUpdate(data, uid)
         self.assertTrue(result['result'] == 'ok')
 
+        data = {'appid': '02', 'username': 'update_test', 'company': 'Borqs', 'telephone': '1234567890'}
+        result = accountUpdate(data, uid)
+        self.assertTrue(self.db['UserTokens'].find({'token': result['data']['token']}))
+        self.assertTrue(self.db['Users'].find({'uid': 9, 'username': 'update_test'}))
+
+    def testaccountGetGroups(self):
+        self.db['Users'].insert({'username': 'test', 'uid': 1, 'password': '123456', 'info':{'email':'test@borqs.com'}})
+        self.db['Groups'].insert({'groupname': 'test', 'gid': 1})
+        self.db['GroupMembers'].insert({'uid': 1, 'role': 10, 'gid': 1})
+
+        result = accountGetGroups(1)
+        self.assertTrue(result['result'] == 'ok')
+
+    def testaccountGetSessions(self):
+        self.db['Groups'].insert({'groupname': 'test', 'gid': 1})
+        for i in range(1, 5):
+            self.db['Sessions'].insert({'gid': 1, 'sid': i, 'uid': 1})
+        result = accountGetSessions(1)
+        self.assertTrue(len(result['data']['usersession']) == 4)
+
+    def testaccountActiveUser(self):
+        self.db['Users'].insert({'username': 'test', 'uid': 1, 'password': '123456', 'info':{'email':'test@borqs.com'}})
+        accountActiveUser(1)
+        self.assertTrue(self.db['Users'].find({'uid': 1})[0]['active'])
+
     def tearDown(self):
         self._mc.drop_database('smartServer_eth')
 

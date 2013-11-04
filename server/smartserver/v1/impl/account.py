@@ -273,6 +273,6 @@ def accountActiveUser(uid):
     except OperationError:
         Users.objects(uid=uid).update(set__active=True)
     result = accountLogout({}, uid)
-    if result['status'] != 'ok':
+    if result['result'] != 'ok':
         accountLogout({}, uid)
     return resultWrapper('ok', {}, '')
