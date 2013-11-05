@@ -3,14 +3,18 @@
 
 from db import *
 from filedealer import deleteFile
-import json
+import json, time
 
 def sessionUpdateDomainSummary(sid, results):
     """
        Task func to update session domain count
     """
     print "Start updating the domain summary of session %s" %sid
-    domaincount = json.loads(Sessions.objects(sid=sid).first().domaincount)
+    domaincount = Sessions.objects(sid=sid).first().domaincount
+    if domaincount:
+        domaincount = json.loads(domaincount)
+    else:
+        domaincount = {}
     for result in results:
         casename = Cases.objects(sid=sid, tid=result[0]).first().casename
         if not result[2]:

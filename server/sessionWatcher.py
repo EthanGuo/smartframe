@@ -6,7 +6,7 @@ import threading
 from Queue import Queue
 import time, types, json
 from smartserver.config import REDIS_HOST, REDIS_PORT
-from smartserver.v2 import tasks
+from smartserver.v1 import tasks
 
 queue = Queue()
 sessionlist = {}
