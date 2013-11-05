@@ -122,31 +122,28 @@ def groupRemoveAll(gid):
 
 def _dirtyFileRemoveAll():
     #Remove dirty records in Files.
-    fileids, casefileids, avatarids = [], [], []
-    for f in Files.objects():
-        fileids.append(f.fileid)
+    casefileids, avatarids = set(), set()
+    fileids = set(Files.objects().distinct('fileid'))
     for case in Cases.objects(result='fail'):
         if case.log:
-            casefileids.append(_getID(case.log))
+            casefileids.add(_getID(case.log))
         if case.expectshot:
-            casefileids.append(_getID(case.expectshot))
+            casefileids.add(_getID(case.expectshot))
         if case.snapshots:
             for snap in case.snapshots:
-                casefileids.append(_getID(snap))
+                casefileids.add(_getID(snap))
     for user in Users.objects():
         if user.avatar:
-            avatarids.append(_getID(user.avatar))
+            avatarids.add(_getID(user.avatar))
 
-    dirtyids = fileids - casefileids - avatarids
-    deleteFile(dirtyids)
+    deleteFile((fileids - casefileids - avatarids))
 
 def _dirtyCaseRemoveAll():
     #Remove dirty records in Cases
-    casesids = Cases.objects().distinct('sid')
-    sessionids = Sessions.objects().distinct('sid')
+    casesids = set(Cases.objects().distinct('sid'))
+    sessionids = set(Sessions.objects().distinct('sid'))
 
-    dirtyids = casesids - sessionids
-    for sid in dirtyids:
+    for sid in casesids - sessionids:
         try:
             Cases.objects(sid=sid).delete()
         except OperationError:
@@ -154,11 +151,10 @@ def _dirtyCaseRemoveAll():
 
 def _dirtySessionRemoveAll():
     #Remove dirty records in Sessions.
-    sessiongids = Sessions.objects().distinct('gid')
-    groupids = Groups.objects().distinct('gid')
+    sessiongids = set(Sessions.objects().distinct('gid'))
+    groupids = set(Groups.objects().distinct('gid'))
 
-    dirtyids = sessiongids - groupids
-    for gid in dirtyids:
+    for gid in sessiongids - groupids:
         try:
             Sessions.objects(gid=gid).delete()
         except OperationError:
@@ -166,11 +162,11 @@ def _dirtySessionRemoveAll():
 
 def _dirtyGroupMemberRemoveAll():
     #Remove dirty records in GroupMembers.
-    membergids = GroupMembers.objects().distinct('gid')
-    groupids = Groups.objects().distinct('gid')
 
-    dirtyids = membergids - groupids
-    for gid in dirtyids:
+    membergids = set(GroupMembers.objects().distinct('gid'))
+    groupids = set(Groups.objects().distinct('gid'))
+
+    for gid in membergids - groupids:
         try:
             GroupMembers.objects(gid=gid).delete()
         except OperationError:
@@ -178,14 +174,12 @@ def _dirtyGroupMemberRemoveAll():
 
 def _dirtyCyclesRemoveAll():
     #Remove dirty records in Cycles.
-    cyclesids=[]
+    cyclesids = set()
     for cycle in Cycles.objects():
-        for sid in cycle.sids:
-            cyclesids.append(sid)
-    sessionids = Sessions.objects().distinct('sid')
+        cyclesids.update(cycle.sids)
+    sessionids = set(Sessions.objects().distinct('sid'))
 
-    dirtyids = cyclesids - sessionids
-    for sid in dirtyids:
+    for sid in cyclesids - sessionids:
         cycle = Cycles.objects(sids=sid).first()
         try:
             cycle.update(pull__sids=sid)
