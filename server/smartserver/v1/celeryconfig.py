@@ -5,7 +5,7 @@ from . import config
 from celery.schedules import crontab
 
 # Included Taskes
-CELERY_INCLUDE = ['smartserver.v2.tasks']
+CELERY_INCLUDE = ['smartserver.v1.tasks']
 # Task Broker
 BROKER_URL = config.REDIS_URI
 # Task Result backend
@@ -20,15 +20,15 @@ CELERY_TASK_RESULT_EXPIRES = 3600
 # Scheduled tasks
 CELERYBEAT_SCHEDULE = {
     'cleardirty-every-month': {
-        'task': 'smartserver.v2.tasks.ws_del_dirty',
+        'task': 'smartserver.v1.tasks.ws_del_dirty',
         'schedule': crontab(minute=0, hour=0, day_of_month=1)
     },
     'validate-testcase-endtime-every-30-minutes': {
-        'task': 'smartserver.v2.tasks.ws_validate_testcase_endtime',
+        'task': 'smartserver.v1.tasks.ws_validate_testcase_endtime',
         'schedule': crontab(minute='*/30')
     },
     'validate-token-expiretime-every-30-minutes': {
-        'task': 'smartserver.v2.tasks.ws_validate_token_expiretime',
+        'task': 'smartserver.v1.tasks.ws_validate_token_expiretime',
         'schedule': crontab(minute='*/30')
     },
 }

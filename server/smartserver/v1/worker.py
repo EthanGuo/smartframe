@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from celery import Celery
 from . import celeryconfig
 
-worker = Celery('smartserver.v2.worker')
+worker = Celery('smartserver.v1.worker')
 
 # Optional configuration, see the application user guide.
 worker.config_from_object(celeryconfig)
