@@ -82,7 +82,7 @@ def tokenValidateExpireTime():
             user.reload()
     #If token has expired, remove it from database.
     for usertoken in UserTokens.objects():
-        if (time.time() - usertoken.expires) <= 0:
+        if (time.time() - usertoken.expires) >= 0:
             UserTokens.objects(token=usertoken.token).delete()
 
 def _getID(url):
