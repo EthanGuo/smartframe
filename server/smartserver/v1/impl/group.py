@@ -137,10 +137,11 @@ def groupGetSessions(data, gid, uid):
             product, revision, deviceid = '', '', ''
         user = Users.objects(uid=session.uid).first()
         tester = user.username if user else ''
+        endtime = session.endtime.strftime(TIME_FORMAT) if session.endtime else ''
         sessions.append({'gid': gid, 'product': product, 'revision': revision,
                          'deviceid': deviceid, 
                          'starttime': session.starttime.strftime(TIME_FORMAT),
-                         'endtime': session.endtime.strftime(TIME_FORMAT), 
+                         'endtime': endtime, 
                          'runtime': session.runtime, 'tester': tester})
     return resultWrapper('ok', {'sessions': sessions}, '')
 

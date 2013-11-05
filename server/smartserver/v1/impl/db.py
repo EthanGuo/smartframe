@@ -92,7 +92,7 @@ class Sessions(Document):
     endtime = DateTimeField()
     runtime = IntField()
     casecount = DictField()
-    domaincount = DictField()
+    domaincount = StringField()
     deviceinfo = EmbeddedDocumentField(Device)
 
     meta = {'collection': 'Sessions',

@@ -3,13 +3,14 @@
 
 from db import *
 from filedealer import deleteFile
+import json
 
 def sessionUpdateDomainSummary(sid, results):
     """
        Task func to update session domain count
     """
     print "Start updating the domain summary of session %s" %sid
-    domaincount = Sessions.objects(sid=sid).first().domaincount
+    domaincount = json.loads(Sessions.objects(sid=sid).first().domaincount)
     for result in results:
         casename = Cases.objects(sid=sid, tid=result[0]).first().casename
         if not result[2]:
@@ -20,7 +21,8 @@ def sessionUpdateDomainSummary(sid, results):
                 domaincount[casename][result[1]] += 1
         else:
             domaincount[casename][result[2]] -= 1
-            domaincount[casename][result[1]] += 1   
+            domaincount[casename][result[1]] += 1
+    domaincount = json.dumps(domaincount)   
     try:
         Sessions.objects(sid=sid).update(set__domaincount=domaincount)
     except OperationError:

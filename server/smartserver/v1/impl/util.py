@@ -16,7 +16,7 @@ def resultWrapper(status, data, msg=''):
 
 def convertTime(targettime):
     if targettime:
-        return datetime.strptime(targettime, TIME_FORMAT)
+        return datetime.strptime(targettime, TIME_FORMAT).strftime(TIME_FORMAT)
     else:
         return datetime.now().strftime(TIME_FORMAT)
 
