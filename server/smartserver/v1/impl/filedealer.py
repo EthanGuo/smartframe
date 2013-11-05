@@ -47,8 +47,6 @@ def deleteFile(fids):
     params, data: {'fids': (list) list of file id}
     return, data: {}
     """
-    if not isinstance(fids, list):
-        fids = [fids]
     for fid in fids:
         f = Files.objects(fileid=fid).first()
         if f:

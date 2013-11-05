@@ -23,7 +23,7 @@ class TestFileDealer(unittest.TestCase):
         self.assertTrue(result['data']['filename'] == '1.png')
         self.assertTrue(result['data']['content_type'] == 'image/png')
 
-        deleteFile(fileid)
+        deleteFile([fileid])
         self.assertFalse(self.db['Files'].find({'fileid': fileid}).count())
 
     def tearDown(self):

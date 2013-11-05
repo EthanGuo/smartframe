@@ -196,6 +196,7 @@ def dirtyDataRemoveAll():
     """
        Scheduled task to remove all the dirty data(file, case, session) from database
     """
+    print "Start removing all the dirty files of server" 
     _dirtyGroupMemberRemoveAll()
     _dirtyCyclesRemoveAll()
     _dirtySessionRemoveAll()

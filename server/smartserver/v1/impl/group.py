@@ -251,5 +251,5 @@ def groupGetReport(data, gid, uid):
                               'starttime': starttime.strftime(TIME_FORMAT),
                               'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,
                               'firstuptime': firstfailureuptime, 'totaluptime': totaluptime,
-                              'issues': issues, 'domains': session.domaincount})
+                              'issues': issues, 'domains': json.loads(session.domaincount)})
     return __calculateResult(sessionresult)
