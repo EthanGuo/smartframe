@@ -46,6 +46,7 @@ def worker(queue):
         msg = queue.get()
         if msg == 'check':
             checkSessionList()
+        #After the connection's setup, a test signal would be sent, need to get rid of it.
         elif type(msg) is types.StringType:
             updateSessionList(json.loads(msg))
 

@@ -3,6 +3,7 @@
 
 from db import *
 from filedealer import deleteFile
+from util import cache
 import json, time
 
 def sessionUpdateDomainSummary(sid, results):
