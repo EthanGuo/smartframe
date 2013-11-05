@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 import memcache
 import redis
-from ..config import MEMCACHED_URI, REDIS_HOST, REDIS_PORT
+from ..config import MEMCACHED_URI, REDIS_HOST, REDIS_PORT, TIME_FORMAT
+from datetime import datetime
 
 def resultWrapper(status, data, msg=''):
     """
@@ -12,6 +13,12 @@ def resultWrapper(status, data, msg=''):
         return {'result': 'ok', 'data': data, 'msg': msg}
     elif status == 'error':
         return {'result': 'error', 'data': data, 'msg': msg}
+
+def convertTime(targettime):
+    if targettime:
+        return datetime.strptime(targettime, TIME_FORMAT)
+    else:
+        return datetime.now().strftime(TIME_FORMAT)
 
 class Cache(object):
     def __init__(self):

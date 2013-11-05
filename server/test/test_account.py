@@ -117,7 +117,7 @@ class TestAccount(unittest.TestCase):
     def testaccountGetSessions(self):
         self.db['Groups'].insert({'groupname': 'test', 'gid': 1})
         for i in range(1, 5):
-            self.db['Sessions'].insert({'gid': 1, 'sid': i, 'uid': 1})
+            self.db['Sessions'].insert({'gid': 1, 'sid': str(i), 'uid': 1})
         result = accountGetSessions(1)
         self.assertTrue(len(result['data']['usersession']) == 4)
 

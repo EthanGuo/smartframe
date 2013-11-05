@@ -131,7 +131,7 @@ def casePOST(data, sid):
     """
     Implement case results create/update.
     """
-    return case_func.get(data['subc'])(data['data'], gid, sid)
+    return case_func.get(data['subc'])(data['data'], sid)
 
 def caseFilePUT(subc, sid, tid, data, xtype):
     """

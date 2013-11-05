@@ -8,7 +8,7 @@ def sessionUpdateDomainSummary(sid, results):
     """
        Task func to update session domain count
     """
-    print "Start updating the domain summary of session %d" %sid
+    print "Start updating the domain summary of session %s" %sid
     domaincount = Sessions.objects(sid=sid).first().domaincount
     for result in results:
         casename = Cases.objects(sid=sid, tid=result[0]).first().casename
@@ -30,7 +30,7 @@ def sessionActiveSession(sid):
     """
        Task function to clear session endtime if it has been set.
     """
-    print "Start activate session %d" %sid
+    print "Start activate session %s" %sid
     session = Sessions.objects(sid=sid).first()
     if session.endtime:
         try:
@@ -42,15 +42,15 @@ def sessionSetEndTime(sid):
     """
        Task function to set session endtime.
     """
-    print "Start setting the endtime of session %d" %sid
+    print "Start setting the endtime of session %s" %sid
     if not Cases.objects(sid=sid):
         endtime = Sessions.objects(sid=sid).first().starttime
     else:
         case = Cases.objects(sid=sid).order_by('-tid').first()
         endtime = case.endtime if case.endtime else case.starttime
 
-    cache.clearCache(str('sid:' + str(sid) + ':snap'))
-    cache.clearCache(str('sid:' + str(sid) + ':snaptime'))
+    cache.clearCache(str('sid:' + sid + ':snap'))
+    cache.clearCache(str('sid:' + sid + ':snaptime'))
     try:
         Sessions.objects(sid=sid).update(set__endtime=endtime)
     except OperationError:
@@ -86,7 +86,7 @@ def sessionRemoveAll(sid):
     """
        Task to remove all the cases of a session and case log/snapshots 
     """
-    print "Start remove session %d" %sid
+    print "Start remove session %s" %sid
     fid = []
     for case in Cases.objects(sid=sid, result='fail'):
         if case.log:

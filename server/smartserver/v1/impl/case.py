@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from util import resultWrapper, cache, redis_con
+from util import resultWrapper, cache, redis_con, convertTime
 from mongoengine import OperationError
 from db import Cases
 from filedealer import saveFile
@@ -15,9 +15,9 @@ def caseresultCreate(data, sid):
     params, data: {'tid':(int), 'casename':(string), 'starttime':(string)}
     return, data: {}
     """
-    sid = int(sid)
     #create a new case if save failed return error
-    caseInst = Cases().from_json(json.dumps({'sid': sid,'tid':data.get('tid'),'casename':data.get('casename'),'result':'running','starttime':data.get('starttime')}))
+    starttime = convertTime(data.get('starttime'))
+    caseInst = Cases().from_json(json.dumps({'sid': sid,'tid':data.get('tid'),'casename':data.get('casename'),'result':'running','starttime':starttime}))
     try:
         caseInst.save()
     except OperationError:
@@ -45,7 +45,7 @@ def caseresultUpdate(data, sid):
     """
     #update case result or add case comments
     #If tid is list, do add case comments, or update case result.
-    sid, domains = int(sid), []
+    domains = []
     if isinstance(data.get('tid'), list):
         if data.get('comments'):
             try:
@@ -63,30 +63,33 @@ def caseresultUpdate(data, sid):
             return resultWrapper('error',{}, 'Comments can not be empty!')
     elif isinstance(data.get('tid'), int):
         case = Cases.objects(sid=sid, tid=data['tid']).first()
+        if not case:
+            return resultWrapper('error', {}, 'Invalid case ID!')
         orgresult = case.result
         orgcommentresult = case.comments.caseresult if case.comments else ''
         # Fetch all the images saved to memcache before then clear the cache.
         # If case failed, save all the images fetched from memcache to database
         if data.get('result').lower() == 'fail':
-            snapshots = cache.getCache(str('sid:' + str(sid) + ':tid:' + str(data['tid']) + ':snaps'))
+            snapshots = cache.getCache(str('sid:' + sid + ':tid:' + str(data['tid']) + ':snaps'))
             snapshots = handleSnapshots(snapshots)
         else:
             snapshots = []
+        endtime = convertTime(data.get('endtime'))
         try:
             case.update(set__result=data.get('result').lower(), 
-                        set__endtime=data.get('endtime'), 
+                        set__endtime=endtime, 
                         set__traceinfo=data.get('traceinfo',''), 
                         push_all__snapshots=snapshots)
             case.reload()
         except OperationError:
             return resultWrapper('error', {}, 'update caseresult failed!')
         finally:
-            cache.clearCache(str('sid:' + str(sid) + ':tid:' + str(data['tid']) + ':snaps'))
+            cache.clearCache(str('sid:' + sid + ':tid:' + str(data['tid']) + ':snaps'))
         session.sessionUpdateSummary(sid, [[data['result'].lower(), orgresult]])
         ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
         ws_active_testsession.delay(sid)
         #publish heart beat to session watcher here.
-        redis_con.publish("session:heartbeat", json.dumps({'sid': int(sid)}))
+        redis_con.publish("session:heartbeat", json.dumps({'sid': sid}))
         return resultWrapper('ok', {},'')
 
 def uploadPng(sid, tid, imagedata, stype):
@@ -103,7 +106,7 @@ def uploadPng(sid, tid, imagedata, stype):
     if imagetype == 'expect':
         imageid = saveFile(imagedata, 'image/png', imagename)
         try:
-            Cases.objects(sid=int(sid), tid=int(tid)).update(set__expectshot=imageid)
+            Cases.objects(sid=sid, tid=int(tid)).update(set__expectshot=imageid)
         except OperationError:
             return resultWrapper('error', {}, 'Save image to database failed!')
     elif imagetype == 'current':
@@ -123,6 +126,6 @@ def uploadZip(sid, tid, logdata, xtype):
     try:
         filename = 'log-caseid-%s.zip' %tid
         fileid = saveFile(logdata, 'application/zip', filename)
-        Cases.objects(sid=int(sid), tid=int(tid)).update(set__log=fileid)
+        Cases.objects(sid=sid, tid=int(tid)).update(set__log=fileid)
     except OperationError:
         return resultWrapper('error', {}, 'Save log to database failed!')

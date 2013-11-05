@@ -13,11 +13,11 @@ class TestCase(unittest.TestCase):
         self.db = self._mc.smartServer_eth
 
     def _insertCase(self):
-        self.db['Sessions'].insert({'gid': 1, 'sid': 1, 'casecount':{'total': 0, 'pass': 0, 'fail': 0, 'block': 0}})
+        self.db['Sessions'].insert({'gid': 1, 'sid': '1', 'casecount':{'total': 0, 'pass': 0, 'fail': 0, 'block': 0}})
         for i in range(1, 10):
             time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             casename = 'wifi.testOpenWifi_' + str(i)
-            self.db['Cases'].insert({'tid': i, 'gid': 1, 'sid': 1, 'casename': casename, 'starttime': time, 'result': 'running'})
+            self.db['Cases'].insert({'tid': i, 'gid': 1, 'sid': '1', 'casename': casename, 'starttime': time, 'result': 'running'})
 
     def testcaseresultCreate(self):
         sid = '1'

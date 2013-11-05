@@ -85,7 +85,7 @@ class Sessions(Document):
     db schema of collection session in mongodb
     """
     gid = IntField(required=True)
-    sid = IntField(required=True)
+    sid = StringField(required=True)
     uid = IntField()
     planname = StringField()
     starttime = DateTimeField()
@@ -104,7 +104,7 @@ class Cycles(Document):
     db schema of collection cycle in mongodb
     """
     gid = IntField(required=True)
-    sids = ListField(IntField())
+    sids = ListField(StringField())
     cid = SequenceField()
 
     meta = {'collection': 'Cycles'}
@@ -121,7 +121,7 @@ class Cases(Document):
     """
     choices=('pass', 'fail', 'error', 'running')
 
-    sid = IntField(required=True)
+    sid = StringField(required=True)
     tid = IntField(required=True)
     casename = StringField(required=True)
     starttime = DateTimeField()

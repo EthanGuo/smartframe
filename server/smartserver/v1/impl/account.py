@@ -255,7 +255,7 @@ def accountGetGroups(uid):
 def accountGetSessions(uid):
     """
     params, uid:(int)uid
-    return, data: {'sessions': [{'sid':(int)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
+    return, data: {'sessions': [{'sid':(String)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
     """ 
     usersession = []
     sessions = Sessions.objects(uid=uid)

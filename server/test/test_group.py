@@ -74,17 +74,17 @@ class TestGroup(unittest.TestCase):
         self.db['Groups'].insert({'groupname': 'test', 'gid': 1})
         for i in range(1, 10):
             self.db['Users'].insert({'username': 'test_' + str(i), 'password': '123456', 'uid': i, 'info':{'email': 'test@borqs.com'}})
-            self.db['Sessions'].insert({'gid': 1, 'sid': i, 'uid': i})
+            self.db['Sessions'].insert({'gid': 1, 'sid': str(i), 'uid': i})
         result = groupGetSessions({}, '1', 1)
         self.asserTrue(len(result['data']['sessions']) == 9)
 
     def testgroupGetCycles(self):
         self.db['Groups'].insert({'groupname': 'test', 'gid': 1})
         for i in range(1, 10):
-            self.db['Sessions'].insert({'gid': 1, 'sid': i, 'deviceinfo':{'product': 'BKB', 'revision': 'abcd'}})
-        self.db['Cycles'].insert({'gid': 1, 'sids':[1,2,3,4], 'cid': 1})
-        self.db['Cycles'].insert({'gid': 1, 'sids':[5,6,7,8], 'cid': 2})
-        self.db['Cycles'].insert({'gid': 1, 'sids':[9], 'cid': 3})
+            self.db['Sessions'].insert({'gid': 1, 'sid': str(i), 'deviceinfo':{'product': 'BKB', 'revision': 'abcd'}})
+        self.db['Cycles'].insert({'gid': 1, 'sids':['1','2','3','4'], 'cid': 1})
+        self.db['Cycles'].insert({'gid': 1, 'sids':['5','6','7','8'], 'cid': 2})
+        self.db['Cycles'].insert({'gid': 1, 'sids':['9'], 'cid': 3})
 
         result = groupGetCycles({}, '1', 1)
         self.assertTrue(len(result['data']['cycles']) == 3)

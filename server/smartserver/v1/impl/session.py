@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from util import resultWrapper, cache, redis_con
+from util import resultWrapper, cache, redis_con, convertTime
 from mongoengine import OperationError
 from ..config import TIME_FORMAT
 from db import Sessions, Cycles, Users, Cases, GroupMembers
@@ -16,8 +16,9 @@ def sessionCreate(data, gid, sid, uid):
     return, data: {}
     """
     #create a new session if save fail return exception
-    sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': int(sid),'uid':int(uid),
-                                      'planname':data.get('planname', 'test'),'starttime':data.get('starttime'),
+    starttime = convertTime(data.get('starttime'))
+    sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': sid,'uid':int(uid),
+                                      'planname':data.get('planname', 'test'),'starttime':starttime,
                                       'deviceinfo':data.get('deviceinfo'),
                                       'casecount': {'total': 0, 'pass': 0, 'fail': 0, 'error': 0}}))
     try:
@@ -25,7 +26,7 @@ def sessionCreate(data, gid, sid, uid):
     except OperationError :
         return resultWrapper('error',{},'Failed to create session!')
     #publish heart beat to session watcher here.
-    redis_con.publish("session:heartbeat", json.dumps({'sid': int(sid)})) 
+    redis_con.publish("session:heartbeat", json.dumps({'sid': sid})) 
     return resultWrapper('ok',{},'')
 
 def sessionUpdate(data, gid, sid, uid):
@@ -34,13 +35,14 @@ def sessionUpdate(data, gid, sid, uid):
     return, data: {}
     """
     #update session endtime
-    gid, sid = int(gid), int(sid)
+    gid = int(gid)
     if 'endtime' in data:
         #Clear the cached image for screen monitor
-        cache.clearCache(str('sid:' + str(sid) + ':snap'))
-        cache.clearCache(str('sid:' + str(sid) + ':snaptime'))
+        cache.clearCache(str('sid:' + sid + ':snap'))
+        cache.clearCache(str('sid:' + sid + ':snaptime'))
+        endtime = convertTime(data.get('endtime'))
         try:
-            Sessions.objects(sid=sid).update(set__endtime=data.get('endtime'))
+            Sessions.objects(sid=sid).update(set__endtime=endtime)
         except OperationError:
             return resultWrapper('error', {}, 'Update session endtime failed!')
         # send session heart to sessionwatcher and remove current sid from the watcher list.
@@ -101,6 +103,8 @@ def sessionUpdateSummary(sid, results):
     """
     # Update casecount here.
     session = Sessions.objects(sid=sid).first()
+    if not session:
+        return resultWrapper('error', {}, 'Invalid session ID!')
     casecount = session.casecount
     for result in results:
         if result[1] == 'running':
@@ -134,11 +138,11 @@ def sessionUploadXML(data, gid, sid):
         caseId = testcase.attrib['order']
         casename = ''.join([testcase.attrib['component'],'.',testcase.attrib['id'].split('_')[0]])
         for resultInfo in testcase.iter('result_info'):
-            starttime = resultInfo.find('start').text
-            endtime = resultInfo.find('end').text
+            starttime = convertTime(resultInfo.find('start').text)
+            endtime = convertTime(resultInfo.find('end').text)
             result = resultInfo.find('actual_result').text.lower()
         try:
-            caseInst = Cases().from_json(json.dumps({'sid': int(sid), 'tid': int(caseId),
+            caseInst = Cases().from_json(json.dumps({'sid': sid, 'tid': int(caseId),
                                                      'casename': casename,'result': result,
                                                      'starttime': starttime, 'endtime': endtime,}))
             caseInst.save()
@@ -147,16 +151,16 @@ def sessionUploadXML(data, gid, sid):
         except OperationError:
             return resultWrapper('error', {}, 'Create case failed!')
     #update session summary here.
-    sessionUpdateSummary(int(sid), summarys)
+    sessionUpdateSummary(sid, summarys)
     #Trigger task to update domain summary here.
-    ws_update_session_domainsummary.delay(int(sid), domains)
+    ws_update_session_domainsummary.delay(sid, domains)
 
 def sessionDelete(data, gid, sid, uid):
     """
     params, data: {}
     return, data: {}
     """
-    gid, sid, uid = int(gid), int(sid), int(uid)
+    gid, uid = int(gid), int(uid)
     member = GroupMembers.objects(gid=gid, uid=uid).first()
     role = member.role if member else -1
     session = Sessions.objects(sid=sid, uid=uid).first()
@@ -183,7 +187,7 @@ def sessionSummary(data, gid, sid):
                    'gid':(int)gid, 'sid':(int)sid, 
                    'deviceid':deviceid, summary':casecount,'deviceinfo':deviceinfo}
     """
-    result = Sessions.objects(sid=int(sid)).first()
+    result = Sessions.objects(sid=sid).first()
     if result:
         tester = Users.objects(uid=result.uid).first().username
         deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
@@ -204,7 +208,7 @@ def sessionPollStatus(data, gid, sid):
     return, data: {}
     """
     #return 'ok' means session has been updated already, 'error' means not yet.
-    if Cases.objects(sid=int(sid), tid__gt=data.get('tid')):
+    if Cases.objects(sid=sid, tid__gt=data.get('tid')):
         return resultWrapper('ok', {}, 'Session has been updated!')
     else:
         return resultWrapper('error', {}, 'Session has NOT been updated yet!')
@@ -219,7 +223,7 @@ def sessionGetLatestCases(data, gid, sid):
     #Fetch the first 'amount'(20 for example) cases and return them.
     amount = data.get('amount', 20)
     result = []
-    for case in Cases.objects(sid=int(sid)).order_by('-tid')[:amount]:
+    for case in Cases.objects(sid=sid).order_by('-tid')[:amount]:
         comments = case.comments.__dict__['_data'] if case.comments else ''
         starttime = case.starttime.strftime(TIME_FORMAT) if case.starttime else ''
         result.append({'tid': case.tid, 'casename': case.casename, 
@@ -236,7 +240,7 @@ def sessionGetHistoryCases(data, gid, sid):
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
     """
     #Fetch the cases of page 'pagenumber', 'pagesize' and 'casetype' can not customized.
-    sess = Sessions.objects(sid=int(sid))
+    sess = Sessions.objects(sid=sid)
     if not sess:
         return resultWrapper('error', {}, 'Invalid session ID!')
     #To calculate how many pages are there in this session, for frontend display purpose
@@ -252,9 +256,9 @@ def sessionGetHistoryCases(data, gid, sid):
     startpoint = (pagenumber - 1) * pagesize
     endpoint = startpoint + pagesize
     if casetype == 'total':
-        case = Cases.objects(sid=int(sid)).order_by('-tid')[startpoint : endpoint]
+        case = Cases.objects(sid=sid).order_by('-tid')[startpoint : endpoint]
     else:
-        case = Cases.objects(sid=int(sid), result=casetype).order_by('-tid')[startpoint : endpoint]
+        case = Cases.objects(sid=sid, result=casetype).order_by('-tid')[startpoint : endpoint]
 
     result = []
     for c in case:
