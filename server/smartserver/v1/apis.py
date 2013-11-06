@@ -166,10 +166,10 @@ def doSessionPOST(gid,sid,uid):
     """
     return sessionPOST(request.json, gid, sid, uid)
 
-@appweb.route('/session/<sid>', method='GET')
+@appweb.route('/group/<gid>/session/<sid>', method='GET')
 def doSessionGET(gid, sid):
     """
-    URL:/session/<sid>
+    URL:/group/<gid>/session/<sid>
     TYPE:http/GET
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
