@@ -234,15 +234,6 @@ def accountGetInfo(uid):
     rmsg, rstatus = '', 'ok'
     return resultWrapper(rstatus, rdata, rmsg)
 
-def _getLiveSessionCount(gid):
-    #Used to get live session count of a group
-    sessions = Sessions.objects(gid=gid)
-    count = 0
-    for session in sessions:
-        if not session.endtime:
-            count += 1
-    return count
-
 def accountGetGroups(uid):
     """
     params, uid:(int)uid
@@ -259,7 +250,7 @@ def accountGetGroups(uid):
             usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
                               'userrole': g.role, 'groupowner': ownername,
                               'allsession': len(Sessions.objects(gid=g.gid)),
-                              'livesession': _getLiveSessionCount(g.gid)})
+                              'livesession': len(Sessions.objects(gid=g.gid, endtime=None))})
     return resultWrapper('ok', {'usergroup': usergroup}, '')
 
 def accountGetSessions(uid):

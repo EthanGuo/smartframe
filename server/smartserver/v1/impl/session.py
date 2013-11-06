@@ -6,6 +6,7 @@ from mongoengine import OperationError
 from ..config import TIME_FORMAT
 from db import Sessions, Cycles, Users, Cases, GroupMembers
 from ..tasks import ws_update_session_domainsummary, ws_del_session
+from taskimpl import sessionUpdateSummary
 import json
 
 def sessionCreate(data, gid, sid, uid):
@@ -96,32 +97,6 @@ def sessionCycle(data, gid, sid, uid):
     except OperationError:
         return resultWrapper('error', {}, 'Add current session to cycle failed!')
     return resultWrapper('ok', {'cid': cycle.cid}, '')
-
-def sessionUpdateSummary(sid, results):
-    """
-       Func to update session casecount summary.
-    """
-    # Update casecount here.
-    session = Sessions.objects(sid=sid).first()
-    if not session:
-        return resultWrapper('error', {}, 'Invalid session ID!')
-    casecount = session.casecount
-    for result in results:
-        if result[1] == 'running':
-            casecount['total'] += 1
-            casecount[result[0]] += 1
-        else:
-            casecount[result[1]] -= 1
-            casecount[result[0]] += 1
-    # Update session endtime here.
-    cases = Cases.objects(sid=sid).order_by('-tid')
-    minstarttime = cases[(len(cases) - 1)].starttime
-    maxendtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
-    runtime = (maxendtime - minstarttime).total_seconds()
-    try:
-        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
-    except OperationError:
-        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
 
 def sessionUploadXML(data, gid, sid):
     """

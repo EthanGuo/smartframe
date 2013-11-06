@@ -30,6 +30,10 @@ def ws_validate_testcase_endtime():
 	taskimpl.caseValidateEndtime()
 
 @w.task()
+def ws_validate_session_endtime():
+	taskimpl.sessionValidateEndtime()
+
+@w.task()
 def ws_update_session_domainsummary(sid, results):
     taskimpl.sessionUpdateDomainSummary(sid, results)
 

@@ -7,7 +7,7 @@ from filedealer import saveFile
 from datetime import datetime
 from ..config import TIME_FORMAT
 from ..tasks import ws_update_session_domainsummary, ws_active_testsession
-import session
+from taskimpl import sessionUpdateSummary
 import json
 
 def caseresultCreate(data, sid):
@@ -85,7 +85,7 @@ def caseresultUpdate(data, sid):
             return resultWrapper('error', {}, 'update caseresult failed!')
         finally:
             cache.clearCache(str('sid:' + sid + ':tid:' + str(data['tid']) + ':snaps'))
-        session.sessionUpdateSummary(sid, [[data['result'].lower(), orgresult]])
+        sessionUpdateSummary(sid, [[data['result'].lower(), orgresult]])
         ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
         ws_active_testsession.delay(sid)
         #publish heart beat to session watcher here.

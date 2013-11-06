@@ -122,9 +122,9 @@ def groupGetMembers(data, gid, uid):
 def groupGetSessions(data, gid, uid):
     """
     params, data: {'cid' is contained but wont be used here}
-    return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 
+    return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 'sid': (String)
                                 'revision':(String)revision, 'deviceid':(string)deviceid,
-                                'starttime': (String)time, 'endtime': (String)time,
+                                'starttime': (String)time, 'endtime': (String)time, 'cid': (int)
                                 'runtime': (int)time, 'tester': (String)name},...]}
     """
     gid, sessions = int(gid), []
@@ -138,10 +138,12 @@ def groupGetSessions(data, gid, uid):
         user = Users.objects(uid=session.uid).first()
         tester = user.username if user else ''
         endtime = session.endtime.strftime(TIME_FORMAT) if session.endtime else ''
+        cycle = Cycles.objects(sids=session.sid).first()
+        cid = cycle.cid if cycle else ''
         sessions.append({'gid': gid, 'product': product, 'revision': revision,
                          'deviceid': deviceid, 'sid': session.sid,
                          'starttime': session.starttime.strftime(TIME_FORMAT),
-                         'endtime': endtime, 
+                         'endtime': endtime, 'cid': cid,
                          'runtime': session.runtime, 'tester': tester})
     return resultWrapper('ok', {'sessions': sessions}, '')
 

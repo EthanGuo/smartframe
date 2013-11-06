@@ -33,6 +33,32 @@ def sessionUpdateDomainSummary(sid, results):
     except OperationError:
         Sessions.objects(sid=sid).update(set__domaincount=domaincount)
 
+def sessionUpdateSummary(sid, results):
+    """
+       Func to update session casecount summary.
+    """
+    # Update casecount here.
+    session = Sessions.objects(sid=sid).first()
+    if not session:
+        return resultWrapper('error', {}, 'Invalid session ID!')
+    casecount = session.casecount
+    for result in results:
+        if result[1] == 'running':
+            casecount['total'] += 1
+            casecount[result[0]] += 1
+        else:
+            casecount[result[1]] -= 1
+            casecount[result[0]] += 1
+    # Update session runtime here.
+    cases = Cases.objects(sid=sid).order_by('-tid')
+    minstarttime = cases[(len(cases) - 1)].starttime
+    maxendtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
+    runtime = (maxendtime - minstarttime).total_seconds()
+    try:
+        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
+    except OperationError:
+        Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
+
 def sessionActiveSession(sid):
     """
        Task function to clear session endtime if it has been set.
@@ -67,7 +93,18 @@ def caseValidateEndtime():
     """
        Used to validate case endtime
     """
-    # Maybe this is not a reasonable function.
+    for case in Cases.objects(endtime=None, result='running'):
+        if not case.starttime:
+            case.delete()
+        if (datetime.now() - case.starttime).total_seconds() >= 3600:
+            case.update(set__endtime=case.starttime, set__result='error')
+            sessionUpdateSummary(case.sid, [['error', 'running']])
+            sessionUpdateDomainSummary(case.sid, [[case.tid, 'error', '']])
+
+def sessionValidateEndtime():
+    """
+       Used to validate session endtime
+    """
     pass
 
 def tokenValidateExpireTime():
