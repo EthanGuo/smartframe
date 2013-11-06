@@ -85,11 +85,17 @@ def sessionCycle(data, gid, sid, uid):
             return resultWrapper('ok', {}, '')
 
     # For other case, remove session from current session then add it to new cycle.
+    if not Cycles.objects(cid=Cid):
+        return resultWrapper('error', {}, 'Invalid Cycle ID!')
     cycle = Cycles.objects(sids=sid).first()
     if cycle:
+        if cycle.cid == Cid:
+            return resultWrapper('error', {}, 'Joins this cycle already!')
         try:
             cycle.update(pull__sids=sid)
             cycle.reload()
+            if not cycle.sids:
+                cycle.delete()
         except OperationError:
             return resultWrapper('error', {}, 'Remove session from current cycle failed!')
     try:
