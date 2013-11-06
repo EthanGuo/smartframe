@@ -5,6 +5,7 @@ from db import *
 from filedealer import deleteFile
 from util import cache
 import json, time
+from datetime import datetime
 
 def sessionUpdateDomainSummary(sid, results):
     """
@@ -105,7 +106,16 @@ def sessionValidateEndtime():
     """
        Used to validate session endtime
     """
-    pass
+    for session in Sessions.objects(endtime=None):
+        cases = Cases.objects(sid=session.sid).order_by('-tid')
+        if not cases:
+            endtime = session.starttime
+        else:
+            endtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
+
+        if (datetime.now() - endtime).total_seconds() >= 3600:
+            session.update(set__endtime=endtime)
+            session.reload()
 
 def tokenValidateExpireTime():
     """
