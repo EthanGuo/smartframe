@@ -8,7 +8,7 @@ import time, types, json
 from smartserver.config import REDIS_HOST, REDIS_PORT
 from smartserver.v1 import tasks
 
-queue = Queue()
+queue = Queue(25)
 sessionlist = {}
 
 def checkSessionList():

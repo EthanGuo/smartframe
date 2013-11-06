@@ -78,9 +78,8 @@ def tokenValidateExpireTime():
     print "Start validating all the tokens of server" 
     users = Users.objects(active=False)
     for user in users:
-        if (time.time() - UserTokens.objects(uid=user.uid).first().expires) <= 0:
+        if (time.time() - UserTokens.objects(uid=user.uid).first().expires) >= 0:
             user.delete()
-            user.reload()
     #If token has expired, remove it from database.
     for usertoken in UserTokens.objects():
         if (time.time() - usertoken.expires) >= 0:
