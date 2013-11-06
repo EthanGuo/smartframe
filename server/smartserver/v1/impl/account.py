@@ -246,7 +246,6 @@ def accountGetGroups(uid):
             ownerid = GroupMembers.objects(role=10, gid=g.gid).first().uid
             ownername = Users.objects(uid=ownerid).first().username
             targetgroupname = Groups.objects(gid=g.gid).first().groupname
-
             usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
                               'userrole': g.role, 'groupowner': ownername,
                               'allsession': len(Sessions.objects(gid=g.gid)),

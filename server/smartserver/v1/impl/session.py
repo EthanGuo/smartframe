@@ -78,6 +78,8 @@ def sessionCycle(data, gid, sid, uid):
             try:
                 cycle.update(pull__sids=sid)
                 cycle.reload()
+                if not cycle.sids:
+                    cycle.delete()
             except OperationError:
                 return resultWrapper('error', {}, 'Remove session from current cycle failed!')
             return resultWrapper('ok', {}, '')
