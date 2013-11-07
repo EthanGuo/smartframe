@@ -16,7 +16,7 @@ def groupCreate(data, uid):
     return, data: {'gid':(int)gid}
     """
     #If groupname has been registered already, return error
-    if Groups.objects(groupname=data.get('groupname')):
+    if Groups.objects(groupname=data.get('groupname')).only('gid'):
         return resultWrapper('error', {}, 'A group with same username exists!')
     #Save group and set current user as its owner.
     groupInst = Groups().from_json(json.dumps({'groupname': data['groupname'], 'info': data.get('info', '')}))
@@ -29,7 +29,7 @@ def groupCreate(data, uid):
     return resultWrapper('ok', {'gid': groupInst.gid}, '')
 
 def __getUserRole(uid, gid):
-    g = GroupMembers.objects(gid=gid, uid=uid).first()
+    g = GroupMembers.objects(gid=gid, uid=uid).only('role').first()
     if g:
         return g.role
     else:
@@ -67,7 +67,7 @@ def groupSetMembers(data, gid, uid):
         for member in data.get('members'):
             if member['role'] == 10:
                 return resultWrapper('error', {}, 'There should be only one owner!')
-            target = GroupMembers.objects(gid=gid, uid=member['uid']).first()
+            target = GroupMembers.objects(gid=gid, uid=member['uid']).only('role').first()
             try:
                 #If target exists in current group, modify its role.
                 if target:
@@ -96,7 +96,7 @@ def groupDelMembers(data, gid, uid):
     else:
         for member in data.get('members'):
             try:
-                groupmember = GroupMembers.objects(gid=gid, uid=member['uid']).first()
+                groupmember = GroupMembers.objects(gid=gid, uid=member['uid']).only('role').first()
                 if not groupmember:
                     return resultWrapper('error', {}, 'Invalid user!')
                 else:
@@ -116,7 +116,7 @@ def groupGetMembers(data, gid, uid):
     gid = int(gid)
     groupMembers = []
     for member in GroupMembers.objects(gid=gid):
-        User = Users.objects(uid=member.uid).first()
+        User = Users.objects(uid=member.uid).only('username', 'info').first()
         groupMembers.append({
             'uid': member.uid,
             'role': member.role,
@@ -134,17 +134,17 @@ def groupGetSessions(data, gid, uid):
                                 'runtime': (int)time, 'tester': (String)name},...]}
     """
     gid, sessions = int(gid), []
-    for session in Sessions.objects(gid=gid):
+    for session in Sessions.objects(gid=gid).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime', 'runtime'):
         if session.deviceinfo:
             product = session.deviceinfo.product
             revision = session.deviceinfo.revision
             deviceid = session.deviceinfo.deviceid
         else:
             product, revision, deviceid = '', '', ''
-        user = Users.objects(uid=session.uid).first()
+        user = Users.objects(uid=session.uid).only('username').first()
         tester = user.username if user else ''
         endtime = session.endtime.strftime(TIME_FORMAT) if session.endtime else ''
-        cycle = Cycles.objects(sids=session.sid).first()
+        cycle = Cycles.objects(sids=session.sid).only('cid').first()
         cid = cycle.cid if cycle else ''
         sessions.append({'gid': gid, 'product': product, 'revision': revision,
                          'deviceid': deviceid, 'sid': session.sid,
@@ -160,10 +160,10 @@ def groupGetCycles(data, gid, uid):
                                 'livecount': (int)num, 'devicecount': (int)num},...]}
     """
     gid, cycles, i = int(gid), [], 0
-    for cycle in Cycles.objects(gid=gid):
+    for cycle in Cycles.objects(gid=gid).only('cid', 'sids'):
         cycles.append({'cid': cycle.cid, 'devicecount': 0, 'livecount': 0, 'product': '', 'revision': ''})
         for sid in cycle.sids:
-            session = Sessions.objects(sid=sid).first()
+            session = Sessions.objects(sid=sid).only('deviceinfo', 'endtime').first()
             if not cycles[i]['product']:
                 if session.deviceinfo:
                     cycles[i]['product'] = session.deviceinfo.product

@@ -43,7 +43,7 @@ def sessionUpdate(data, gid, sid, uid):
         cache.clearCache(str('sid:' + sid + ':snaptime'))
         endtime = convertTime(data.get('endtime'))
         try:
-            Sessions.objects(sid=sid).update(set__endtime=endtime)
+            Sessions.objects(sid=sid).only('endtime').update(set__endtime=endtime)
         except OperationError:
             return resultWrapper('error', {}, 'Update session endtime failed!')
         # send session heart to sessionwatcher and remove current sid from the watcher list.
@@ -90,7 +90,7 @@ def sessionCycle(data, gid, sid, uid):
     cycle = Cycles.objects(sids=sid).first()
     if cycle:
         if cycle.cid == Cid:
-            return resultWrapper('error', {}, 'Joins this cycle already!')
+            return resultWrapper('error', {}, 'Joined this cycle already!')
         try:
             cycle.update(pull__sids=sid)
             cycle.reload()
@@ -144,20 +144,21 @@ def sessionDelete(data, gid, sid, uid):
     return, data: {}
     """
     gid, uid = int(gid), int(uid)
-    member = GroupMembers.objects(gid=gid, uid=uid).first()
+    member = GroupMembers.objects(gid=gid, uid=uid).only('role').first()
     role = member.role if member else -1
-    session = Sessions.objects(sid=sid, uid=uid).first()
+    session = Sessions.objects(sid=sid, uid=uid).only('endtime').first()
     if session and role > 8 and session.endtime:
         try:
             session.delete()
-            cycle = Cycles.objects(gid=gid, sids=sid).first()
+            cycle = Cycles.objects(gid=gid, sids=sid).only('sids').first()
             if cycle:
-                Cycles.objects(sids=sid).update(pull__sids=sid)
+                cycle.update(pull__sids=sid)
                 cycle.reload()
                 if not cycle.sids:
                     cycle.delete()
         except OperationError :
             return resultWrapper('error', {}, 'Failed to remove the session!')
+        redis_con.publish('session:heartbeat', json.dumps({'clear': sid}))
         ws_del_session(sid)
         return resultWrapper('ok',{},'')
     return resultWrapper('error', {}, 'Permission denied or session is still alive!')
@@ -170,7 +171,7 @@ def sessionSummary(data, gid, sid):
                    'gid':(int)gid, 'sid':(int)sid, 
                    'deviceid':deviceid, summary':casecount,'deviceinfo':deviceinfo}
     """
-    result = Sessions.objects(sid=sid).first()
+    result = Sessions.objects(sid=sid).only('uid', 'deviceinfo', 'starttime', 'planname', 'runtime', 'casecount').first()
     if result:
         tester = Users.objects(uid=result.uid).first().username
         deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
@@ -191,7 +192,7 @@ def sessionPollStatus(data, gid, sid):
     return, data: {}
     """
     #return 'ok' means session has been updated already, 'error' means not yet.
-    if Cases.objects(sid=sid, tid__gt=data.get('tid')):
+    if Cases.objects(sid=sid, tid__gt=data.get('tid')).only('tid'):
         return resultWrapper('ok', {}, 'Session has been updated!')
     else:
         return resultWrapper('error', {}, 'Session has NOT been updated yet!')
@@ -205,7 +206,7 @@ def sessionGetLatestCases(data, gid, sid):
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
     """
     #Fetch the first 'amount'(20 for example) cases and return them.
-    amount = data.get('amount', 20)
+    amount = int(data.get('amount', 20))
     result = []
     for case in Cases.objects(sid=sid).order_by('-tid')[:amount]:
         comments = case.comments.__dict__['_data'] if case.comments else ''
@@ -226,11 +227,11 @@ def sessionGetHistoryCases(data, gid, sid):
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
     """
     #Fetch the cases of page 'pagenumber', 'pagesize' and 'casetype' can not customized.
-    sess = Sessions.objects(sid=sid)
+    sess = Sessions.objects(sid=sid).only('casecount')
     if not sess:
         return resultWrapper('error', {}, 'Invalid session ID!')
     #To calculate how many pages are there in this session, for frontend display purpose
-    pagesize = data.get('pagesize', 100)
+    pagesize = int(data.get('pagesize', 100))
     totalamount = sess.first().casecount['total']
     if (totalamount % pagesize != 0):
         totalpageamount = totalamount / pagesize + 1

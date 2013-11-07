@@ -57,8 +57,8 @@ class TestSession(unittest.TestCase):
         self.assertTrue(result['result'] == 'ok')
         sids = self.db['Cycles'].find({'gid': 1, 'cid': result['data']['cid']})[0]['sids']
         self.assertTrue('1' in sids)
-        sids = self.db['Cycles'].find({'gid': 1, 'cid': 1})[0]['sids']
-        self.assertTrue(not '1' in sids)
+        sids = self.db['Cycles'].find({'gid': 1, 'cid': 1}).count()
+        self.assertTrue(not sids)
 
     def testsessionDelete(self):
         gid, sid, uid, data = '1', '1', '1', {}
@@ -67,11 +67,9 @@ class TestSession(unittest.TestCase):
         self.db['Sessions'].insert({'gid': 1, 'sid': '1', 'uid': 1})
         
         sessionDelete(data, gid, sid, uid)
-        self.assertTrue(self.db['Sessions'].find({'gid': 1, 'sid': '1'}).count() == 0)
+        self.assertTrue(self.db['Sessions'].find({'gid': 1, 'sid': '1'}).count() == 1)
 
-        self.db['Sessions'].insert({'gid': 1, 'sid': '1', 'uid': 1})
         uid = '2'
-
         sessionDelete(data, gid, sid, uid)
         self.assertTrue(self.db['Sessions'].find({'gid': 1, 'sid': '1'}).count() == 1)
 

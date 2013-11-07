@@ -32,7 +32,7 @@ def createToken(appid, uid):
         return {'status': 'error', 'token': ''}
 
 def accountValidToken(token):
-    userToken = UserTokens.objects(token=token).first()
+    userToken = UserTokens.objects(token=token).only('uid').first()
     if userToken == 0:
         return None
     else:
@@ -46,9 +46,9 @@ def accountLogin(data):
     #Check whether data['username'] is username or email address.
     #Find user by email/password or username/password
     if '@' in data.get('username'):
-        result = Users.objects(info__email=data['username'], password=data['password'])
+        result = Users.objects(info__email=data['username'], password=data['password']).only('active', 'appid', 'uid')
     else:
-        result = Users.objects(username=data['username'], password=data['password'])
+        result = Users.objects(username=data['username'], password=data['password']).only('active', 'appid', 'uid')
     #If user exists, create a token for it and return, or return error.
     if len(result) != 0:
         useraccount = result.first()
@@ -71,7 +71,7 @@ def accountRegister(data):
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
     # If both username and email have not been registered, create a new user, generate a token, send a mail then return, or return error.
-    if (not Users.objects(username=data['username'])) and (not Users.objects(info__email=data['info']['email'])):
+    if (not Users.objects(username=data['username']).only('uid')) and (not Users.objects(info__email=data['info']['email']).only('uid')):
         #Password should be encryped already.
         try:
             userInst = Users().from_json(json.dumps(data))
@@ -95,7 +95,7 @@ def accountRetrievePasswd(data):
     return, data: {}
     """    
     # Find user by email, if user exists, update its password, generate a token, then send mail to it, or return error.
-    result = Users.objects(info__email=data.get('email'))
+    result = Users.objects(info__email=data.get('email')).only('uid')
     if len(result) == 1:
         newpassword = ''.join([choice(string.ascii_letters + string.digits) for i in range(8)])
         m = hashlib.md5()
@@ -125,7 +125,7 @@ def accountChangepasswd(data, uid):
     """  
     #oldpassword/newpassword should be encrypted already.
     #Find user by user uid and oldpassword
-    result = Users.objects(uid=uid, password=data.get('oldpassword'))
+    result = Users.objects(uid=uid, password=data.get('oldpassword')).only('uid')
     #If user exist, update its password, or return error
     if len(result) == 1:
         try:
@@ -170,7 +170,7 @@ def __updateAvatar(data, uid):
     if not filetype in ['png', 'jpg', 'jpeg']:
         return resultWrapper('error', {}, 'Support png/jpg/jpeg image only!')
     filedata = data['file'].get('file')
-    u = Users.objects(uid=uid).first()
+    u = Users.objects(uid=uid).only('avatar').first()
     if u.avatar:
         fileid = u.avatar.strip().replace('/file/', '')
         deleteFile(fileid)
@@ -190,7 +190,7 @@ def accountUpdate(data, uid):
     if 'file' in data.keys():
         return __updateAvatar(data, uid)
     else:
-        useraccount = Users.objects(uid=uid).first()
+        useraccount = Users.objects(uid=uid).only('username', 'info').first()
         try:
             if data.has_key('username'):
                 useraccount.update(set__username=data['username'])
@@ -213,11 +213,11 @@ def accountGetUserList(uid):
     return, data: {'count':(int)count, 'users':[{'uid':(int)uid, 'username':(string)username}...]}
     """ 
     #If users exist in database, return all of them or return error
-    if not Users.objects():
+    if not Users.objects().only('uid'):
         rmsg, rdata, rstatus = 'no user found!', {}, 'error'
     else:
         rmsg, rstatus = '', 'ok'
-        users = [{'uid': d['uid'], 'username': d['username']} for d in Users.objects()]
+        users = [{'uid': d['uid'], 'username': d['username']} for d in Users.objects().only('uid', 'username')]
         rdata = {'count': len(users), 'users': users}
     return resultWrapper(rstatus, rdata, rmsg)
 
@@ -227,7 +227,7 @@ def accountGetInfo(uid):
     return, data: {'uid':(int)uid, 'username':(string)username, 'info': (dict)userinfo}
     """ 
     #Return uid's username and info.
-    result = Users.objects(uid=uid)
+    result = Users.objects(uid=uid).only('username', 'info', 'avatar')
     useraccount = result.first()
     uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data'], 'avatar': useraccount.avatar}
     rdata = {'userinfo': uinfo}
@@ -244,12 +244,12 @@ def accountGetGroups(uid):
     if group:
         for g in group:
             ownerid = GroupMembers.objects(role=10, gid=g.gid).first().uid
-            ownername = Users.objects(uid=ownerid).first().username
-            targetgroupname = Groups.objects(gid=g.gid).first().groupname
+            ownername = Users.objects(uid=ownerid).only('username').first().username
+            targetgroupname = Groups.objects(gid=g.gid).only('groupname').first().groupname
             usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
                               'userrole': g.role, 'groupowner': ownername,
-                              'allsession': len(Sessions.objects(gid=g.gid)),
-                              'livesession': len(Sessions.objects(gid=g.gid, endtime=None))})
+                              'allsession': len(Sessions.objects(gid=g.gid).only('uid')),
+                              'livesession': len(Sessions.objects(gid=g.gid, endtime=None).only('uid'))})
     return resultWrapper('ok', {'usergroup': usergroup}, '')
 
 def accountGetSessions(uid):
@@ -258,10 +258,10 @@ def accountGetSessions(uid):
     return, data: {'sessions': [{'sid':(String)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
     """ 
     usersession = []
-    sessions = Sessions.objects(uid=uid)
+    sessions = Sessions.objects(uid=uid).only('sid', 'gid')
     if sessions:
         for s in sessions:
-            usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': Groups.objects(gid=s.gid).first().groupname})
+            usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': Groups.objects(gid=s.gid).only('groupname').first().groupname})
     return resultWrapper('ok' ,{'usersession': usersession}, '')
 
 def accountActiveUser(uid):
@@ -269,9 +269,9 @@ def accountActiveUser(uid):
        Active current user and remove the original token
     """
     try:
-        Users.objects(uid=uid).update(set__active=True)
+        Users.objects(uid=uid).only('active').update(set__active=True)
     except OperationError:
-        Users.objects(uid=uid).update(set__active=True)
+        Users.objects(uid=uid).only('active').update(set__active=True)
     result = accountLogout({}, uid)
     if result['result'] != 'ok':
         accountLogout({}, uid)

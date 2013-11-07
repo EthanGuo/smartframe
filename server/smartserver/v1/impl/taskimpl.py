@@ -12,13 +12,13 @@ def sessionUpdateDomainSummary(sid, results):
        Task func to update session domain count
     """
     print "Start updating the domain summary of session %s" %sid
-    domaincount = Sessions.objects(sid=sid).first().domaincount
+    domaincount = Sessions.objects(sid=sid).only('domaincount').first().domaincount
     if domaincount:
         domaincount = json.loads(domaincount)
     else:
         domaincount = {}
     for result in results:
-        casename = Cases.objects(sid=sid, tid=result[0]).first().casename
+        casename = Cases.objects(sid=sid, tid=result[0]).only('casename').first().casename
         if not result[2]:
             if casename in domaincount.keys():
                 domaincount[casename][result[1]] += 1
@@ -30,16 +30,16 @@ def sessionUpdateDomainSummary(sid, results):
             domaincount[casename][result[1]] += 1
     domaincount = json.dumps(domaincount)   
     try:
-        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
+        Sessions.objects(sid=sid).only('sid').update(set__domaincount=domaincount)
     except OperationError:
-        Sessions.objects(sid=sid).update(set__domaincount=domaincount)
+        Sessions.objects(sid=sid).only('sid').update(set__domaincount=domaincount)
 
 def sessionUpdateSummary(sid, results):
     """
        Func to update session casecount summary.
     """
     # Update casecount here.
-    session = Sessions.objects(sid=sid).first()
+    session = Sessions.objects(sid=sid).only('casecount').first()
     if not session:
         return resultWrapper('error', {}, 'Invalid session ID!')
     casecount = session.casecount
@@ -65,7 +65,7 @@ def sessionActiveSession(sid):
        Task function to clear session endtime if it has been set.
     """
     print "Start activate session %s" %sid
-    session = Sessions.objects(sid=sid).first()
+    session = Sessions.objects(sid=sid).only('endtime').first()
     if session.endtime:
         try:
             Sessions.objects(sid=sid).update(set__endtime='')
@@ -77,8 +77,8 @@ def sessionSetEndTime(sid):
        Task function to set session endtime.
     """
     print "Start setting the endtime of session %s" %sid
-    if not Cases.objects(sid=sid):
-        endtime = Sessions.objects(sid=sid).first().starttime
+    if not Cases.objects(sid=sid).only('tid'):
+        endtime = Sessions.objects(sid=sid).only('starttime').first().starttime
     else:
         case = Cases.objects(sid=sid).order_by('-tid').first()
         endtime = case.endtime if case.endtime else case.starttime
