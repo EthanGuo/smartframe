@@ -3,7 +3,7 @@
 
 from db import *
 from filedealer import deleteFile
-from util import cache
+from util import cache, resultWrapper
 import json, time
 from datetime import datetime
 

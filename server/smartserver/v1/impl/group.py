@@ -96,7 +96,13 @@ def groupDelMembers(data, gid, uid):
     else:
         for member in data.get('members'):
             try:
-                GroupMembers.objects(gid=gid, uid=member['uid']).delete()
+                groupmember = GroupMembers.objects(gid=gid, uid=member['uid']).first()
+                if not groupmember:
+                    return resultWrapper('error', {}, 'Invalid user!')
+                else:
+                    if groupmember.role == 10:
+                        return resultWrapper('error', {}, 'Can not remove group owner from the group!')
+                groupmember.delete()
             except OperationError:
                 return resultWrapper('error', {}, 'Remove user failed!')
         return resultWrapper('ok', {}, '')

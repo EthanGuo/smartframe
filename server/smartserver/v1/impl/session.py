@@ -147,7 +147,7 @@ def sessionDelete(data, gid, sid, uid):
     member = GroupMembers.objects(gid=gid, uid=uid).first()
     role = member.role if member else -1
     session = Sessions.objects(sid=sid, uid=uid).first()
-    if session or (role > 8):
+    if session and role > 8 and session.endtime:
         try:
             session.delete()
             cycle = Cycles.objects(gid=gid, sids=sid).first()
@@ -160,7 +160,7 @@ def sessionDelete(data, gid, sid, uid):
             return resultWrapper('error', {}, 'Failed to remove the session!')
         ws_del_session(sid)
         return resultWrapper('ok',{},'')
-    return resultWrapper('error', {}, 'Permission denied!')
+    return resultWrapper('error', {}, 'Permission denied or session is still alive!')
 
 def sessionSummary(data, gid, sid):
     """
