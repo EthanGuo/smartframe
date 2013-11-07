@@ -199,7 +199,8 @@ def sessionPollStatus(data, gid, sid):
 def sessionGetLatestCases(data, gid, sid):
     """
     params, data: {'amount': (int)value}
-    return, data: {'cases': [{'tid':(int)tid, 'casename':(string)name, 
+    return, data: {'cases': [{'tid':(int)tid, 'casename':(string)name, 'expectshot': (string),
+                              'snapshots': (list(string)), 'log': (string),
                               'starttime':(string)time, 'result':(string)result, 
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
     """
@@ -209,7 +210,8 @@ def sessionGetLatestCases(data, gid, sid):
     for case in Cases.objects(sid=sid).order_by('-tid')[:amount]:
         comments = case.comments.__dict__['_data'] if case.comments else ''
         starttime = case.starttime.strftime(TIME_FORMAT) if case.starttime else ''
-        result.append({'tid': case.tid, 'casename': case.casename, 
+        result.append({'tid': case.tid, 'casename': case.casename, 'log': case.log,
+                       'expectshot': case.expectshot, 'snapshots': case.snapshots,
                        'starttime': starttime,'result': case.result, 
                        'traceinfo': case.traceinfo,'comments': comments})
     return resultWrapper('ok', {'cases': result}, '')
@@ -218,7 +220,8 @@ def sessionGetHistoryCases(data, gid, sid):
     """
     params, data: {'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
     return, data: {'totalpage':(int)value, 
-                   'cases': [{'tid':(int)tid, 'casename':(string)name, 
+                   'cases': [{'tid':(int)tid, 'casename':(string)name,
+                              'log':(string), 'expectshot':(string), 'snapshots':(list(string)),
                               'starttime':(string)time, 'result':(string)result, 
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
     """
@@ -247,7 +250,8 @@ def sessionGetHistoryCases(data, gid, sid):
     for c in case:
         comments = c.comments.__dict__['_data'] if c.comments else ''
         starttime = c.starttime.strftime(TIME_FORMAT) if c.starttime else ''
-        result.append({'tid': c.tid, 'casename': c.casename, 
+        result.append({'tid': c.tid, 'casename': c.casename, 'log': c.log,
+                       'expectshot': c.expectshot, 'snapshots': c.snapshots,
                        'starttime': starttime, 'result': c.result, 
                        'traceinfo': c.traceinfo, 'comments': comments})
     return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')
