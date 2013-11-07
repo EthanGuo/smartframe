@@ -238,7 +238,7 @@ def sessionGetHistoryCases(data, gid, sid):
     else:
         totalpageamount = totalamount / pagesize
     #To calculate the startpoint and endpoint of the cases to fetch.
-    pagenumber = data.get('pagenumber', 1)
+    pagenumber = int(data.get('pagenumber', 1))
     casetype = data.get('casetype', 'total')
     startpoint = (pagenumber - 1) * pagesize
     endpoint = startpoint + pagesize
