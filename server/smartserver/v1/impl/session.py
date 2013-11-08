@@ -206,7 +206,7 @@ def sessionGetLatestCases(data, gid, sid):
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
     """
     #Fetch the first 'amount'(20 for example) cases and return them.
-    amount = int(data.get('amount', 20))
+    amount = 20 if not data.get('amount') else int(data.get('amount'))
     result = []
     for case in Cases.objects(sid=sid).order_by('-tid')[:amount]:
         comments = case.comments.__dict__['_data'] if case.comments else ''
@@ -231,14 +231,14 @@ def sessionGetHistoryCases(data, gid, sid):
     if not sess:
         return resultWrapper('error', {}, 'Invalid session ID!')
     #To calculate how many pages are there in this session, for frontend display purpose
-    pagesize = int(data.get('pagesize', 100))
+    pagesize = 100 if not data.get('pagesize') else int(data.get('pagesize'))
     totalamount = sess.first().casecount['total']
     if (totalamount % pagesize != 0):
         totalpageamount = totalamount / pagesize + 1
     else:
         totalpageamount = totalamount / pagesize
     #To calculate the startpoint and endpoint of the cases to fetch.
-    pagenumber = int(data.get('pagenumber', 1))
+    pagenumber = 1 if not data.get('pagenumber') else int(data.get('pagenumber'))
     casetype = data.get('casetype', 'total')
     startpoint = (pagenumber - 1) * pagesize
     endpoint = startpoint + pagesize
