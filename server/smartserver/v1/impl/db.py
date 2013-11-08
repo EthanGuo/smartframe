@@ -33,7 +33,7 @@ class Users(Document):
     info = EmbeddedDocumentField(UserInfo)
     uid = SequenceField()
     appid = StringField()
-    avatar = StringField()
+    avatar = DictField()
     active = BooleanField(default=False)
 
     meta = {'collection': 'Users',
@@ -128,9 +128,9 @@ class Cases(Document):
     endtime = DateTimeField()
     traceinfo = StringField()
     result = StringField(choices=choices)
-    log = StringField()
-    expectshot = StringField()
-    snapshots = ListField(StringField())
+    log = DictField()
+    expectshot = DictField()
+    snapshots = ListField(DictField())
     comments = EmbeddedDocumentField(CommentInfo)
 
     meta = {'collection': 'Cases',

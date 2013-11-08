@@ -133,7 +133,7 @@ def tokenValidateExpireTime():
             UserTokens.objects(token=usertoken.token).delete()
 
 def _getID(url):
-    return url.strip().replace('/file/', '')
+    return url['url'].strip().replace('/file/', '')
 
 def sessionRemoveAll(sid):
     """

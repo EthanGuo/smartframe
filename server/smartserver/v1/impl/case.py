@@ -52,6 +52,7 @@ def __updateCaseComments(data, sid):
         except OperationError:
             return resultWrapper('error', {}, 'Failed to update case comments!')
         ws_update_session_domainsummary.delay(sid, domains)
+        return resultWrapper('ok', {}, 'Update successfully!')
     else:
         return resultWrapper('error',{}, 'Comments can not be empty!')
 

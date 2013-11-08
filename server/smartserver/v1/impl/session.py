@@ -200,8 +200,8 @@ def sessionPollStatus(data, gid, sid):
 def sessionGetLatestCases(data, gid, sid):
     """
     params, data: {'amount': (int)value}
-    return, data: {'cases': [{'tid':(int)tid, 'casename':(string)name, 'expectshot': (string),
-                              'snapshots': (list(string)), 'log': (string),
+    return, data: {'cases': [{'tid':(int)tid, 'casename':(string)name, 'expectshot': (dict),
+                              'snapshots': (list(dict)), 'log': (dict),
                               'starttime':(string)time, 'result':(string)result, 
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
     """
@@ -222,7 +222,7 @@ def sessionGetHistoryCases(data, gid, sid):
     params, data: {'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
     return, data: {'totalpage':(int)value, 
                    'cases': [{'tid':(int)tid, 'casename':(string)name,
-                              'log':(string), 'expectshot':(string), 'snapshots':(list(string)),
+                              'log':(dict), 'expectshot':(dict), 'snapshots':(list(dict)),
                               'starttime':(string)time, 'result':(string)result, 
                               'traceinfo':(string)trace, 'comments':(dict)comments},...]}
     """

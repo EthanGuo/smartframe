@@ -25,7 +25,7 @@ def saveFile(filedata, content_type, filename=''):
         newfile.save()
     except OperationError:
         newfile.save()
-    return ('/file/' + fileid)
+    return {'url':'/file/' + fileid, 'filename': filename}
 
 def fetchFileData(fileid):
     """

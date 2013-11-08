@@ -110,17 +110,18 @@ def groupDelMembers(data, gid, uid):
 def groupGetMembers(data, gid, uid):
     """
     params, data: {'cid' is contained but wont be used here}
-    return, data: {'members':[{'uid':(int)uid, 'role':(String)role, 'username':(String)username, 'info':(JSON)info},...]}
+    return, data: {'members':[{'uid':(int)uid, 'role':(String)role, 'username':(String)username, 'avatar':(Dict),'info':(JSON)info},...]}
     """
     #If current user is a member, return all members' info of current group, or return error.
     gid = int(gid)
     groupMembers = []
     for member in GroupMembers.objects(gid=gid):
-        User = Users.objects(uid=member.uid).only('username', 'info').first()
+        User = Users.objects(uid=member.uid).only('username', 'info', 'avatar').first()
         groupMembers.append({
             'uid': member.uid,
             'role': member.role,
             'username': User.username,
+            'avatar': User.avatar,
             'info': User.info.__dict__['_data']
             })
     return resultWrapper('ok', {'members': groupMembers}, '')

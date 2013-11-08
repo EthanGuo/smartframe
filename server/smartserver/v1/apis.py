@@ -224,7 +224,7 @@ def doCaseFilePUT(sid, tid):
     xtype = request.headers.get('Ext-Type') or ''
     return caseFilePUT(subc, sid, tid, request.body, xtype)
 
-@appweb.route('/file/<fileid>', method='GET')
+@appweb.route('/file/<fileid>', method='GET', login=False)
 def doFileGET(fileid):
     """
     URL:/file/<fid>
@@ -244,7 +244,7 @@ def doFileGET(fileid):
         elif data['data']['content_type'] in ['application/zip']:
             response.set_header('Content-Type', 'application/x-download')
             response.set_header('Content-Disposition', 'attachment; filename=' + data['data']['filename'])
-            return result['data']['filedata']
+            return data['data']['filedata']
 
 @appweb.route('/file', method='PUT', login=False)
 def doFilePUT():

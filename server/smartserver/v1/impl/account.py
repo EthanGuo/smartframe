@@ -33,7 +33,7 @@ def createToken(appid, uid):
 
 def accountValidToken(token):
     userToken = UserTokens.objects(token=token).only('uid').first()
-    if userToken == 0:
+    if not userToken:
         return None
     else:
         return userToken.uid
@@ -172,7 +172,7 @@ def __updateAvatar(data, uid):
     filedata = data['file'].get('file')
     u = Users.objects(uid=uid).only('avatar').first()
     if u.avatar:
-        fileid = u.avatar.strip().replace('/file/', '')
+        fileid = u.avatar['url'].strip().replace('/file/', '')
         deleteFile(fileid)
     imageid = saveFile(filedata, 'image/' + filetype, data['file']['filename'])
     try:
