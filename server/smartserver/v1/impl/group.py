@@ -181,39 +181,45 @@ def __calculateResult(sessionresult):
     """
        Return the data frontend required.
     """
-    table1, table2, table3, table4 = {}, {}, {}, {}
+    table1, table2, table3, table4, i = {}, {}, {}, {}, 1
     table1['totalfailure'], table1['totaluptime'] = 0, 0
     table1['devicecount'] = len(sessionresult)
+    table1['mtbf'] = ''
 
     for session in sessionresult:
         if not table1.get('product'):
-            table1['product'] = session.product
+            table1['product'] = session['product']
         if not table1.get('revision'):
-            table1['revision'] = session.revision
-        table1['totalfailure'] += session.failurecount
-        table1['totaluptime'] += session.totaluptime
+            table1['revision'] = session['revision']
+        table1['totalfailure'] += session['failurecount']
+        table1['totaluptime'] += session['totaluptime']
 
-        for issue in session.issues:
+        for issue in session['issues']:
             if issue['issueType'] in table2.keys():
                 table2[issue['issueType']] += 1
             else:
                 table2.update({issue['issueType']: 1})
 
-        table3[session.deviceid] = {'starttime': session.starttime, 'endtime': session.endtime,
-                                    'failurecount': session.failurecount, 'firstuptime': session.firstuptime,
-                                    'uptime': session.totaluptime, 'issues': session.issues}
+        if session['deviceid']:
+            deviceid = session['deviceid']
+        else:
+            deviceid = 'device_' + str(i)
+            i += 1
+        table3[deviceid] = {'starttime': session['starttime'], 'endtime': session['endtime'],
+                            'failurecount': session['failurecount'], 'firstuptime': session['firstuptime'],
+                            'uptime': session['totaluptime'], 'issues': session['issues'], 'sid': session['sid']}
 
-        for casename in session.domains.keys():
+        for casename in session['domains'].keys():
             domain = casename.strip().split('.')[0]
             if domain in table4.keys():
                 if casename in table4[domain].keys():
-                    table4[domain][casename]['pass'] += session.domains.casename['pass']
-                    table4[domain][casename]['fail'] += session.domains.casename['fail']
-                    table4[domain][casename]['block'] += session.domains.casename['block']
+                    table4[domain][casename]['pass'] += session['domains'][casename]['pass']
+                    table4[domain][casename]['fail'] += session['domains'][casename]['fail']
+                    table4[domain][casename]['block'] += session['domains'][casename]['block']
                 else:
-                    table4[domain][casename] = session.domains.casename
+                    table4[domain][casename] = session['domains'][casename]
             else:
-                table4[domain] = {casename: session.domains.casename}
+                table4[domain] = {casename: session['domains'][casename]}
     
     return resultWrapper('ok', {'table1': table1, 'table2': table2, 
                                 'table3': table3, 'table4': table4}, '')
@@ -223,9 +229,11 @@ def groupGetReport(data, gid, uid):
     params, data: {'cid'}
     return, data: report data
     """
-    gid, cid, sessionresult = int(gid), data, []
-    sids = Cycles.objects(cid=cid).first().sids
-    for sid in sids:
+    gid, cid, sessionresult = int(gid), int(data), []
+    cycle = Cycles.objects(cid=cid).first()
+    if not cycle:
+        return resultWrapper('error', {}, 'Invalid cycle id!')
+    for sid in cycle.sids:
         session = Sessions.objects(gid=gid, sid=sid).first()
         cases = Cases.objects(sid=sid).order_by('+tid')
         if session.deviceinfo:
@@ -241,7 +249,7 @@ def groupGetReport(data, gid, uid):
             endtime = cases[index].endtime if cases[index].endtime else cases[index].starttime
         failurecount, firstfailureuptime, blocktime, issues = 0, 0, 0, []
         for case in cases:
-            if case.get('comments'):
+            if case.comments:
                 if case['comments']['caseresult'] == 'fail':
                     failurecount += 1
                     issues.append({'casename': case.casename, 'starttime': case.starttime.strftime(TIME_FORMAT),
@@ -257,7 +265,7 @@ def groupGetReport(data, gid, uid):
                     break
         totaluptime = (endtime - starttime).total_seconds() - blocktime
         sessionresult.append({'deviceid': deviceid, 'product': product, 'revision': revision,
-                              'starttime': starttime.strftime(TIME_FORMAT),
+                              'starttime': starttime.strftime(TIME_FORMAT), 'sid': sid,
                               'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,
                               'firstuptime': firstfailureuptime, 'totaluptime': totaluptime,
                               'issues': issues, 'domains': json.loads(session.domaincount)})
