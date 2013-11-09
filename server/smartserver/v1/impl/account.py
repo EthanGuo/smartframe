@@ -193,8 +193,11 @@ def accountUpdate(data, uid):
         useraccount = Users.objects(uid=uid).only('username', 'info').first()
         try:
             if data.has_key('username'):
-                useraccount.update(set__username=data['username'])
-                useraccount.reload()
+                if not Users.objects(username=data['username']):
+                    useraccount.update(set__username=data['username'])
+                    useraccount.reload()
+                else:
+                    return resultWrapper('error', {}, 'This name has been chosen already!')
             if data.has_key('company'):
                 useraccount.update(set__info__company=data['company'])
                 useraccount.reload()
