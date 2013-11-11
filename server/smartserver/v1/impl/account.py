@@ -166,15 +166,15 @@ def __updateAvatar(data, uid):
     """
        Update avatar here
     """
-    filetype = data['file'].get('filename').split('.')[-1]
+    filetype = data['file'].filename.split('.')[-1]
     if not filetype in ['png', 'jpg', 'jpeg']:
         return resultWrapper('error', {}, 'Support png/jpg/jpeg image only!')
-    filedata = data['file'].get('file')
+    filedata = data['file'].file
     u = Users.objects(uid=uid).only('avatar').first()
     if u.avatar:
         fileid = u.avatar['url'].strip().replace('/file/', '')
         deleteFile(fileid)
-    imageid = saveFile(filedata, 'image/' + filetype, data['file']['filename'])
+    imageid = saveFile(filedata, 'image/' + filetype, data['file'].filename)
     try:
         u.update(set__avatar=imageid)
         u.reload()
