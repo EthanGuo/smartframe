@@ -180,7 +180,7 @@ def __updateAvatar(data, uid):
         u.reload()
     except OperationError:
         return resultWrapper('error', {}, 'Update avatar failed!')
-    return resultWrapper('ok', {}, 'Upload successfully!')
+    return resultWrapper('ok', imageid, 'Upload successfully!')
 
 def accountUpdate(data, uid):
     """

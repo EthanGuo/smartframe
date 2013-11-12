@@ -232,14 +232,14 @@ def sessionGetHistoryCases(data, gid, sid):
         return resultWrapper('error', {}, 'Invalid session ID!')
     #To calculate how many pages are there in this session, for frontend display purpose
     pagesize = 100 if not data.get('pagesize') else int(data.get('pagesize'))
-    totalamount = sess.first().casecount['total']
+    casetype = data.get('casetype', 'total').lower()
+    totalamount = sess.first().casecount[casetype]
     if (totalamount % pagesize != 0):
         totalpageamount = totalamount / pagesize + 1
     else:
         totalpageamount = totalamount / pagesize
     #To calculate the startpoint and endpoint of the cases to fetch.
     pagenumber = 1 if not data.get('pagenumber') else int(data.get('pagenumber'))
-    casetype = data.get('casetype', 'total')
     startpoint = (pagenumber - 1) * pagesize
     endpoint = startpoint + pagesize
     if casetype == 'total':

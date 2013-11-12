@@ -44,10 +44,15 @@ def __updateCaseComments(data, sid):
         try:
             result = data['comments']['caseresult']
             for tid in data['tid']:
-                case = Cases.objects(sid=sid, tid=tid).only('comments').first()
-                orgcommentresult = case.comments.caseresult if case.comments else ''
+                case = Cases.objects(sid=sid, tid=tid).only('comments', 'result').first()
+                if case.comments and case.comments.caseresult:
+                    orgcommentresult = case.comments.caseresult
+                else:
+                    orgcommentresult = case.result
                 case.update(set__comments=data.get('comments'))
                 case.reload()
+                if not result:
+                    result = case.result
                 domains.append([tid, result.lower(), orgcommentresult])
         except OperationError:
             return resultWrapper('error', {}, 'Failed to update case comments!')
