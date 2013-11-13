@@ -73,7 +73,9 @@ def groupSetMembers(data, gid, uid):
                 if target:
                     if target.role == 10:
                         return resultWrapper('error', {}, 'Can not modify owner permission!')
-                    else:
+                    elif target.role == member['role']:
+                        return resultWrapper('error', {}, 'Member has been added to this group already!')
+                    else:    
                         target.update(set__role=member['role'])
                         target.reload()
                 #If target does not exist in current group, save it to current group.
@@ -129,29 +131,27 @@ def groupGetMembers(data, gid, uid):
 def groupGetSessions(data, gid, uid):
     """
     params, data: {'cid' is contained but wont be used here}
-    return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 'sid': (String)
-                                'revision':(String)revision, 'deviceid':(string)deviceid,
+    return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 'sid': (String),
+                                'revision':(String)revision,
                                 'starttime': (String)time, 'endtime': (String)time, 'cid': (int)
-                                'runtime': (int)time, 'tester': (String)name},...]}
+                                'tester': (String)name},...]}
     """
     gid, sessions = int(gid), []
-    for session in Sessions.objects(gid=gid).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime', 'runtime'):
+    for session in Sessions.objects(gid=gid).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime'):
         if session.deviceinfo:
             product = session.deviceinfo.product
             revision = session.deviceinfo.revision
-            deviceid = session.deviceinfo.deviceid
         else:
-            product, revision, deviceid = '', '', ''
+            product, revision = '', ''
         user = Users.objects(uid=session.uid).only('username').first()
         tester = user.username if user else ''
         endtime = session.endtime.strftime(TIME_FORMAT) if session.endtime else ''
         cycle = Cycles.objects(sids=session.sid).only('cid').first()
         cid = cycle.cid if cycle else ''
         sessions.append({'gid': gid, 'product': product, 'revision': revision,
-                         'deviceid': deviceid, 'sid': session.sid,
+                         'sid': session.sid,
                          'starttime': session.starttime.strftime(TIME_FORMAT),
-                         'endtime': endtime, 'cid': cid,
-                         'runtime': session.runtime, 'tester': tester})
+                         'endtime': endtime, 'cid': cid, 'tester': tester})
     return resultWrapper('ok', {'sessions': sessions}, '')
 
 def groupGetCycles(data, gid, uid):

@@ -74,7 +74,7 @@ def __updateCaseResult(data, sid):
         snapshots = handleSnapshots(snapshots)
     else:
         snapshots = []
-    endtime = convertTime(data.get('endtime'))
+    endtime = convertTime(data.get('time'))
     try:
         case.update(set__result=data.get('result').lower(), 
                     set__endtime=endtime, 
