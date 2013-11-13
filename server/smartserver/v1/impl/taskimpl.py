@@ -72,24 +72,6 @@ def sessionActiveSession(sid):
         except OperationError:
             Sessions.objects(sid=sid).update(set__endtime='')
 
-def sessionSetEndTime(sid):
-    """
-       Task function to set session endtime.
-    """
-    print "Start setting the endtime of session %s" %sid
-    if not Cases.objects(sid=sid).only('tid'):
-        endtime = Sessions.objects(sid=sid).only('starttime').first().starttime
-    else:
-        case = Cases.objects(sid=sid).order_by('-tid').first()
-        endtime = case.endtime if case.endtime else case.starttime
-
-    cache.clearCache(str('sid:' + sid + ':snap'))
-    cache.clearCache(str('sid:' + sid + ':snaptime'))
-    try:
-        Sessions.objects(sid=sid).update(set__endtime=endtime)
-    except OperationError:
-        Sessions.objects(sid=sid).update(set__endtime=endtime)
-
 def caseValidateEndtime():
     """
        Used to validate case endtime

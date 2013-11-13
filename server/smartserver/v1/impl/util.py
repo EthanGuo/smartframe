@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import memcache
-import redis
-from ..config import MEMCACHED_URI, REDIS_HOST, REDIS_PORT, TIME_FORMAT
+from ..config import MEMCACHED_URI, TIME_FORMAT
 from datetime import datetime
 
 def resultWrapper(status, data, msg=''):
@@ -53,4 +52,3 @@ class Cache(object):
             return None
         
 cache = Cache()
-redis_con = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)

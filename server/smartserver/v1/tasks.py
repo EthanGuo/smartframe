@@ -18,10 +18,6 @@ def ws_del_dirty():
 	taskimpl.dirtyDataRemoveAll()
 
 @w.task()
-def ws_set_session_endtime(sid):
-	taskimpl.sessionSetEndTime(sid)
-
-@w.task()
 def ws_active_testsession(sid):
     taskimpl.sessionActiveSession(sid)
 

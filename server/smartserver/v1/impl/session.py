@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from util import resultWrapper, cache, redis_con, convertTime
+from util import resultWrapper, cache, convertTime
 from mongoengine import OperationError
 from ..config import TIME_FORMAT
 from db import Sessions, Cycles, Users, Cases, GroupMembers
@@ -26,8 +26,6 @@ def sessionCreate(data, gid, sid, uid):
         sessionInst.save()
     except OperationError :
         return resultWrapper('error',{},'Failed to create session!')
-    #publish heart beat to session watcher here.
-    redis_con.publish("session:heartbeat", json.dumps({'sid': sid})) 
     return resultWrapper('ok',{},'')
 
 def sessionUpdate(data, gid, sid, uid):
@@ -46,8 +44,6 @@ def sessionUpdate(data, gid, sid, uid):
             Sessions.objects(sid=sid).only('endtime').update(set__endtime=endtime)
         except OperationError:
             return resultWrapper('error', {}, 'Update session endtime failed!')
-        # send session heart to sessionwatcher and remove current sid from the watcher list.
-        redis_con.publish("session:heartbeat", json.dumps({'clear': sid}))
         return resultWrapper('ok', {}, '')
 
 def sessionCycle(data, gid, sid, uid):
@@ -158,7 +154,6 @@ def sessionDelete(data, gid, sid, uid):
                     cycle.delete()
         except OperationError :
             return resultWrapper('error', {}, 'Failed to remove the session!')
-        redis_con.publish('session:heartbeat', json.dumps({'clear': sid}))
         ws_del_session(sid)
         return resultWrapper('ok',{},'')
     return resultWrapper('error', {}, 'Permission denied or session is still alive!')

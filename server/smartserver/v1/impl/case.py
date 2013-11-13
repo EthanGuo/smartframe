@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from util import resultWrapper, cache, redis_con, convertTime
+from util import resultWrapper, cache, convertTime
 from mongoengine import OperationError
 from db import Cases
 from filedealer import saveFile
@@ -24,8 +24,6 @@ def caseresultCreate(data, sid):
         return resultWrapper('error',{},'Failed to create the testcase!')
     #Set session alive here, clear endtime in another way.
     ws_active_testsession.delay(sid)
-    #publish heart beat to session watcher here.
-    redis_con.publish("session:heartbeat", json.dumps({'sid': sid}))
     return resultWrapper('ok',{},'')
 
 def handleSnapshots(snapshots):
@@ -88,8 +86,6 @@ def __updateCaseResult(data, sid):
     sessionUpdateSummary(sid, [[data['result'].lower(), orgresult]])
     ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
     ws_active_testsession.delay(sid)
-    #publish heart beat to session watcher here.
-    redis_con.publish("session:heartbeat", json.dumps({'sid': sid}))
     return resultWrapper('ok', {},'')
 
 def caseresultUpdate(data, sid):
