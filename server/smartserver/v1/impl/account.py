@@ -174,9 +174,9 @@ def __updateAvatar(data, uid):
     if u.avatar:
         fileid = u.avatar['url'].strip().replace('/file/', '')
         deleteFile(fileid)
-    imageid = saveFile(filedata, 'image/' + filetype, data['file'].filename)
+    imageurl = saveFile(filedata, 'image/' + filetype, data['file'].filename)
     try:
-        u.update(set__avatar=imageid)
+        u.update(set__avatar={'filename': data['file'].filename, 'url': imageurl})
         u.reload()
     except OperationError:
         return resultWrapper('error', {}, 'Update avatar failed!')

@@ -51,7 +51,7 @@ def groupDelete(data, gid, uid):
             Cycles.objects(gid=gid).delete()
         except OperationError:
             return resultWrapper('error', {}, 'Remove group failed!')
-        ws_del_group(gid)
+        ws_del_group.delay(gid)
         return resultWrapper('ok', {}, '')
 
 def groupSetMembers(data, gid, uid):
@@ -104,7 +104,7 @@ def groupDelMembers(data, gid, uid):
                 else:
                     if groupmember.role == 10:
                         return resultWrapper('error', {}, 'Can not remove group owner from the group!')
-                groupmember.delete()
+                    groupmember.delete()
             except OperationError:
                 return resultWrapper('error', {}, 'Remove user failed!')
         return resultWrapper('ok', {}, '')
@@ -132,8 +132,8 @@ def groupGetSessions(data, gid, uid):
     """
     params, data: {'cid' is contained but wont be used here}
     return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 'sid': (String),
-                                'revision':(String)revision,
-                                'starttime': (String)time, 'endtime': (String)time, 'cid': (int)
+                                'revision':(String)revision, 'cid': (int),
+                                'starttime': (String)time, 'endtime': (String)time,
                                 'tester': (String)name},...]}
     """
     gid, sessions = int(gid), []
@@ -149,9 +149,9 @@ def groupGetSessions(data, gid, uid):
         cycle = Cycles.objects(sids=session.sid).only('cid').first()
         cid = cycle.cid if cycle else ''
         sessions.append({'gid': gid, 'product': product, 'revision': revision,
-                         'sid': session.sid,
+                         'sid': session.sid, 'cid': cid, 'tester': tester,
                          'starttime': session.starttime.strftime(TIME_FORMAT),
-                         'endtime': endtime, 'cid': cid, 'tester': tester})
+                         'endtime': endtime})
     return resultWrapper('ok', {'sessions': sessions}, '')
 
 def groupGetCycles(data, gid, uid):

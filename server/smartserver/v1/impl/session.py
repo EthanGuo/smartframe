@@ -5,8 +5,7 @@ from util import resultWrapper, cache, convertTime
 from mongoengine import OperationError
 from ..config import TIME_FORMAT
 from db import Sessions, Cycles, Users, Cases, GroupMembers
-from ..tasks import ws_update_session_domainsummary, ws_del_session
-from taskimpl import sessionUpdateSummary
+from ..tasks import ws_update_session_domainsummary, ws_del_session, ws_update_session_sessionsummary
 import json
 
 def sessionCreate(data, gid, sid, uid):
@@ -25,7 +24,7 @@ def sessionCreate(data, gid, sid, uid):
     try:
         sessionInst.save()
     except OperationError :
-        return resultWrapper('error',{},'Failed to create session!')
+        sessionInst.save()
     return resultWrapper('ok',{},'')
 
 def sessionUpdate(data, gid, sid, uid):
@@ -43,7 +42,7 @@ def sessionUpdate(data, gid, sid, uid):
         try:
             Sessions.objects(sid=sid).only('endtime').update(set__endtime=endtime)
         except OperationError:
-            return resultWrapper('error', {}, 'Update session endtime failed!')
+            Sessions.objects(sid=sid).only('endtime').update(set__endtime=endtime)
         return resultWrapper('ok', {}, '')
 
 def sessionCycle(data, gid, sid, uid):
@@ -58,7 +57,7 @@ def sessionCycle(data, gid, sid, uid):
         if Cycles.objects(sids=sid):
             return resultWrapper('error', {}, 'Please remove session from current cycle first!')
         else:
-            cycleinst = Cycles().from_json(json.dumps({'gid': gid, 'sids': [sid]}))
+            cycleinst = Cycles(gid=gid, sids=[sid])
             try:
                 cycleinst.save()
             except OperationError:
@@ -95,9 +94,7 @@ def sessionCycle(data, gid, sid, uid):
         except OperationError:
             return resultWrapper('error', {}, 'Remove session from current cycle failed!')
     try:
-        cycle = Cycles.objects(cid=Cid).first()
-        cycle.update(push__sids=sid)
-        cycle.reload()
+        Cycles.objects(cid=Cid).update(push__sids=sid)
     except OperationError:
         return resultWrapper('error', {}, 'Add current session to cycle failed!')
     return resultWrapper('ok', {'cid': cycle.cid}, '')
@@ -130,7 +127,7 @@ def sessionUploadXML(data, gid, sid):
         except OperationError:
             return resultWrapper('error', {}, 'Create case failed!')
     #update session summary here.
-    sessionUpdateSummary(sid, summarys)
+    ws_update_session_sessionsummary.delay(sid, summarys)
     #Trigger task to update domain summary here.
     ws_update_session_domainsummary.delay(sid, domains)
 
@@ -154,7 +151,7 @@ def sessionDelete(data, gid, sid, uid):
                     cycle.delete()
         except OperationError :
             return resultWrapper('error', {}, 'Failed to remove the session!')
-        ws_del_session(sid)
+        ws_del_session.delay(sid)
         return resultWrapper('ok',{},'')
     return resultWrapper('error', {}, 'Permission denied or session is still alive!')
 
@@ -168,7 +165,7 @@ def sessionSummary(data, gid, sid):
     """
     result = Sessions.objects(sid=sid).only('uid', 'deviceinfo', 'starttime', 'planname', 'runtime', 'casecount').first()
     if result:
-        tester = Users.objects(uid=result.uid).first().username
+        tester = Users.objects(uid=result.uid).only('username').first().username
         deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
         starttime = result.starttime.strftime(TIME_FORMAT) if result.starttime else ''
         data ={'planname':result.planname,'tester':tester,
@@ -249,5 +246,6 @@ def sessionGetHistoryCases(data, gid, sid):
         result.append({'tid': c.tid, 'casename': c.casename, 'log': c.log,
                        'expectshot': c.expectshot, 'snapshots': c.snapshots,
                        'starttime': starttime, 'result': c.result, 
-                       'traceinfo': c.traceinfo, 'comments': comments})
+                       'comments': comments})
+        #traceinfo can also be returned here.
     return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')

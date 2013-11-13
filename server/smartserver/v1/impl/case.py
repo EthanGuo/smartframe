@@ -6,8 +6,7 @@ from db import Cases
 from filedealer import saveFile
 from datetime import datetime
 from ..config import TIME_FORMAT
-from ..tasks import ws_update_session_domainsummary, ws_active_testsession
-from taskimpl import sessionUpdateSummary
+from ..tasks import ws_update_session_domainsummary, ws_active_testsession, ws_update_session_sessionsummary
 import json
 
 def caseresultCreate(data, sid):
@@ -21,7 +20,7 @@ def caseresultCreate(data, sid):
     try:
         caseInst.save()
     except OperationError:
-        return resultWrapper('error',{},'Failed to create the testcase!')
+        caseInst.save()
     #Set session alive here, clear endtime in another way.
     ws_active_testsession.delay(sid)
     return resultWrapper('ok',{},'')
@@ -32,28 +31,29 @@ def handleSnapshots(snapshots):
     else:
         result = []
         for snapshot in snapshots:
-            fileid = saveFile(snapshot['image'], 'image/png', snapshot['imagename'])
-            result.append(fileid)
+            fileurl = saveFile(snapshot['image'], 'image/png', snapshot['imagename'])
+            result.append({'filename': snapshot['imagename'], 'url': fileurl})
         return result
 
 def __updateCaseComments(data, sid):
     domains = []
     if data.get('comments'):
-        try:
-            result = data['comments']['caseresult']
-            for tid in data['tid']:
-                case = Cases.objects(sid=sid, tid=tid).only('comments', 'result').first()
-                if case.comments and case.comments.caseresult:
-                    orgcommentresult = case.comments.caseresult
-                else:
-                    orgcommentresult = case.result
-                case.update(set__comments=data.get('comments'))
+        result = data['comments']['caseresult']
+        for tid in data['tid']:
+            case = Cases.objects(sid=sid, tid=tid).only('comments', 'result').first()
+            if case.comments and case.comments.caseresult:
+                orgcommentresult = case.comments.caseresult
+            else:
+                orgcommentresult = case.result
+            try:
+                case.update(set__comments=data['comments'])
                 case.reload()
-                if not result:
-                    result = case.result
-                domains.append([tid, result.lower(), orgcommentresult])
-        except OperationError:
-            return resultWrapper('error', {}, 'Failed to update case comments!')
+            except OperationError:
+                case.update(set__comments=data['comments'])
+                case.reload()
+            if not result:
+                result = case.result
+            domains.append([tid, result.lower(), orgcommentresult])
         ws_update_session_domainsummary.delay(sid, domains)
         return resultWrapper('ok', {}, 'Update successfully!')
     else:
@@ -80,10 +80,14 @@ def __updateCaseResult(data, sid):
                     push_all__snapshots=snapshots)
         case.reload()
     except OperationError:
-        return resultWrapper('error', {}, 'update caseresult failed!')
+        case.update(set__result=data.get('result').lower(), 
+                    set__endtime=endtime, 
+                    set__traceinfo=data.get('traceinfo',''), 
+                    push_all__snapshots=snapshots)
+        case.reload()
     finally:
         cache.clearCache(str('sid:' + sid + ':tid:' + str(data['tid']) + ':snaps'))
-    sessionUpdateSummary(sid, [[data['result'].lower(), orgresult]])
+    ws_update_session_sessionsummary.delay(sid, [[data['result'].lower(), orgresult]])
     ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
     ws_active_testsession.delay(sid)
     return resultWrapper('ok', {},'')
@@ -113,11 +117,11 @@ def uploadPng(sid, tid, imagedata, stype):
     values = stype.split(':')
     imagetype, imagename = values[0], values[1]
     if imagetype == 'expect':
-        imageid = saveFile(imagedata, 'image/png', imagename)
+        imageurl = saveFile(imagedata, 'image/png', imagename)
         try:
-            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot=imageid)
+            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl})
         except OperationError:
-            return resultWrapper('error', {}, 'Save image to database failed!')
+            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl})
     elif imagetype == 'current':
         snaps.append({'imagename': imagename, 'image': imagedata})
         #Following two caches are used for screen monitor
@@ -132,9 +136,9 @@ def uploadZip(sid, tid, logdata, xtype):
     params, data: {'sid':(string)sid, 'tid':(string)tid, 'logdata':(bytes)logdata}
     return, data: {}
     """
+    filename = 'log-caseid-%s.zip' %tid
+    fileurl = saveFile(logdata, 'application/zip', filename)
     try:
-        filename = 'log-caseid-%s.zip' %tid
-        fileid = saveFile(logdata, 'application/zip', filename)
-        Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__log=fileid)
+        Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__log={'filename': filename, 'url': fileurl})
     except OperationError:
-        return resultWrapper('error', {}, 'Save log to database failed!')
+        Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__log={'filename': filename, 'url': fileurl})

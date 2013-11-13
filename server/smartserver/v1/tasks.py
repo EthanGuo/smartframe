@@ -34,5 +34,9 @@ def ws_update_session_domainsummary(sid, results):
     taskimpl.sessionUpdateDomainSummary(sid, results)
 
 @w.task()
+def ws_update_session_sessionsummary(sid, results):
+	taskimpl.sessionUpdateSummary(sid, results)
+
+@w.task()
 def ws_validate_token_expiretime():
 	taskimpl.tokenValidateExpireTime()

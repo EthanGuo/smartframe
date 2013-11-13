@@ -3,7 +3,7 @@
 
 from db import *
 from filedealer import deleteFile
-from util import cache, resultWrapper
+from util import resultWrapper
 import json, time
 from datetime import datetime
 
@@ -39,6 +39,7 @@ def sessionUpdateSummary(sid, results):
        Func to update session casecount summary.
     """
     # Update casecount here.
+    print "Start updating the session summary of session %s" %sid
     session = Sessions.objects(sid=sid).only('casecount').first()
     if not session:
         return resultWrapper('error', {}, 'Invalid session ID!')
@@ -88,7 +89,7 @@ def sessionValidateEndtime():
     """
        Used to validate session endtime
     """
-    for session in Sessions.objects(endtime=None):
+    for session in Sessions.objects(endtime=None).only('starttime'):
         cases = Cases.objects(sid=session.sid).order_by('-tid')
         if not cases:
             endtime = session.starttime
@@ -105,7 +106,7 @@ def tokenValidateExpireTime():
     """
     #If user has not activated itself before its token's expire time, remove this user.
     print "Start validating all the tokens of server" 
-    users = Users.objects(active=False)
+    users = Users.objects(active=False).only('uid')
     for user in users:
         if (time.time() - UserTokens.objects(uid=user.uid).first().expires) >= 0:
             user.delete()
@@ -123,7 +124,7 @@ def sessionRemoveAll(sid):
     """
     print "Start remove session %s" %sid
     fid = []
-    for case in Cases.objects(sid=sid, result='fail'):
+    for case in Cases.objects(sid=sid, result='fail').only('log', 'expectshot', 'snapshots'):
         if case.log:
             fid.append(_getID(case.log))
         if case.expectshot:
