@@ -9,6 +9,7 @@ from util import resultWrapper
 from mongoengine import OperationError
 from db import Users, UserTokens, Groups, Sessions, GroupMembers
 from filedealer import saveFile, deleteFile
+from ..tasks import ws_send_activeaccount_mail, ws_send_retrievepswd_mail, ws_send_invitation_mail
 import time
 
 TOKEN_EXPIRES = {'01': 30*24*3600, #For client end upload result purpose 
@@ -67,7 +68,8 @@ def accountLogin(data):
 def accountRegister(data):
     """
     params, data: {'username':(string), 'password':(string), 'appid':(string),
-                   'info':{'email':(string), 'telephone':(string), 'company':(string)}
+                   'info':{'email':(string), 'telephone':(string), 'company':(string)},
+                   'baseurl': (string)}
     return, data: {'token':(string)token, 'uid':(int)uid}
     """
     # If both username and email have not been registered, create a new user, generate a token, send a mail then return, or return error.
@@ -82,7 +84,7 @@ def accountRegister(data):
         ret = createToken(appid=userInst.appid, uid=userInst.uid)
         if ret['status'] == 'ok':
             rmsg, rdata, rstatus = '', {'token': ret['token'], 'uid': userInst.uid}, 'ok'
-            #sendVerifyMail(userInst.info.email, userInst.username, ret)
+            ws_send_activeaccount_mail.delay(userInst.info.email, userInst.username, ret['token'], data['baseurl'])
         else:
             rmsg, rdata, rstatus = 'Create token failed!', {}, 'error'
     else:
@@ -91,7 +93,7 @@ def accountRegister(data):
 
 def accountRetrievePasswd(data):
     """
-    params, data: {'email':(string)mailaddress}
+    params, data: {'email':(string)mailaddress, 'baseurl':(string)url}
     return, data: {}
     """    
     # Find user by email, if user exists, update its password, generate a token, then send mail to it, or return error.
@@ -107,13 +109,9 @@ def accountRetrievePasswd(data):
             useraccount.reload()
         except OperationError:
             rmsg, rdata, rstatus = 'Save new password failed!', {}, 'error'
-        #Generate a token, then send mail to it.
-        ret = createToken(appid='02', uid=useraccount.uid)
-        if ret['status'] == 'ok':
-            #sendForgotPasswdMail(data['email'], newpassword, ret)
-            rmsg, rdata, rstatus = '', {}, 'ok' 
-        else:
-            rmsg, rdata, rstatus = 'Create token failed!', {}, 'error'
+        #Send mail to user with the new password.
+        ws_send_retrievepswd_mail.delay(data['email'], newpassword, data['baseurl'])
+        rmsg, rdata, rstatus = '', {}, 'ok' 
     else:
         rmsg, rdata, rstatus = 'Invalid email!', {}, 'error'
     return resultWrapper(rstatus, rdata, rmsg)
@@ -141,11 +139,12 @@ def accountChangepasswd(data, uid):
 
 def accountInvite(data, uid):
     """
-    params, data: {'email':(string)email, 'username':(string)username}
+    params, data: {'email':(string)email, 'username':(string)username, 'baseurl':(string)url}
     return, data: {}
     """ 
-    #Send a mail to the invited user, or return error.
-    #sendInviteMail(data['email'], data['username'])
+    #Send a mail to the invited user.
+    orguser = Users.objects(uid=uid).only('username').first().username
+    ws_send_invitation_mail.delay(data['email'], data['username'], orguser, data['baseurl'])
     rmsg, rdata, rstatus = '', {}, 'ok'
     return resultWrapper(rstatus, rdata, rmsg)
 
@@ -277,4 +276,7 @@ def accountActiveUser(uid):
     result = accountLogout({}, uid)
     if result['result'] != 'ok':
         accountLogout({}, uid)
-    return resultWrapper('ok', {}, '')
+    result = "<script>alert(\"Your account has been activated successfully!\");\
+    window.location = window.location.protocol + \"//\" + window.location.hostname + \
+    (window.location.port ? \":\" + window.location.port : \"\") + \"/smartserver\"</script>"
+    return result

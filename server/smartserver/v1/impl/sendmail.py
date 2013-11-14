@@ -27,45 +27,51 @@ def __sendMail(receiver,subject,message):
         print e
     smtp.quit()
 
-def sendVerifyMail(receiver, user, token):
-    subject = 'Please active your email on SmartAT'
-    print '+++++'+receiver
-    msg = 'Hi,%s,\r\n\r\n' % (user)
-    msg = msg + 'This mail sent out by smartAT, do not reply to it directly.\r\n'
+def sendActiveAccountMail(receiver, user, token, baseurl):
+    subject = 'Please active your account of SmartAT'
+    print 'Sending account activation email to '+receiver
+
+    msg = 'Hi,%s,\r\n\r\n' %(user)
     msg = msg + 'Your account \"%s\" has been created already.\r\n' % (user)
-    msg = msg + 'Please verify your email via the url as below.\r\n'
-    msg = msg + 'http://ats.borqs.com/smartserver/verify.html?token=%s\r\n' % (token)
+    msg = msg + 'Please verify your email via the url as below with a day.\r\n'
+    msg = msg + baseurl + '/account/active?token=' + token + '\r\n'
     msg = msg + '\r\n\r\n'
     msg = msg + 'Best Regards\r\n'
     msg = msg + 'SmartAT Team\r\n'
+    msg = msg + '\r\n'
+    msg = msg + 'This mail is sent out by smartAT, do not reply to it directly.\r\n'
 
     __sendMail([receiver],subject,msg)
 
-def sendInviteMail(receiver, user, group, token):
-    subject = 'Welcome to signup on SmartAT'
+def sendInvitationMail(receiver, user, orguser, baseurl):
+    subject = 'Invitation to SmartAT from %s' %(orguser)
+    print 'Sending invitation email to ' + receiver
 
     msg = 'Hi,%s,\r\n\r\n' % (user)
-    msg = msg + 'This mail sent out by smartAT, do not reply to it directly.\r\n'
-    msg = msg + 'Your friend \"%s\" invite you to join group [%s].\r\n' % (user, group)
-    msg = msg + 'You are welcome to signup your own account via the url below.\r\n'
-    msg = msg + 'http://ats.borqs.com/smartserver/login.html?token=%s\r\n' % (token)
+    msg = msg + 'Your friend \"%s\" invite you to join SmartAT.\r\n' %(orguser)
+    msg = msg + 'You are welcomed to signup your own account via the url below.\r\n'
+    msg = msg + baseurl.replace('/smartapi', '/smartserver/index.html#/smartserver/signup') + '\r\n'
     msg = msg + '\r\n\r\n'
     msg = msg + 'Best Regards\r\n'
     msg = msg + 'SmartAT Team\r\n'
+    msg = msg + '\r\n'
+    msg = msg + 'This mail is sent out by smartAT, do not reply to it directly.\r\n'
 
     __sendMail([receiver],subject,msg)
 
-def sendForgotPasswdMail(receiver, passwd, token):
-    subject = 'Reset your password on SmartAT'
+def sendRetrievePswdMail(receiver, passwd, baseurl):
+    subject = 'Your password to SmartAT has been reset'
+    print 'Sending retrieve password email to ' + receiver
 
     msg = 'Hi,%s,\r\n\r\n' % (receiver)
-    msg = msg + 'This mail sent out by smartAT, do not reply to it directly.\r\n'
     msg = msg + 'Your password of account \"%s\" has been reset already.\r\n' % (receiver)
-    msg = msg + 'The new password: ' + passwd + ' \r\n'
+    msg = msg + 'The new password is ' + passwd + ' \r\n'
     msg = msg + 'Please login SmartAT and change new one for your own.\r\n'
     msg = msg + '\r\n\r\n'
     msg = msg + 'Best Regards\r\n'
     msg = msg + 'SmartAT Team\r\n'
+    msg = msg + '\r\n'
+    msg = msg + 'This mail is sent out by smartAT, do not reply to it directly.\r\n'
 
     __sendMail([receiver],subject,msg)
 

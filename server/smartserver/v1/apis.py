@@ -32,8 +32,8 @@ def doAccount():
     ---------------------------------------------------------------------------------------
     |support|subc           |data
     |       |register       |{'username':(string), 'password':(string), 'appid':(string),
-    |       |               | 'info':{'email':(string), 'telephone':(string), 'company':(string)}
-    |       |retrievepswd   |{'email':(string)}
+    |       |               | 'info':{'email':(string), 'telephone':(string), 'company':(string)}, 'baseurl': (string)}
+    |       |retrievepswd   |{'email':(string), 'baseurl': (string)}
     |       |login          |{'appid':(string), 'username':(string), 'password':(string)}
     ---------------------------------------------------------------------------------------
     """
@@ -53,7 +53,7 @@ def doAccountPOST(uid):
     |support|subc          |data
     |       |changepswd    |{'oldpassword':(string), 'newpassword':(string)}
     |       |update        |{'appid': (string), 'username':(string), 'telephone':(string), 'company':(string)}
-    |       |invite        |{'email':(string)target email, 'username':(string)target name}
+    |       |invite        |{'email':(string)target email, 'username':(string)target name, 'baseurl': (string)}
     |       |logout        |{}
     -----------------------------------------------------------------------------------------
     """
@@ -275,7 +275,7 @@ def doUploadSessionResult(sid):
     """
     return uploadSessionResult(request.files.get('file').file, sid)
 
-@appweb.route('/account/active', method='POST')
+@appweb.route('/account/active', method='GET')
 def doAccountActive(uid):
     """
     URL:/account/active
