@@ -93,8 +93,10 @@ def sessionCycle(data, gid, sid, uid):
                 cycle.delete()
         except OperationError:
             return resultWrapper('error', {}, 'Remove session from current cycle failed!')
+    cycle = Cycles.objects(cid=Cid).first()
     try:
-        Cycles.objects(cid=Cid).update(push__sids=sid)
+        cycle.update(push__sids=sid)
+        cycle.reload()
     except OperationError:
         return resultWrapper('error', {}, 'Add current session to cycle failed!')
     return resultWrapper('ok', {'cid': cycle.cid}, '')

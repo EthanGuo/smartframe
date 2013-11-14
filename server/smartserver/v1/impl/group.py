@@ -184,7 +184,6 @@ def __calculateResult(sessionresult):
     table1, table2, table3, table4, i = {}, {}, {}, {}, 1
     table1['totalfailure'], table1['totaluptime'] = 0, 0
     table1['devicecount'] = len(sessionresult)
-    table1['mtbf'] = ''
 
     for session in sessionresult:
         if not table1.get('product'):
@@ -220,7 +219,7 @@ def __calculateResult(sessionresult):
                     table4[domain][casename] = session['domains'][casename]
             else:
                 table4[domain] = {casename: session['domains'][casename]}
-    
+    table1['mtbf'] = table1['totaluptime']/table1['totalfailure'] if table1['totalfailure'] else table1['totaluptime']
     return resultWrapper('ok', {'table1': table1, 'table2': table2, 
                                 'table3': table3, 'table4': table4}, '')
 

@@ -16,7 +16,7 @@ class TestAccount(unittest.TestCase):
         self.assertTrue(self.db['UserTokens'].find({'token': token}).count() == 1)
 
     def testaccountRegister(self):
-        data = {'username': 'test', 'password': '123456', 'appid': '02', 'info': {'email': 'test@borqs.com'}}
+        data = {'username': 'test', 'password': '123456', 'appid': '02', 'info': {'email': 'test@borqs.com'}, 'baseurl': 'http://'}
         result =accountRegister(data)
         token = result['data']['token']
         self.assertTrue(self.db['Users'].find({'username': 'test', 'appid': '02', 'info.email': 'test@borqs.com'}).count())
@@ -53,10 +53,10 @@ class TestAccount(unittest.TestCase):
     def testaccountRetrievePasswd(self):
         self.db['Users'].insert({'appid':'02', 'username':'test', 'uid': 9,'password':'123456', 'info': {'email': 'test@borqs.com'}})
 
-        result = accountRetrievePasswd({'email': 'test@borqs.com'})
+        result = accountRetrievePasswd({'email': 'test@borqs.com', 'baseurl': 'http://'})
         self.assertTrue(result['result'] == 'ok')
 
-        result = accountRetrievePasswd({'email': 'test1@borqs.com'})
+        result = accountRetrievePasswd({'email': 'test1@borqs.com', 'baseurl': 'http://'})
         self.assertTrue(result['result'] == 'error')
 
     def testaccountChangepasswd(self):
@@ -97,10 +97,6 @@ class TestAccount(unittest.TestCase):
         self.db['Users'].insert({'appid':'02', 'username':'test', 'uid': 9, 'password':'123456', 'info': {'email': 'test@borqs.com'}})
         
         uid = 9
-        data = {'file': {'filename': '1.png', 'file': open('1.png','rb').read()}}
-        result = accountUpdate(data, uid)
-        self.assertTrue(result['result'] == 'ok')
-
         data = {'appid': '02', 'username': 'update_test', 'company': 'Borqs', 'telephone': '1234567890'}
         result = accountUpdate(data, uid)
         self.assertTrue(self.db['UserTokens'].find({'token': result['data']['token']}))
