@@ -16,7 +16,6 @@ def __sendMail(receiver,subject,message):
     msg['Subject'] = subject      
     msg['From'] = sender     
     msg['To'] = ';'.join(receiver) 
-    print receiver
     smtp = None
     try:
         smtp = smtplib.SMTP_SSL()
@@ -33,12 +32,12 @@ def sendActiveAccountMail(receiver, user, token, baseurl):
 
     msg = 'Hi,%s,\r\n\r\n' %(user)
     msg = msg + 'Your account \"%s\" has been created already.\r\n' % (user)
-    msg = msg + 'Please verify your email via the url as below with a day.\r\n'
+    msg = msg + 'Please verify your email via the url as below within a day.\r\n\r\n'
     msg = msg + baseurl + '/account/active?token=' + token + '\r\n'
     msg = msg + '\r\n\r\n'
     msg = msg + 'Best Regards\r\n'
     msg = msg + 'SmartAT Team\r\n'
-    msg = msg + '\r\n'
+    msg = msg + '\r\n\r\n'
     msg = msg + 'This mail is sent out by smartAT, do not reply to it directly.\r\n'
 
     __sendMail([receiver],subject,msg)
@@ -49,12 +48,12 @@ def sendInvitationMail(receiver, user, orguser, baseurl):
 
     msg = 'Hi,%s,\r\n\r\n' % (user)
     msg = msg + 'Your friend \"%s\" invite you to join SmartAT.\r\n' %(orguser)
-    msg = msg + 'You are welcomed to signup your own account via the url below.\r\n'
+    msg = msg + 'You are welcomed to signup your own account via the url below.\r\n\r\n'
     msg = msg + baseurl.replace('/smartapi', '/smartserver/index.html#/smartserver/signup') + '\r\n'
     msg = msg + '\r\n\r\n'
     msg = msg + 'Best Regards\r\n'
     msg = msg + 'SmartAT Team\r\n'
-    msg = msg + '\r\n'
+    msg = msg + '\r\n\r\n'
     msg = msg + 'This mail is sent out by smartAT, do not reply to it directly.\r\n'
 
     __sendMail([receiver],subject,msg)
@@ -64,13 +63,13 @@ def sendRetrievePswdMail(receiver, passwd, baseurl):
     print 'Sending retrieve password email to ' + receiver
 
     msg = 'Hi,%s,\r\n\r\n' % (receiver)
-    msg = msg + 'Your password of account \"%s\" has been reset already.\r\n' % (receiver)
-    msg = msg + 'The new password is ' + passwd + ' \r\n'
+    msg = msg + 'Your password of account \"%s\" has been reset already.\r\n\r\n' % (receiver)
+    msg = msg + 'The new password is ' + passwd + ' \r\n\r\n'
     msg = msg + 'Please login SmartAT and change new one for your own.\r\n'
     msg = msg + '\r\n\r\n'
     msg = msg + 'Best Regards\r\n'
     msg = msg + 'SmartAT Team\r\n'
-    msg = msg + '\r\n'
+    msg = msg + '\r\n\r\n'
     msg = msg + 'This mail is sent out by smartAT, do not reply to it directly.\r\n'
 
     __sendMail([receiver],subject,msg)
