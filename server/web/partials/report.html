@@ -1,0 +1,149 @@
+<div class='report_head'>
+        <div class="" style="width:100%;height:40px;background:#23658B;">
+                <a href="#/smartserver/group/{{groupid}}"><b style='float:left;margin-left:10px;margin-top:8px;color:white'>Back</b></a>
+                <button type="button" style='float:right;color:white;margin-top:3px;' ng-click="signout()" class="btn btn-link">Sign Out</button>
+       </div>
+
+</div>
+        <div class='group_members' style='float:right;margin-right:40px;margin-top:20px'>
+              <dl>
+		<dt><h3>Members</h3></dt>
+		<dd ng-repeat="member in members">
+			<img style='width:30px;height:30px;margin-bottom:5px;' ng-src='{{member.avatar.url}}'>
+			<span>{{member.username}}</span>
+            <button ng-click='delMember("{{member.username}}")' class='btn btn-mini btn-link'>del</button>
+		</dd>
+	</dl>
+	</div>
+<div class='span10' >
+<h2>Cycle : {{cid}}</h2>
+	<table class='table table-striped table-hover table-bordered'>
+		<thead><tr> <th>Product</th>
+			<th>Revision</th>
+			<th>Devices</th>
+			<th>Total Failures</th>
+			<th>Total Uptime</th>
+			<th>MTBF</th>
+		</tr></thead>
+		<tbody>
+			<tr>
+				<td>{{summary.product}}</td>
+				<td>{{summary.revision}}</td>
+				<td>{{summary.devicecount}}</td>
+		    	        <td>{{summary.totalfailure}}</td>
+				<td>{{summary.totaluptime}}</td>
+				<td>{{summary.mtbf}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+
+<div class='span10'>
+	<table class='table table-striped table-hover table-bordered' align='center'>
+		<thead>
+			<tr><th style='text-align:center' colspan="2">Failure Summary</th></tr>
+			<tr><th style='text-align:center'>Issue Type</th><th style='text-align:center'>Occurs</th></tr>
+		</thead>
+		<tbody>
+			<tr style='text-align:center' ng-repeat='issue in issues'>
+				<td style='text-align:center'>{{issue.issuetype}}</td>
+				<td style='text-align:center'>{{issue.occurs}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<div class='span10'>
+	<table class='table table-striped table-hover table-bordered'>
+		<thead>
+			<th></th>
+			<th>Deviec#</th>
+			<th>Start Time</th>
+			<th>End Time</th>
+			<th>Failures</th>
+			<th>First Failure Uptime</th>
+			<th>Uptime</th>
+		</thead>
+		<tbody ng-repeat="session in sessions">
+			<tr >
+				<td style='text-align:center;'>
+					<span style='font-size:24px;color:#0088cc;cursor:pointer ' ng-click="toggleDetail($index)">{{session.content.failurecount |  more}}</span>
+				<!--	<span style='font-size:24px;color:#0088cc;cursor:pointer' ng-click="toggleDetail($index)" ng-switch-default>+</span>
+					<span ng-switch-when='0'></span>-->
+				</td>
+				
+				<td>{{session.deviceid}}</td>
+				<td>{{session.content.starttime}}</td>
+				<td>{{session.content.endtime}}</td>
+				<td>{{session.content.failurecount}}</td>
+				<td>{{session.content.firstuptime}}</td>
+				<td>{{session.content.uptime}}</td>
+				
+			</tr>
+			<tr ng-show="activePosition == $index">
+				<th></th><th></th>
+				<th>Happend Time</th>
+				<th>Issue Type</th>
+				<th colspan='3'>Comments</th>
+			</tr>
+			<tr ng-show="activePosition == $parent.$index" ng-repeat='issue in session.content.issues'>
+			<td></td>	<td>{{$index+1}}</td>
+				<td>{{issue.starttime}}</td>
+				<td>{{issue.issueType}}</td>
+				<td colspan='3'>{{issue.comments}}</td>
+			</tr>			
+		</tbody>
+	</table>
+</div>
+
+
+<div class='span10'>
+	<table class='table table-striped table-hover table-bordered'>
+		<thead>
+			<th></th>
+			<th>Component</th>
+			<th>Total</th>
+			<th>Pass</th>
+			<th>Fail</th>
+			<th>Block</th>
+			<th>Success Rate</th>
+		</thead>
+		<tbody ng-repeat='domain in domains'>
+			<tr>
+				<td style='text-align:center;font-size:24px;color:#0088cc;cursor:pointer' ng-click="toggleDetail1($index)">+</td>
+				<td>{{domain.type}}</td>
+				<td>{{domain.total}}</td>
+				<td>{{domain.pass}}</td>
+				<td>{{domain.fail}}</td>
+				<td>{{domain.block}}</td>
+				<td>{{domain.pass*100 / domain.total | number:2 }}%</td>
+			</tr>
+			<tr ng-show="activePosition1 == $index">
+				<th></th>
+				<th>Case Name</th>
+				<th>Total</th>
+				<th>Pass</th>
+				<th>Fail</th>
+				<th>Block</th>
+				<th>Success Rate</th>
+			</tr>
+			<tr ng-show="activePosition1 == $parent.$index" ng-repeat='case in domain.cases'>
+				<td></td>
+				<td>{{case.casetype}}</td>
+				<td>{{case.total}}</td>
+				<td>{{case.pass}}</td>
+				<td>{{case.fail}}</td>
+				<td>{{case.block}}</td>
+				<td>{{case.pass*100/case.total | number:2}}%</td>
+			</tr>
+			</tbody>
+
+	</table>
+</div>
+<div class='span9'>
+<a ng-click='toggleInfo()' href=''>Appendix</a>
+<article id="article" class="show-content" style="background-color: #f9f9f9; display: block;display:none"><b>MTBF</b> = Total Uptime/Total Failures  <br><b>Product:</b> The device platform and product information. <br><b>Start Time:</b> The test start time. <br><b>End Time: </b>The test finish timestamp. Genericlly the value should be the ciritical issue happen time or the test stop time. 'N/A' means the test is ongoing. <br><b>Uptime:</b> Uptime = Endtime - StarTime . EndTime is the critical issue happen time or test stop time. <br><b>Failures</b>= (critical issues) + (Non-Critical issues). <br><b>Critial Issues:</b> Phone hang, kernel reboot/panic, system crash, etc. <br><b>Non-Critical Issues:</b> Application/process force close/ANR, core dump (native process crash), etc.<br><b>First Failure Uptime:</b> From the <b>Start Time</b> to first failure occurs. <br></article>
+</div>
+
+

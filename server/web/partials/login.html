@@ -1,0 +1,21 @@
+<div class="login-page">
+	    
+	<div class="login-logo">
+		<img src="img/logo-s.png" class="img-thumbnail">
+	</div>
+
+	<div>
+		<form class="login-form">
+			<h3>Log in</h3>
+			<hr>
+			<label for="username">Email or username</label>
+			<label class="warnning" style='color:red;font-size:12px;display:none'>Username and Password need to be filled!</label>
+			<input ng-model="username" type='text' tabindex="1" required><br>
+	        <label class="" for="password">Password</label>
+	        <input ng-keydown='checkKeyCode($event)' ng-model="password" type='password' tabindex="2" required><br>
+	        <button type="button" ng-click="logIn()" class='btn btn-primary' tabindex="3">Login</button>
+	        <button type="button" ng-click="signUp()" class='btn btn-primary' tabindex="4">Sign Up</button>
+	        <button type="button" ng-click="forgetPwd()" class='btn btn-link' tabindex="5">Forget Password</button>
+		</form>
+	</div>
+</div>

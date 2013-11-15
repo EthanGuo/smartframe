@@ -1,0 +1,109 @@
+<div class='set_page'>
+	<div class="login-logo">
+		<img src="img/logo-s.png" class="img-thumbnail">
+	</div>
+	<div class='setting_tabs'>
+		<ul class="nav nav-tabs" id='mytab'>
+			<li class="active">
+				<a href="#change_pwd">Change Password</a>
+			</li>
+			<li>
+				<a href="#change_info">Change Info</a>
+			</li>
+                        <li>
+                                <a href="#change_avatar">Change Avatar</a>
+                        </li>
+			<li>
+				<a href="#change_username">Change Username</a>
+			</li>
+		</ul>
+		<div class='tab-content'>
+			<div class='tab-pane active' id='change_pwd'>
+				<form class='form-horizontal'>
+					<label class='inputerror' style='display:none;color:red'>All these three fields are required!</label>
+					<div class='control-group'>
+						<label class='control-label'>Old Password</label>
+						<div class='controls'>
+							<input type='password' ng-model='oldpwd'>
+						</div>
+					</div>
+					<div class='control-group'>
+						<label class='control-label'>New Password</label>
+						<div class='controls'>
+							<input type='password' ng-model='newpwd'>
+						</div>
+					</div>
+					<div class='control-group'>
+						<label class='control-label'>Confirm New Password</label>
+						<div class='controls'>
+							<input type='password' ng-model='confpwd'>
+						</div>
+					</div>
+					<div class='control-group'>
+						<div class='controls'>
+							<button ng-click='changePwd()' type='button' class='btn btn-primary'>Submit</button>
+							<button ng-click='cancel()' type='button' class='btn btn-primary'>Cancel</button>
+						</div>
+					</div>
+				
+				</form>
+				
+			</div>
+			<div class='tab-pane' id='change_info'>
+				<form class='form-horizontal'>
+					<div class='control-group'>
+						<label class='control-label'>Company</label>
+						<div class='controls'>
+							<input type='text' ng-model='company'>
+						</div>
+					</div>
+					<div class='control-group'>
+						<label class='control-label'>Telephone</label>
+						<div class='controls'>
+							<input type='text' ng-model='telephone'>
+						</div>
+					</div>
+					<div class='control-group'>
+						<div class='controls'>
+							<button ng-click='changeInfo()' type='button' class='btn btn-primary'>Submit</button>
+							<button ng-click='cancel()' type='button' class='btn btn-primary'>Cancel</button>
+						</div>
+						
+					</div>
+					
+				</form>
+			</div>
+			<div class='tab-pane' id='change_username'>
+				<form class='form-horizontal'>
+					<div class='control-group'>
+						<label class='control-label'>Username</label>
+						<div class='controls'>
+							<input type='text' ng-model='username'>
+						</div>
+					</div>
+					<div class='control-group'>
+						<div class='controls'>
+							<button ng-click='changeUsername()' type='button' class='btn btn-primary'>Submit</button>
+							<button ng-click='cancel()' type='button' class='btn btn-primary'>Cancel</button>
+						</div>
+					</div>
+					
+				</form>
+			</div>
+                        <div class='tab-pane' id='change_avatar'>
+			    <form class='form-horizontal'>
+		                <div class='control-group'>
+		    		    <div class='controls'>
+				        <img style='width:200px;height=200px;' ng-src='{{avatar || "http://storage.aliyun.com/wutong-data/system/1_L.jpg"}}'>
+				   </div>
+				   <div class='control-group'>
+					<input type="file" ng-model='file' file-upload class='controls' />
+					<button ng-click='save()' class='btn btn-primary controls'>Upload</button>
+					<button ng-click='cancel()' type='button' class='btn btn-primary'>Cancel</button>
+				  </div>
+                                </div>
+			   </form>
+			</div>
+		</div>
+	</div>
+</div>

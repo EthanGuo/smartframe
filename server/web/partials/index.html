@@ -1,0 +1,77 @@
+	<div class="" style="width:100%;height:40px;background:#23658B;">
+		<div>	
+		<button type="button" style='float:right;color:white;margin-top:3px;' ng-click="signout()" class="btn btn-link">Sign Out</button>
+		<a style='float:right;color:white;margin-top:3px;' href="#/smartserver/setting/{{username}}"> <button style='color:white' class='btn btn-link'>Account Settings</button></a>
+		</div>
+		
+	</div>
+   
+<div style='width:900px; height:auto; margin:auto'>	<div class="container-fluid">
+	    <div class="row-fluid">
+		    <div class="span9" >
+		    <!--Sidebar content-->
+			    <div style="width:400px;height:auto;margin-top:100px;">
+					<ul  class="nav nav-pills" id="mytabs">
+					  <li class="active">
+					    <a id='mygroups' href="#test1">My Groups</a>
+					  </li>
+					  <li class="">
+					  	<a id='mysessions' href="#test2">My Sessions</a>
+					  </li>
+					</ul>
+				</div>
+				<div class='tab-content'>
+					<div class='tab-pane active' id='test1'>
+						<div><button class='btn btn-link' ng-click="create()">New Group</button></div>
+						<div class='create_group' style='display:none'>
+							<input type='text' ng-model='newgroup' placeholder="New Group Name"><br>
+							<input type='text' ng-model='groupinfo' placeholder='Description for group'><br>
+							<button class='btn' ng-click="cancel()">Cancel</button>
+							<button class='btn btn-primary' ng-click="createGroup()">Create</button>
+						</div>
+					<table class='table table-striped table-hover'>
+							<thead>
+								<th>Group (live/all)</th>
+								<th>Option</th>
+							</thead>
+							<tbody>
+							<tr ng-repeat='group in groups' ng-switch on='group.userrole'>
+							<td class='grouphover' style='width:500px;' ng-click="groupDetail({{group.gid}})">{{group.groupname}}({{group.livesession}}/{{group.allsession}})
+                                                        <span style='float:right'>{{group.groupowner}}</span>
+                                                        </td>                                                
+                                                        <td>
+							<button style='margin-left:5px;' ng-click="edit({{group.gid}},{{group.userrole}})" type='button 'class='btn btn-mini btn-danger' ng-switch-when='10'>delete</button>
+							</tr>
+							</tbody>
+							
+						</table>	
+					</div>
+					<div class='tab-pane' id='test2'>
+						<table class='table table-striped table-hover'>
+							<tr ng-repeat="session in sessions">
+								<td style='cursor:pointer;color:#0088cc' ng-click="sessionDetail('{{session.sid}}','{{session.gid}}')">
+								       {{session.sid}} of {{session.groupname}}
+								</td>
+							</tr>							
+						</table>	
+					</div>
+				</div>
+		    </div>
+		    <div class="span3" style='margin-top:100px;'>
+		    	<div>
+					<img style='width:150px;height:150px;' ng-src='{{avatar || "http://storage.aliyun.com/wutong-data/system/1_L.jpg"}}'>
+					<span style='display:block;font-weight:bold;font-size:16px;width:150px;text-align:center;' ng-model='username'>{{username}}</span>
+			</div>
+			<!--<div>
+				<input type="file" ng-model='file' file-upload />
+				<button ng-click='save()' class='btn btn-primary'>Upload</button>
+	                	    <ul>
+        				<li ng-repeat="file in files">{{file.name}}</li>
+    				   </ul>
+			</div> -->
+		    </div>
+	    </div>
+    </div> 
+</div>
+
+	

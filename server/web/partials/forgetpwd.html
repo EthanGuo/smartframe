@@ -1,0 +1,24 @@
+<div class="forgetpwd-page">
+
+	<div class="login-logo">
+		<img src="img/logo-s.png" class="img-thumbnail">
+	</div>
+	
+	<!-- <div class="verify-form">
+		<h3>Verify Email</h3><br>
+		<input ng-model="email" class="form-control" tabindex="1"><br>
+		<button type="button" ng-click="checkemail()" class='btn btn-primary' tabindex="2">Send Email</button>
+		<button type="button" ng-click="cancel()" class='btn btn-primary' tabindex="3">Cancel</button>
+	</div> -->
+	<form class="verify-form">
+	  <fieldset>
+	    <legend>Retrieve Password</legend>
+	    <label>Your Email</label>
+	    <input type="email" ng-model="email" tabindex="1" placeholder="Your Email Address">
+	    <label></label>
+	    <button type="button" ng-click="checkemail()" class='btn btn-primary' tabindex="2">Retrieve</button>
+		<button type="button" ng-click="cancel()" class='btn btn-primary' tabindex="3">Cancel</button>
+	  </fieldset>
+	</form>
+
+</div>

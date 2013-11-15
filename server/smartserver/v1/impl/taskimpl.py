@@ -53,8 +53,12 @@ def sessionUpdateSummary(sid, results):
             casecount[result[0]] += 1
     # Update session runtime here.
     cases = Cases.objects(sid=sid).order_by('-tid')
-    minstarttime = cases[(len(cases) - 1)].starttime
+    minstarttime = cases[(len(cases) - 1)].starttime if cases[(len(cases) - 1)].starttime else cases[(len(cases) - 1)].endtime
     maxendtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
+    if not maxendtime:
+        maxendtime = cases[1].endtime
+    if not maxendtime:
+        maxendtime = cases[1].starttime
     runtime = (maxendtime - minstarttime).total_seconds()
     try:
         Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
@@ -69,9 +73,9 @@ def sessionActiveSession(sid):
     session = Sessions.objects(sid=sid).only('endtime').first()
     if session.endtime:
         try:
-            Sessions.objects(sid=sid).update(set__endtime='')
+            Sessions.objects(sid=sid).update(set__endtime=None)
         except OperationError:
-            Sessions.objects(sid=sid).update(set__endtime='')
+            Sessions.objects(sid=sid).update(set__endtime=None)
 
 def caseValidateEndtime():
     """
@@ -89,7 +93,7 @@ def sessionValidateEndtime():
     """
        Used to validate session endtime
     """
-    for session in Sessions.objects(endtime=None).only('starttime'):
+    for session in Sessions.objects(endtime=None).only('starttime', 'sid'):
         cases = Cases.objects(sid=session.sid).order_by('-tid')
         if not cases:
             endtime = session.starttime
