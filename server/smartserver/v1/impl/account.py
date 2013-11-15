@@ -165,7 +165,7 @@ def __updateAvatar(data, uid):
     """
        Update avatar here
     """
-    filetype = data['file'].filename.split('.')[-1]
+    filetype = data['file'].filename.split('.')[-1].lower()
     if not filetype in ['png', 'jpg', 'jpeg']:
         return resultWrapper('error', {}, 'Support png/jpg/jpeg image only!')
     filedata = data['file'].file
@@ -179,7 +179,7 @@ def __updateAvatar(data, uid):
         u.reload()
     except OperationError:
         return resultWrapper('error', {}, 'Update avatar failed!')
-    return resultWrapper('ok', imageid, 'Upload successfully!')
+    return resultWrapper('ok', {'filename': data['file'].filename, 'url': imageurl}, 'Upload successfully!')
 
 def accountUpdate(data, uid):
     """
