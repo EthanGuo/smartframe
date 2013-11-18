@@ -25,16 +25,6 @@ def caseresultCreate(data, sid):
     ws_active_testsession.delay(sid)
     return resultWrapper('ok',{},'')
 
-def handleSnapshots(snapshots):
-    if not snapshots:
-        return []
-    else:
-        result = []
-        for snapshot in snapshots:
-            fileurl = saveFile(snapshot['image'], 'image/png', snapshot['imagename'])
-            result.append({'filename': snapshot['imagename'], 'url': fileurl})
-        return result
-
 def __updateCaseComments(data, sid):
     domains = []
     if data.get('comments'):
@@ -69,8 +59,9 @@ def __updateCaseResult(data, sid):
     # If case failed, save all the images fetched from memcache to database
     if data.get('result').lower() == 'fail':
         snapshots = cache.getCache(str('sid:' + sid + ':tid:' + str(data['tid']) + ':snaps'))
-        snapshots = handleSnapshots(snapshots)
     else:
+        snapshots = []
+    if not snapshots:
         snapshots = []
     endtime = convertTime(data.get('time'))
     try:
@@ -116,17 +107,18 @@ def uploadPng(sid, tid, imagedata, stype):
         snaps = []
     values = stype.split(':')
     imagetype, imagename = values[0], values[1]
+    imageurl = saveFile(imagedata, 'image/png', imagename)
+    imagedata.seek(0)
     if imagetype == 'expect':
-        imageurl = saveFile(imagedata, 'image/png', imagename)
         try:
             Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl})
         except OperationError:
             Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl})
     elif imagetype == 'current':
-        snaps.append({'imagename': imagename, 'image': imagedata})
+        snaps.append({'filename': imagename, 'url': imageurl})
         #Following two caches are used for screen monitor
         timenow = datetime.now().strftime(TIME_FORMAT)
-        cache.setCache(str('sid:' + sid + ':snap'), imagedata)
+        cache.setCache(str('sid:' + sid + ':snap'), imagedata.read())
         cache.setCache(str('sid:' + sid + ':snaptime'), timenow)
         #Cache history snapshots for a testcase
         cache.setCache(str('sid:' + sid + ':tid:' + tid + ':snaps'), snaps)
