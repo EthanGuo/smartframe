@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from mongoengine import *
-from ..config import DB_NAME, MONGODB_URI, PORT
+from ..config import DB_NAME, MONGODB_URI, MONGODB_PORT
 
 class File(EmbeddedDocument):
     # Work around of the mongoengine 0.8.4 AttributeError issue 
@@ -143,6 +143,6 @@ class connector(object):
     """
     def __init__(self, db=DB_NAME):
         print "Init connection to database..."
-        connect(db, host=MONGODB_URI, port=PORT)
+        connect(db, host=MONGODB_URI, port=MONGODB_PORT)
         
 connector()

@@ -10,6 +10,7 @@ __all__ = ["MONGODB_URI", "MONGODB_REPLICASET", "REDIS_URI", "REDIS_HOST",
 
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017").strip().replace("mongodb://", "")
 MONGODB_REPLICASET = os.getenv("MONGODB_REPLICASET")
+MONGODB_PORT = int(MONGODB_URI.split(':')[1])
 REDIS_URI = os.getenv("REDIS_URI", "redis://localhost:6379")
 MEMCACHED_URI = os.getenv("MEMCACHED_URI", "localhost:11211")
 WEB_HOST = os.getenv("WEB_HOST", "")
@@ -23,6 +24,5 @@ if ru.path.find("/") == 0:
 else:
     REDIS_DB = 0
 
-PORT = 27017
 DB_NAME = 'smartServer_eth'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'

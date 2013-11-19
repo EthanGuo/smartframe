@@ -17,12 +17,12 @@ def groupCreate(data, uid):
     """
     #If groupname has been registered already, return error
     if Groups.objects(groupname=data.get('groupname')).only('gid'):
-        return resultWrapper('error', {}, 'A group with same username exists!')
+        return resultWrapper('error', {}, 'A group with the same name exists!')
     #Save group and set current user as its owner.
-    groupInst = Groups().from_json(json.dumps({'groupname': data['groupname'], 'info': data.get('info', '')}))
+    groupInst = Groups(groupname=data['groupname'], info=data.get('info', ''))
     try:
         groupInst.save()
-        memberInst = GroupMembers().from_json(json.dumps({'uid': int(uid), 'role': ROLES['OWNER'], 'gid': groupInst.gid}))
+        memberInst = GroupMembers(uid=int(uid), role=ROLES['OWNER'], gid=groupInst.gid)
         memberInst.save()
     except OperationError:
         return resultWrapper('error', {}, 'save group failed')
@@ -80,7 +80,7 @@ def groupSetMembers(data, gid, uid):
                         target.reload()
                 #If target does not exist in current group, save it to current group.
                 else:
-                    memberInst = GroupMembers().from_json(json.dumps({'gid': gid, 'uid': member['uid'], 'role': member['role']}))
+                    memberInst = GroupMembers(gid=gid, uid=member['uid'], role=member['role'])
                     memberInst.save()
             except OperationError:
                 return resultWrapper('error', {}, 'Operation failed!')
@@ -118,13 +118,12 @@ def groupGetMembers(data, gid, uid):
     gid = int(gid)
     groupMembers = []
     for member in GroupMembers.objects(gid=gid):
-        User = Users.objects(uid=member.uid).only('username', 'info', 'avatar').first()
+        User = Users.objects(uid=member.uid).only('username', 'avatar').first()
         groupMembers.append({
             'uid': member.uid,
             'role': member.role,
             'username': User.username,
-            'avatar': User.avatar,
-            'info': User.info.__dict__['_data']
+            'avatar': User.avatar
             })
     return resultWrapper('ok', {'members': groupMembers}, '')
 
@@ -145,13 +144,13 @@ def groupGetSessions(data, gid, uid):
             product, revision = '', ''
         user = Users.objects(uid=session.uid).only('username').first()
         tester = user.username if user else ''
+        starttime = session.starttime.strftime(TIME_FORMAT) if session.starttime else ''
         endtime = session.endtime.strftime(TIME_FORMAT) if session.endtime else ''
         cycle = Cycles.objects(sids=session.sid).only('cid').first()
         cid = cycle.cid if cycle else ''
         sessions.append({'gid': gid, 'product': product, 'revision': revision,
                          'sid': session.sid, 'cid': cid, 'tester': tester,
-                         'starttime': session.starttime.strftime(TIME_FORMAT),
-                         'endtime': endtime})
+                         'starttime': starttime,'endtime': endtime})
     return resultWrapper('ok', {'sessions': sessions}, '')
 
 def groupGetCycles(data, gid, uid):
@@ -165,15 +164,16 @@ def groupGetCycles(data, gid, uid):
         cycles.append({'cid': cycle.cid, 'devicecount': 0, 'livecount': 0, 'product': '', 'revision': ''})
         for sid in cycle.sids:
             session = Sessions.objects(sid=sid).only('deviceinfo', 'endtime').first()
-            if not cycles[i]['product']:
-                if session.deviceinfo:
-                    cycles[i]['product'] = session.deviceinfo.product
-            if not cycles[i]['revision']:
-                if session.deviceinfo:
-                    cycles[i]['revision'] = session.deviceinfo.revision
-            if not session.endtime:
-                cycles[i]['livecount'] += 1
-            cycles[i]['devicecount'] += 1
+            if session:
+                if not cycles[i]['product']:
+                    if session.deviceinfo:
+                        cycles[i]['product'] = session.deviceinfo.product
+                if not cycles[i]['revision']:
+                    if session.deviceinfo:
+                        cycles[i]['revision'] = session.deviceinfo.revision
+                if not session.endtime:
+                    cycles[i]['livecount'] += 1
+                cycles[i]['devicecount'] += 1
         i += 1
     return resultWrapper('ok', {'cycles': cycles}, '')
 
@@ -251,13 +251,15 @@ def groupGetReport(data, gid, uid):
             if case.comments:
                 if case['comments']['caseresult'] == 'fail':
                     failurecount += 1
-                    issues.append({'casename': case.casename, 'starttime': case.starttime.strftime(TIME_FORMAT),
+                    casestarttime = case.starttime.strftime(TIME_FORMAT) if case.starttime else ''
+                    issues.append({'casename': case.casename, 'starttime': casestarttime,
                                    'issueType': case['comments']['issuetype'], 'comments': case['comments']['commentinfo']})
                     if not firstfailureuptime:
                         caseendtime = case.endtime if case.endtime else case.starttime
-                        firstfailureuptime = (caseendtime - starttime).total_seconds()
+                        if caseendtime:
+                            firstfailureuptime = (caseendtime - starttime).total_seconds()
                 if case['comments']['caseresult'] == 'block':
-                    if case.endtime:
+                    if case.endtime and case.starttime:
                         blocktime += (case.endtime - case.starttime).total_seconds()
                 if case['comments']['endsession'] == 1:
                     endtime = case.endtime if case.endtime else case.starttime

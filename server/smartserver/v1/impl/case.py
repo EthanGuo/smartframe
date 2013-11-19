@@ -7,7 +7,6 @@ from filedealer import saveFile
 from datetime import datetime
 from ..config import TIME_FORMAT
 from ..tasks import ws_update_session_domainsummary, ws_active_testsession, ws_update_session_sessionsummary
-import json
 
 def caseresultCreate(data, sid):
     """
@@ -16,7 +15,7 @@ def caseresultCreate(data, sid):
     """
     #create a new case if save failed return error
     starttime = convertTime(data.get('starttime'))
-    caseInst = Cases().from_json(json.dumps({'sid': sid,'tid':data.get('tid'),'casename':data.get('casename'),'result':'running','starttime':starttime}))
+    caseInst = Cases(sid=sid, tid=data.get('tid'), casename=data.get('casename'), result='running', starttime=starttime)
     try:
         caseInst.save()
     except OperationError:
@@ -29,8 +28,12 @@ def __updateCaseComments(data, sid):
     domains = []
     if data.get('comments'):
         result = data['comments']['caseresult']
+        if not (result in ['fail', 'block', '']):
+            return resultWrapper('error', {}, 'Invalid result!')
         for tid in data['tid']:
             case = Cases.objects(sid=sid, tid=tid).only('comments', 'result').first()
+            if not (case.result.lower() in ['fail', 'error']):
+                return resultWrapper('error', {}, "Can only add comments to fail/error cases!")
             if case.comments and case.comments.caseresult:
                 orgcommentresult = case.comments.caseresult
             else:
@@ -54,7 +57,12 @@ def __updateCaseResult(data, sid):
     if not case:
         return resultWrapper('error', {}, 'Invalid case ID!')
     orgresult = case.result
-    orgcommentresult = case.comments.caseresult if case.comments else ''
+    if case.comments and case.comments.caseresult:
+        orgcommentresult = case.comments.caseresult
+        case.update(set__comments={})
+        case.reload()
+    else:
+        orgcommentresult = ''
     # Fetch all the images saved to memcache before then clear the cache.
     # If case failed, save all the images fetched from memcache to database
     if data.get('result').lower() == 'fail':
@@ -90,7 +98,6 @@ def caseresultUpdate(data, sid):
     """
     #update case result or add case comments
     #If tid is list, do add case comments, or update case result.
-
     if isinstance(data.get('tid'), list):
         return __updateCaseComments(data, sid)
     elif isinstance(data.get('tid'), int):

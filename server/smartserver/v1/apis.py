@@ -25,16 +25,16 @@ def doAccount():
     URL:/accountbasic
     TYPE:http/POST
     @data type:JSON
-    @param:{'subc': '', 'data':{}}
+    @param:{'subc': (string), 'data':{}}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
-    ---------------------------------------------------------------------------------------
-    |support|subc           |data
-    |       |register       |{'username':(string), 'password':(string), 'appid':(string),
-    |       |               | 'info':{'email':(string), 'telephone':(string), 'company':(string)}, 'baseurl': (string)}
-    |       |retrievepswd   |{'email':(string), 'baseurl': (string)}
-    |       |login          |{'appid':(string), 'username':(string), 'password':(string)}
+    -------------------------------------------------------------------------------
+    |subc           |data
+    |register       |{'username':(string), 'password':(string), 'appid':(string),
+    |               | 'info':{'email':(string), 'telephone':(string), 'company':(string)}, 'baseurl': (string)}
+    |retrievepswd   |{'email':(string), 'baseurl': (string)}
+    |login          |{'appid':(string), 'username':(string), 'password':(string)}
     ---------------------------------------------------------------------------------------
     """
     return accountBasic(request.json)
@@ -45,16 +45,17 @@ def doAccountPOST(uid):
     URL:/account
     TYPE:http/POST
     @data type:JSON
-    @param:{'subc': '', 'data':{}}
+    @param:{'subc': (string), 'data':{}, 'token': (string)}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
-    ----------------------------------------------------------------------------------------
-    |support|subc          |data
-    |       |changepswd    |{'oldpassword':(string), 'newpassword':(string)}
-    |       |update        |{'appid': (string), 'username':(string), 'telephone':(string), 'company':(string)}
-    |       |invite        |{'email':(string)target email, 'username':(string)target name, 'baseurl': (string)}
-    |       |logout        |{}
+    --------------------------------------------------------------------------------
+    |subc          |data
+    |changepswd    |{'oldpassword':(string), 'newpassword':(string)}
+    |update        |{'appid': (string), 'username':(string), 'telephone':(string), 'company':(string)}
+    |              |or user avatar
+    |invite        |{'email':(string)target email, 'username':(string)target name, 'baseurl': (string)}
+    |logout        |{}
     -----------------------------------------------------------------------------------------
     """
     if 'multipart/form-data' in request.content_type:
@@ -69,17 +70,16 @@ def doAccountGET(uid):
     """
     URL:/account
     TYPE:http/GET
-    @data type:JSON
-    @param:{'subc': '', 'data':{}}
+    @param: 'subc': (string), 'token':(string)
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
-    ----------------------------------------------------------------------------------------
-    |support|subc          |return data 
-    |       |accountlist   |{'count':(int), 'users':[{'uid':(string),'username':(string)},...]}}
-    |       |accountinfo   |{'username':(string),'info':{'email':(string), 'telephone':(string), 'company':(string)}}
-    |       |groups        |{'groups':[{'gid':(int),'groupname':(string), 'allsession': (int)count, 'livesession': (int)count},...]}
-    |       |sessions      |{'sessions': [{'sid':(int), 'gid':(int), 'groupname':(string)},...]}
+    --------------------------------------------------------------------------------
+    |subc          |return data 
+    |accountlist   |{'count':(int), 'users':[{'uid':(string),'username':(string)},...]}}
+    |accountinfo   |{'username':(string),'info':{'email':(string), 'telephone':(string), 'company':(string)}, 'avatar':(dict)}
+    |groups        |{'usergroup':[{'gid':(int),'groupname':(string), 'allsession': (int)count, 'livesession': (int)count},...]}
+    |sessions      |{'usersession': [{'sid':(int), 'gid':(int), 'groupname':(string)},...]}
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc')}
@@ -91,13 +91,13 @@ def doGroup(uid):
     URL:/group
     TYPE:http/POST
     @data type:JSON
-    @param: {'subc': '', 'data':{}}
+    @param: {'subc': (string), 'data':{}, 'token': (string)}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc          |data 
-    |       |create        |{'groupname':(string), 'info':(string)}
+    |subc          |data 
+    |create        |{'groupname':(string), 'info':(string)}
     -----------------------------------------------------------------------------------------
     """
     return groupBasic(request.json, uid)
@@ -108,15 +108,15 @@ def doGroupPOST(gid, uid):
     URL:/group/<gid>
     TYPE:http/POST
     @data type:JSON
-    @param:{'subc': '', 'data':{}}
+    @param:{'subc': (string), 'data':{}, 'token':(string)}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc          |data 
-    |       |delete        |{}
-    |       |setmember     |{'members':[{'uid':(int),'role':(int)roleId}]}
-    |       |delmember     |{'members':[{'uid':(int),'role':(int)roleId}]}
+    |subc          |data 
+    |delete        |{}
+    |setmember     |{'members':[{'uid':(int),'role':(int)roleId}]}
+    |delmember     |{'members':[{'uid':(int),'role':(int)roleId}]}
     -----------------------------------------------------------------------------------------
     """
     return groupPOST(request.json, gid, uid)
@@ -126,20 +126,19 @@ def doGroupGET(gid, uid):
     """
     URL:/group/<gid>
     TYPE:http/GET
-    @data type:JSON
-    @param:{'subc': '', 'data':{}}
+    @param: 'subc':(string), 'token':(string), 'cid': (string)For report
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc        |return data 
-    |       |members     |{'members':[{'uid':(int), 'username':(string), 'role':(int), 'info':(dict)},...]   
-    |       |sessions    |{'sessions': [{'gid':(int), 'product':(string), 'revision':(string), 
-    |       |            |               'deviceid':(string), 'starttime':(string), 'endtime':(string),
-    |       |            |               'runtime':(int), 'tester':(string)name},...]}
-    |       |cycles      |{'cycles': [{'cid':(int), 'devicecount':(int), 'livecount':(int),
-    |       |            |             'product':(string), 'revision':(string)},...]}
-    |       |report      |{}   
+    |subc        |return data 
+    |members     |{'members':[{'uid':(int), 'username':(string), 'role':(int), 'info':(dict)},...]   
+    |sessions    |{'sessions': [{'gid':(int), 'product':(string), 'revision':(string), 
+    |            |               'deviceid':(string), 'starttime':(string), 'endtime':(string),
+    |            |               'runtime':(int), 'tester':(string)name},...]}
+    |cycles      |{'cycles': [{'cid':(int), 'devicecount':(int), 'livecount':(int),
+    |            |             'product':(string), 'revision':(string)},...]}
+    |report      |{}   
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'cid': request.params.get('cid', '')}
@@ -151,17 +150,17 @@ def doSessionPOST(gid,sid,uid):
     URL:/group/<gid>/session/<sid>
     TYPE:http/POST
     @data type:JSON
-    @param:{'subc': '', 'data':{}}
+    @param:{'subc': (string), 'data':{}, 'token':(string)}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc   |data                   
-    |       |create |{'planname':(string),'starttime':(string),
-    |       |       | 'deviceinfo':{'deviceid':(string),'revision':(string),'product':(string), 'width':(int), 'height':(int)}}
-    |       |update |{'endtime':(string)}
-    |       |cycle  |{'cid':(int)cid}
-    |       |delete |{}
+    |subc   |data                   
+    |create |{'planname':(string),'starttime':(string),
+    |       | 'deviceinfo':{'deviceid':(string),'revision':(string),'product':(string), 'width':(int), 'height':(int)}}
+    |update |{'endtime':(string)}
+    |cycle  |{'cid':(int)cid}
+    |delete |{}
     -----------------------------------------------------------------------------------------
     """
     return sessionPOST(request.json, gid, sid, uid)
@@ -171,15 +170,16 @@ def doSessionGET(gid, sid):
     """
     URL:/group/<gid>/session/<sid>
     TYPE:http/GET
+    @params: 'subc': (string), 'token': (string)
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{'code':(string)code}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc       |data 
-    |       |latest     |{'amount': (int)value}
-    |       |history    |{'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
-    |       |poll       |{'tid': (int)value}
-    |       |summary    |{}   
+    |subc       |return data 
+    |latest     |{'amount': (int)value}
+    |history    |{'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
+    |poll       |{'tid': (int)value}
+    |summary    |{}   
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'data':request.params}
@@ -191,15 +191,15 @@ def doCasePOST(sid):
     URL:/session/<sid>/case
     TYPE:http/POST
     @data type:JSON
-    @param:{'subc': '', 'data':{}}
+    @param:{'subc': (string), 'data':{}, 'token':(string)}
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc    |data                                                          
-    |       |create  |{'tid':(int), 'casename':(string), 'starttime':(string)}
-    |       |update  |{'tid':(int)/(list), 'result':['Pass'/'Fail'/'Error'],
-    |       |        | 'endtime':(string), 'traceinfo':(string), 'comments': (dict)}
+    |subc    |data                                                          
+    |create  |{'tid':(int), 'casename':(string), 'starttime':(string)}
+    |update  |{'tid':(int)/(list), 'result':['Pass'/'Fail'/'Error'],
+    |        | 'endtime':(string), 'traceinfo':(string), 'comments': (dict)}
     -----------------------------------------------------------------------------------------
     """
     return casePOST(request.json, sid)
@@ -215,9 +215,9 @@ def doCaseFilePUT(sid, tid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc         |data                                                          
-    |       |uploadpng    |{}
-    |       |uploadzip    |{}
+    |subc         |data                                                          
+    |uploadpng    |{}
+    |uploadzip    |{}
     -----------------------------------------------------------------------------------------
     """
     subc = 'uploadpng' if 'image/png' in request.content_type else 'uploadzip'
@@ -230,7 +230,7 @@ def doFileGET(fileid):
     URL:/file/<fid>
     TYPE:http/GET
     @data type: string
-    @param fileid: the unique id of case file
+    @param fileid: (string)
     @rtype: image/png, application/zip
     @return: image(bytes), attachment
     """
@@ -269,8 +269,7 @@ def doUploadSessionResult(sid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc        |data                   
-    |       |uploadXML   |filedata
+    |subc        |data                   
     -----------------------------------------------------------------------------------------
     """
     return uploadSessionResult(request.files.get('file').file, sid)
@@ -281,12 +280,12 @@ def doAccountActive(uid):
     URL:/account/active
     TYPE:http/POST
     @data type: JSON
-    @param: token
+    @param: 'token': (string)
     @rtype: JSON
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |support|subc        |data                   
+    |subc        |data                   
     -----------------------------------------------------------------------------------------
     """
     return accountActive(uid)

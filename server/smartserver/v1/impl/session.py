@@ -51,7 +51,6 @@ def sessionCycle(data, gid, sid, uid):
     return, data: {}
     """
     # If cid = 0, create a new cycle and add sid to it.
-    #TODO: only group admin, group owner and session generator can do cycle setting?
     Cid = data.get('cid')
     if (Cid == 0):
         if Cycles.objects(sids=sid):
@@ -63,7 +62,6 @@ def sessionCycle(data, gid, sid, uid):
             except OperationError:
                 return resultWrapper('error', {}, 'Create new cycle failed!')
             return resultWrapper('ok', {'cid': cycleinst.cid}, '')
-
     # If cid = -1, remove current session from cycle it belongs.
     if (Cid == -1):
         cycle = Cycles.objects(sids=sid).first() 
@@ -78,7 +76,6 @@ def sessionCycle(data, gid, sid, uid):
             except OperationError:
                 return resultWrapper('error', {}, 'Remove session from current cycle failed!')
             return resultWrapper('ok', {}, '')
-
     # For other case, remove session from current session then add it to new cycle.
     if not Cycles.objects(cid=Cid):
         return resultWrapper('error', {}, 'Invalid Cycle ID!')
@@ -167,7 +164,8 @@ def sessionSummary(data, gid, sid):
     """
     result = Sessions.objects(sid=sid).only('uid', 'deviceinfo', 'starttime', 'planname', 'runtime', 'casecount').first()
     if result:
-        tester = Users.objects(uid=result.uid).only('username').first().username
+        user = Users.objects(uid=result.uid).only('username').first()
+        tester = user.username if user else ''
         deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
         starttime = result.starttime.strftime(TIME_FORMAT) if result.starttime else ''
         data ={'planname':result.planname,'tester':tester,
@@ -185,8 +183,7 @@ def sessionPollStatus(data, gid, sid):
     params, data: {'tid': (int)value}
     return, data: {}
     """
-    #return 'ok' means session has been updated already, 'error' means not yet.
-    if Cases.objects(sid=sid, tid__gt=data.get('tid')).only('tid'):
+    if Cases.objects(sid=sid, tid__gt=int(data.get('tid', 1))).only('tid'):
         return resultWrapper('ok', {}, 'Session has been updated!')
     else:
         return resultWrapper('error', {}, 'Session has NOT been updated yet!')
@@ -207,8 +204,8 @@ def sessionGetLatestCases(data, gid, sid):
         starttime = case.starttime.strftime(TIME_FORMAT) if case.starttime else ''
         result.append({'tid': case.tid, 'casename': case.casename, 'log': case.log,
                        'expectshot': case.expectshot, 'snapshots': case.snapshots,
-                       'starttime': starttime,'result': case.result, 
-                       'traceinfo': case.traceinfo,'comments': comments})
+                       'starttime': starttime, 'result': case.result, 
+                       'traceinfo': case.traceinfo, 'comments': comments})
     return resultWrapper('ok', {'cases': result}, '')
 
 def sessionGetHistoryCases(data, gid, sid):

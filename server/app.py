@@ -12,7 +12,6 @@ import os
 from smartserver.config import WEB_HOST, WEB_PORT  # import db configuration and arguments
 from smartserver.api import v1
 
-
 # Below code is to fix known log issue because of mismatch on gevent and gunicorn
 # http://stackoverflow.com/questions/9444405/gunicorn-and-websockets
 def log_request(self):
@@ -34,17 +33,13 @@ app = Bottle()
 def assets(filename):
     return static_file(filename, root=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'web'))
 
-
 @app.route("/")
 @app.route("/smartserver")
 @app.route("/smartserver/")
 def root():
     return redirect("/smartserver/index.html")
 
-
 app.mount('/smartapi', v1)
-app.mount('/smart/0/api/', v1)
-
 
 def main():
     port = WEB_PORT
