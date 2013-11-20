@@ -4,7 +4,7 @@
 import os
 from urlparse import urlparse
 
-__all__ = ["MONGODB_URI", "MONGODB_REPLICASET", "REDIS_URI", "REDIS_HOST",
+__all__ = ["MONGODB_URI", "MONGODB_REPLICASET", "MONGODB_PORT", "REDIS_URI", "REDIS_HOST",
            "REDIS_PORT", "REDIS_DB", "MEMCACHED_URI", "WEB_HOST", "WEB_PORT"]
 
 
