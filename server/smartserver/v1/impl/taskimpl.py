@@ -53,12 +53,10 @@ def sessionUpdateSummary(sid, results):
             casecount[result[0]] += 1
     # Update session runtime here.
     cases = Cases.objects(sid=sid).order_by('-tid')
-    minstarttime = cases[(len(cases) - 1)].starttime if cases[(len(cases) - 1)].starttime else cases[(len(cases) - 1)].endtime
+    minstarttime = cases[(len(cases) - 1)].starttime if cases[(len(cases) - 1)].starttime else cases[(len(cases) - 2)].starttime
     maxendtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
     if not maxendtime:
-        maxendtime = cases[1].endtime
-    if not maxendtime:
-        maxendtime = cases[1].starttime
+        maxendtime = cases[1].endtime if cases[1].endtime else cases[1].starttime
     runtime = (maxendtime - minstarttime).total_seconds()
     try:
         Sessions.objects(sid=sid).update(set__casecount=casecount, set__runtime=runtime)
@@ -85,7 +83,9 @@ def caseValidateEndtime():
         if not case.starttime:
             case.delete()
         if (datetime.now() - case.starttime).total_seconds() >= 3600:
-            case.update(set__endtime=case.starttime, set__result='error')
+            case.update(set__endtime=case.starttime, 
+                        set__result='error',
+                        set__traceinfo='Case has been running for an hour, set it error')
             sessionUpdateSummary(case.sid, [['error', 'running']])
             sessionUpdateDomainSummary(case.sid, [[case.tid, 'error', '']])
 

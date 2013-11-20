@@ -7,21 +7,22 @@ Internal APIs to implement sending invitation/verification email.
 import smtplib
 from email.MIMEText import MIMEText
 
-def __sendMail(receiver,subject,message):
-    sender = 'borqsat@borqs.com'
-    mailuser = 'borqsat@borqs.com'
-    mailpass = '!QAZ2wsx3edc'
+SENDER = 'borqsat@borqs.com'
+MAILUSER = 'borqsat@borqs.com'
+MAILPSWD = '!QAZ2wsx3edc'
+SMTP_SERVER = 'smtp.bizmail.yahoo.com'
 
+def __sendMail(receiver,subject,message):
     msg = MIMEText(message,_subtype='plain',_charset='gb2312')      
     msg['Subject'] = subject      
-    msg['From'] = sender     
+    msg['From'] = SENDER     
     msg['To'] = ';'.join(receiver) 
     smtp = None
     try:
         smtp = smtplib.SMTP_SSL()
-        smtp.connect('smtp.bizmail.yahoo.com')
-        smtp.login(mailuser, mailpass)
-        smtp.sendmail(sender, receiver, msg.as_string())
+        smtp.connect(SMTP_SERVER)
+        smtp.login(MAILUSER, MAILPSWD)
+        smtp.sendmail(SENDER, receiver, msg.as_string())
     except Exception, e:
         print e
     smtp.quit()

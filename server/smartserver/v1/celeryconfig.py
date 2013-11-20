@@ -12,11 +12,6 @@ BROKER_URL = config.REDIS_URI
 CELERY_RESULT_BACKEND = config.REDIS_URI
 CELERY_TASK_RESULT_EXPIRES = 3600
 
-# pool and threads
-#CELERYD_POOL = "gevent"
-#CELERYD_CONCURRENCY = 1000
-#CELERYD_PREFETCH_MULTIPLIER = 1
-
 # Scheduled tasks
 CELERYBEAT_SCHEDULE = {
     'cleardirty-every-month': {
@@ -27,9 +22,9 @@ CELERYBEAT_SCHEDULE = {
         'task': 'smartserver.v1.tasks.ws_validate_testcase_endtime',
         'schedule': crontab(minute=0, hour='*/1')
     },
-    'validate-session-endtime-every-10-mins':{
+    'validate-session-endtime-every-5-mins':{
         'task': 'smartserver.v1.tasks.ws_validate_session_endtime',
-        'schedule': crontab(minute='*/10')
+        'schedule': crontab(minute='*/5')
     },
     'validate-token-expiretime-every-midnight': {
         'task': 'smartserver.v1.tasks.ws_validate_token_expiretime',
