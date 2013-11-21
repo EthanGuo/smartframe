@@ -100,7 +100,7 @@ def sessionValidateEndtime():
         else:
             endtime = cases[0].endtime if cases[0].endtime else cases[0].starttime
 
-        if (datetime.now() - endtime).total_seconds() >= 600:
+        if (datetime.now() - endtime).total_seconds() >= 300:
             session.update(set__endtime=endtime)
             session.reload()
 
