@@ -24,5 +24,6 @@ if ru.path.find("/") == 0:
 else:
     REDIS_DB = 0
 
-DB_NAME = 'smartServer_eth'
+DATA_DB_NAME = 'smartServer'
+FILE_DB_NAME = 'smartFile'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'

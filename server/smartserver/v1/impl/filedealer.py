@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from db import Files, File
+from db import Files
 import uuid, hashlib
 from mongoengine import OperationError
+from mongoengine.context_managers import switch_db
+from ..config import FILE_DB_NAME
 from util import resultWrapper
 
 def generateUniqueID():
@@ -15,17 +17,17 @@ def saveFile(filedata, content_type, filename=''):
     params, data: {'filedata':(bytes), 'content_type':(string), 'filename':(string)}
     return, data: url to fetch file
     """
-    fileid = generateUniqueID()
-    new = File()
-    new.data.new_file()
-    new.data.write(filedata)
-    new.data.close()
-    newfile = Files(fileid=fileid, filename=filename, filedata=new, content_type=content_type)
-    try:
-        newfile.save()
-    except OperationError:
-        newfile.save()
-    return ('/file/' + fileid)
+    with switch_db(Files, FILE_DB_NAME) as File:
+        fileid = generateUniqueID()
+        new = File(fileid=fileid, filename=filename, content_type=content_type)
+        new.filedata.new_file()
+        new.filedata.write(filedata)
+        new.filedata.close()
+        try:
+            new.save()
+        except OperationError:
+            new.save()
+        return ('/file/' + fileid)
 
 def fetchFileData(fileid):
     """
@@ -33,26 +35,28 @@ def fetchFileData(fileid):
     return, data: {'filedata':(bytes)filedata, 'filename': (string)filename, 'content_type': (string)type}
     """
     #If fileid is valid, return filedata, or return error
-    targetfile = Files.objects(fileid=fileid).first()
-    if targetfile:
-        filedata = targetfile.filedata.data.read()
-        filename = targetfile.filename
-        content_type = targetfile.content_type
-        return resultWrapper('ok', {'filedata': filedata, 'filename': filename, 'content_type': content_type}, '')
-    else:
-        return resultWrapper('error', {}, 'Invalid ID!')
+    with switch_db(Files, FILE_DB_NAME) as File:
+        targetfile = File.objects(fileid=fileid).first()
+        if targetfile:
+            filedata = targetfile.filedata.read()
+            filename = targetfile.filename
+            content_type = targetfile.content_type
+            return resultWrapper('ok', {'filedata': filedata, 'filename': filename, 'content_type': content_type}, '')
+        else:
+            return resultWrapper('error', {}, 'Invalid ID!')
 
 def deleteFile(fids):
     """
     params, data: {'fids': (list) list of file id}
     return, data: {}
     """
-    for fid in fids:
-        f = Files.objects(fileid=fid).first()
-        if f:
-            try:
-                f.filedata.data.delete()
-                f.delete()
-            except OperationError:
-                f.filedata.data.delete()
-                f.delete()                
+    with switch_db(Files, FILE_DB_NAME) as File:
+        for fid in fids:
+            f = File.objects(fileid=fid).first()
+            if f:
+                try:
+                    f.filedata.delete()
+                    f.delete()
+                except OperationError:
+                    f.filedata.delete()
+                    f.delete()                

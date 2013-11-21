@@ -2,20 +2,16 @@
 # -*- coding: utf-8 -*-
 
 from mongoengine import *
-from ..config import DB_NAME, MONGODB_URI, MONGODB_PORT
-
-class File(EmbeddedDocument):
-    # Work around of the mongoengine 0.8.4 AttributeError issue 
-    # when invoke class.field.save() 
-    data = FileField()
+from ..config import DATA_DB_NAME, FILE_DB_NAME, MONGODB_URI, MONGODB_PORT
 
 class Files(Document):
     fileid = StringField(required=True)
     filename = StringField()
     content_type = StringField()
-    filedata = EmbeddedDocumentField(File)
+    filedata = FileField(db_alias=FILE_DB_NAME)
 
     meta = {'collection': 'Files',
+            'db-alias': FILE_DB_NAME,
             'indexes': [{'fields': ['fileid'], 'unique': True}],
             'index_background': True}
 
@@ -141,8 +137,9 @@ class connector(object):
     """
     class to setup connection to mongodb
     """
-    def __init__(self, db=DB_NAME):
+    def __init__(self, datadb=DATA_DB_NAME, filedb=FILE_DB_NAME):
         print "Init connection to database..."
-        connect(db, host=MONGODB_URI, port=MONGODB_PORT)
+        connect(datadb, alias='default' ,host=MONGODB_URI, port=MONGODB_PORT)
+        connect(filedb, alias=filedb ,host=MONGODB_URI, port=MONGODB_PORT)
         
 connector()

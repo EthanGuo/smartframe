@@ -38,15 +38,13 @@ def __updateCaseComments(data, sid):
                 orgcommentresult = case.comments.caseresult
             else:
                 orgcommentresult = case.result
-            try:
-                case.update(set__comments=data['comments'])
-                case.reload()
-            except OperationError:
-                case.update(set__comments=data['comments'])
-                case.reload()
             if not result:
                 result = case.result
             domains.append([tid, result.lower(), orgcommentresult])
+        try:
+            Cases.objects(sid=sid, tid__in=data['tid']).update(set__comments=data['comments'], multi=True)
+        except OperationError:
+            Cases.objects(sid=sid, tid__in=data['tid']).update(set__comments=data['comments'], multi=True)
         ws_update_session_domainsummary.delay(sid, domains)
         return resultWrapper('ok', {}, 'Update successfully!')
     else:
