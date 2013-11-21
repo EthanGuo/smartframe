@@ -151,7 +151,7 @@ smartControllers.controller('SignUpCtrl', ['$scope', '$http',
         return false;
       }
       var data = {'username':username,'password':hex_md5(password),'appid':'02',
-                  'info':{'email':email,'telephone':telephone,'company':company},
+                  'info':{'email':email,'phonenumber':telephone,'company':company},
                   'baseurl': apiBaseURL};
       $http.post(apiBaseURL+'/accountbasic',{'subc':'register','data':data})
       .success(function(ret){
@@ -311,43 +311,21 @@ smartControllers.controller('SetingCtrl', ['$scope', '$http','$routeParams',
     
    $scope.$on("fileSelected", function (event, args) {
         $scope.$apply(function () {
-            //add the file object to the scope's files collection
-            // $scope.files.push(args.file);
             $scope.file = args.file;
         });
     });
 
-    //the save method
     $scope.save = function() {
         $http({
             method: 'POST',
             url: apiBaseURL + "/account",
-            //IMPORTANT!!! You might think this should be set to 'multipart/form-data' 
-            // but this is not true because when we are sending up files the request 
-            // needs to include a 'boundary' parameter which identifies the boundary 
-            // name between parts in this multi-part request and setting the Content-type 
-            // manually will not set this boundary parameter. For whatever reason, 
-            // setting the Content-type to 'false' will force the request to automatically
-            // populate the headers properly including the boundary parameter.
             headers: { 'Content-Type': false },
-            //This method will allow us to change how the data is sent up to the server
-            // for which we'll need to encapsulate the model data in 'FormData'
             transformRequest: function (data) {
                 var formData = new FormData();
-                //need to convert our json object to a string version of json otherwise
-                // the browser will do a 'toString()' on the object which will result 
-                // in the value '[Object object]' on the server.
-                // formData.append("model", angular.toJson(data.model));
-                //now add all of the assigned files
-                // for (var i = 0; i < data.files; i++) {
-                    //add each file to the form data and iteratively name them
-                    formData.append("data", data.file);
+              formData.append("data", data.file);
                     formData.append("token", data.token);
-       // }
                 return formData;
             },
-            //Create an object that contains the model and files which will be transformed
-            // in the above transformRequest method
             data: { 'file': $scope.file,'token':$.cookie('ticket') }
         }).
         success(function (data, status, headers, config) {
@@ -385,6 +363,7 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
     var modalInstance = $modal.open({
       templateUrl: 'myModalContent.html',
       controller: ModalInstanceCtrl,
+      windowClass : 'addMember',
       resolve: {
         users: function () {
           return $scope.users;
@@ -567,67 +546,6 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
       });
   }
 
-/*  $scope.addMember = function(){
-      $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticket'))
-       .success(function(ret){
-          if(ret.result == 'ok'){
-            $scope.users = ret.data.users;
-
-            $scope.membername = ret.data.users[0].username;
-            $scope.rolename = 'member';
-          //  $("#addMember").dialog("open");
-	    dialogService.open('#addMember');
-	  }
-       });
- }
-
-  $('#addMember')
-        .dialog({
-            resizable:false,
-            autoOpen: false,
-            modal: true,
-            buttons:{
-                 "Add":function(){
-                      var uid = '';
-                      var roleId = 0;
-                      if($scope.membername  && $scope.rolename){
-                        $.each($scope.users, function(i, o){
-                          if(o.username == $scope.membername){
-                              uid = o.uid
-                          }
-                        });
-                        if($scope.rolename == 'member'){
-                              roleId = 8
-                        }else if($scope.rolename == 'admin'){
-                              roleId = 9;
-                        }
-                    }
-                    var data = {'members':[{'uid':uid,'role':roleId}]};
-                    $http.post(apiBaseURL+'/group/'+groupid, {'subc':'setmember','data':data,'token':$.cookie('ticket')})
-                      .success(function(ret){
-                        if(ret.result == 'ok'){
-                  			   var flag = false;
-                  			   $.each($scope.members, function(i, o){
-                      			    if(o.username == $scope.membername){
-                      				     flag = true;
-					       o.role = roleId;
-                      			    }
-                           });
-                    			 if(!flag){
-                    		 	     $scope.members.push({'username':$scope.membername,'role':roleId,'avatar':{'url': "http://storage.aliyun.com/wutong-data/system/1_S.jpg"}});
-                    		   }
-	             		         $("#addMember").dialog("close");
-		                    }else{
-                        alert(ret.msg);
-                           $("#addMember").dialog("close");
-		                    }
-                    }); 
-                  },
-                 "Cancel":function(){
-                      $(this).dialog("close");
-                  }
-            }
-        });*/
     $scope.delSession = function(sid){
       var r = window.confirm("Are you sure to delete?");
       if(r){
@@ -678,8 +596,8 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
 
 //Controller for session
 
-smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope', '$http', '$routeParams',
-  function(dialogService, $modal, $scope, $http, $routeParams) {
+smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope', '$http', '$routeParams', '$timeout',
+  function(dialogService, $modal, $scope, $http, $routeParams, $timeout) {
       var groupid = $routeParams.groupid;
       var sessionid = $routeParams.sessionid;
       var total;
@@ -691,9 +609,21 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       if(groupid == undefined || sessionid == undefined){
         return;
       } 
-     $scope.pageindex = 1;
-      
-    $scope.pagenationTo = function(page){
+     $scope.collapse = {};
+     $scope.setCollapse = function(caseid){
+console.log(caseid);
+	$timeout(function(){
+	   $scope.collapse[caseid] = true
+           }, 500);
+     }	
+     $scope.delCollapse = function(caseid){
+console.log(caseid);
+	$timeout(function(){
+	   $scope.collapse[caseid] = false 
+           }, 1000);
+     }
+     $scope.pageindex = 1; 
+     $scope.pagenationTo = function(page){
         if($scope.pageindex == page.pagenumber + $scope.buffer){
     	     return;
       	}
@@ -800,7 +730,7 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       	    }
       	});  
       }
-$scope.collapse = {};
+   
     $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket'))
       .success(function(ret){
        $scope.cases = ret.data.cases; 
@@ -847,15 +777,6 @@ $scope.collapse = {};
      }
     }
 
-/*    $('#addComments')
-        .dialog({
-            resizable:false,
-            autoOpen: false,
-            modal: true,
-            height:320,
-	    width:600
-    });*/
-
  
     var selectedCases = []; 
     $scope.getTids = function(){
@@ -866,7 +787,6 @@ $scope.collapse = {};
        $.each(selectedCases, function(i, o){
 	  tids.push(o.tid);
        });
-      //dialogService.open('#addComments');
       var modalInstance = $modal.open({
 	 templateUrl : 'comments.html',
  	 controller : CommentCtrl,
@@ -939,70 +859,6 @@ $scope.collapse = {};
 	});
 }
 
-    /*$scope.clear = function(){
-      if(tids.length == 0){
-        alert("Please select some cases!");
-        $("#addComments").dialog('close');
-      }
-      var data = {'tid': tids, 'comments':{'caseresult': '', 'commentinfo': '', 'endsession': 0, 'issuetype': ''}};
-      $http.post(apiBaseURL + '/session/' + sessionid + '/case', {'subc': 'update', 'data': data, 'token': $.cookie('ticket')})
-      .success(function(ret){
-        if(ret['result'] == 'ok'){
-           $scope.master=false;
-           var len = tids.length;
-           for(var i = 0; i<len; i++){
-               $scope.selected[tids[i]] = false;
-               $.each($scope.cases, function(m, n){
-                  if($scope.cases[m].tid == tids[i]){
-                     $scope.cases[m].comments = data.comments;
-      	          }
-               });
-            }
-          $("#addComments").dialog('close');
-        }
-        else{
-          alert(ret['msg']);
-        }
-      });
-    }*/
-/*    $scope.commit = function(){
-      if(tids.length == 0){
-    	   alert('please select some cases!');
-         return;
-    	}
-      if($scope.endsession){
-        var endsession = 1;
-      }else{
-        endsession = 0;
-      }
-      var issue = $scope.issue;
-      var caseret = $scope.caseret;
-      var comments = $scope.comments;
-      if(issue == undefined || caseret == undefined || comments == undefined){
-        alert("IssueType, caseResult and comments can not be empty!");
-        return;
-      }
-        var data = {'tid':tids,'comments':{'caseresult':caseret,'commentinfo':comments,'endsession':endsession,'issuetype':issue}};
-        $http.post(apiBaseURL+'/session/'+sessionid+'/case',{'subc':'update','data':data,'token':$.cookie('ticket')})
-        .success(function(ret){
-      	    if(ret.result == 'ok'){
-		$scope.master=false;
-                var len = tids.length;
-                for(var i = 0; i<len; i++){
-                  $scope.selected[tids[i]] = false;
-                  $.each($scope.cases, function(m, n){
-                    if($scope.cases[m].tid == tids[i]){
-                      $scope.cases[m].comments = data.comments;
-      		    }
-                  });
-                }
-          	    $('#addComments').dialog('close');
-          	}else{
-          	   alert(ret.msg);
-          	}
-        }); 
-    }*/
-   
     $scope.delMember = function(username){
       var r = window.confirm("Are you sure to delete?");
       if(r){   
@@ -1085,15 +941,6 @@ $scope.collapse = {};
 		}
 	    }
 	});
-/*   	$('#snapshots').dialog({
-            title:'case snapshots',
-            resizable:false,
-            autoOpen: false,
-            modal: true,
-	    height: parseInt($scope.deviceinfo.height)+120 ,
-	    width: parseInt($scope.deviceinfo.width)*2+80
-});
-       dialogService.open('#snapshots');*/	
     }
      
  }]);
@@ -1152,12 +999,14 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
       $scope.domains.push(temp);
     });
      });
-         $scope.toggleDetail = function($index) {
-        $scope.activePosition = $scope.activePosition == $index ? -1 : $index;
+    $scope.activePosition1 = {};
+    $scope.activePosition = {};
+    $scope.toggleDetail = function($index) {
+        $scope.activePosition[$index] = $scope.activePosition[$index] == true ? false : true;
       
     };      
-           $scope.toggleDetail1 = function($index) {
-        $scope.activePosition1 = $scope.activePosition1 == $index ? -1 : $index;
+    $scope.toggleDetail1 = function($index) {
+        $scope.activePosition1[$index] = $scope.activePosition1[$index] == true ? false : true;
       
     }; 
      $scope.signout = function(){
