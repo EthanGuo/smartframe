@@ -8,7 +8,8 @@ var smartServer = angular.module('smartServer', [
   'smartControllers',
    'smartFilters',
    'smartDirectives',
-  'smartServices'
+  'smartServices',
+  'ui.bootstrap' 
 ]);
 
 smartServer.config(['$routeProvider',

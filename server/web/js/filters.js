@@ -46,3 +46,13 @@ smartFilters.filter('role', function(){
   }
 
 });
+smartFilters.filter('endsession', function(){
+  return function(input){
+    if(input ==1){
+	return '(session ends here)';
+    }else{
+	return '';
+    }
+  }
+
+});

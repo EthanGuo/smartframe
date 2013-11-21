@@ -1,0 +1,39 @@
+<style>
+.snapshot{
+height:auto;
+width: auto;
+position:fixed;
+left:50%;
+margin-left:-400px;
+}
+</style>
+<div class='modal-header' style="height:0px;width:0px;padding:0"><button class='btn btn-link' style='position:absolute;top:5px;left:{{deviceinfo.width*2-50}}px' ng-click="close()">Close</button>
+</div>
+<div>
+  <tabset>
+    <tab heading='Comparision' >
+
+	<div style='float:left;' >
+	    <img ng-src="{{selectedcase.expectshot.url}}" style='width:{{deviceinfo.width}}px;height:{{deviceinfo.height}}px'>
+	    <div style="border:3px solid green; position:absolute; top:{{selectedcase.expectshot.y+69}}px; left:{{selectedcase.expectshot.x}}px; width:{{selectedcase.expectshot.w}}px; height:{{selectedcase.expectshot.h}}px"></div>
+        </div>
+	<div style='float:left;margin-left:20px;'>
+	    <img ng-src="{{selectedcase.snapshots[0].url}}" style='width:{{deviceinfo.width}}px;height:{{deviceinfo.height}}px'>
+	    <div style="border:3px solid green; position:absolute; top:{{selectedcase.snapshots[0].y+69}}px; left:{{selectedcase.snapshots[0].x+deviceinfo.width+20}}px; width:{{selectedcase.snapshots[0].w}}px; height:{{selectedcase.snapshots[0].h}}px"></div>
+	</div>
+    </tab>
+    <tab heading="All Snapshots" >
+	  <carousel interval="myInterval" >
+	    <slide ng-repeat="snapshot in selectedcase.snapshots" active="snapshot.active">
+	    <div style='background:silver;width:{{deviceinfo.width*2+20}}px;margin:auto'>
+	      <img ng-src="{{snapshot.url}}" style='width:{{deviceinfo.width}}px;height:{{deviceinfo.height}}px;margin-left:{{deviceinfo.width/2+10}}px;'>
+	      <div class="carousel-caption">
+	        <h4>Slide {{$index}}</h4>
+	        <p>{{snapshot.filename}}</p>
+	      </div>
+	    </div>
+	    </slide>
+	  </carousel>
+    </tab>
+  </tabset>
+</div>

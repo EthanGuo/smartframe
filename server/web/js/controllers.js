@@ -3,7 +3,7 @@
 /* Controllers */
 
 var smartControllers = angular.module('smartControllers', []);
-var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
+var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapid";
 
 //Controller for index
 
@@ -366,12 +366,71 @@ smartControllers.controller('SetingCtrl', ['$scope', '$http','$routeParams',
 
 //Controller for group
 
-smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$routeParams',
-  function(dialogService, $scope, $http, $routeParams) {
+smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$routeParams','$modal','$log', 
+  function(dialogService, $scope, $http, $routeParams, $modal, $log) {
     var groupid = $routeParams.groupid;
     if(groupid == undefined){
       return;
     }
+
+ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticket'))
+       .success(function(ret){
+          if(ret.result == 'ok'){
+            $scope.users = ret.data.users;
+	  }
+       });
+
+  $scope.addMember = function () {
+
+    var modalInstance = $modal.open({
+      templateUrl: 'myModalContent.html',
+      controller: ModalInstanceCtrl,
+      resolve: {
+        users: function () {
+          return $scope.users;
+        }
+      }
+    });
+
+    modalInstance.result.then(function (selected) {
+	$scope.selected = selected;
+        var uid = '';
+        var roleId = 0;
+        if($scope.selected.membername  && $scope.selected.rolename){
+             $.each($scope.users, function(i, o){
+                  if(o.username == $scope.selected.membername){
+                       uid = o.uid
+                  }
+             });
+             if($scope.selected.rolename == 'member'){
+                  roleId = 8
+             }else if($scope.selected.rolename == 'admin'){
+                  roleId = 9;
+             }
+             }
+             var data = {'members':[{'uid':uid,'role':roleId}]};
+                 $http.post(apiBaseURL+'/group/'+groupid, {'subc':'setmember','data':data,'token':$.cookie('ticket')})
+                    .success(function(ret){
+                        if(ret.result == 'ok'){
+                  	   var flag = false;
+                  	   $.each($scope.members, function(i, o){
+                           if(o.username == $scope.selected.membername){
+                      	      flag = true;
+			      o.role = roleId;
+                      	    }
+                           });
+                           if(!flag){
+                               $scope.members.push({'username':$scope.selected.membername,'uid':uid,'role':roleId,'avatar':{'url': "http://storage.aliyun.com/wutong-data/system/1_S.jpg"}});
+                            }
+		        }else{
+                            alert(ret.msg);
+		        }
+                  }); 
+    }, function () {
+      $log.info('Modal dismissed at: ' + new Date());
+    });
+  };
+
     $scope.signout = function(){
       window.location = '#/smartserver/login';
       $http.post(apiBaseURL+'/account',{'subc':'logout','data':{}})
@@ -508,11 +567,12 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
       });
   }
 
-  $scope.addMember = function(){
+/*  $scope.addMember = function(){
       $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticket'))
        .success(function(ret){
           if(ret.result == 'ok'){
             $scope.users = ret.data.users;
+
             $scope.membername = ret.data.users[0].username;
             $scope.rolename = 'member';
           //  $("#addMember").dialog("open");
@@ -520,7 +580,6 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
 	  }
        });
  }
-
 
   $('#addMember')
         .dialog({
@@ -531,7 +590,6 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
                  "Add":function(){
                       var uid = '';
                       var roleId = 0;
-console.log($scope.membername + " " + $scope.rolename);
                       if($scope.membername  && $scope.rolename){
                         $.each($scope.users, function(i, o){
                           if(o.username == $scope.membername){
@@ -569,8 +627,7 @@ console.log($scope.membername + " " + $scope.rolename);
                       $(this).dialog("close");
                   }
             }
-        });
-
+        });*/
     $scope.delSession = function(sid){
       var r = window.confirm("Are you sure to delete?");
       if(r){
@@ -604,7 +661,6 @@ console.log($scope.membername + " " + $scope.rolename);
             }
           });
           var data = {'members':[{'uid':uid,'role':roleId}]};
-      
           $http.post(apiBaseURL+'/group/'+groupid,{'subc':'delmember','data':data,'token':$.cookie('ticket')})
           .success(function(ret){
             if(ret.result == 'ok'){
@@ -622,14 +678,15 @@ console.log($scope.membername + " " + $scope.rolename);
 
 //Controller for session
 
-smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '$routeParams',
-  function(dialogService, $scope, $http, $routeParams) {
+smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope', '$http', '$routeParams',
+  function(dialogService, $modal, $scope, $http, $routeParams) {
       var groupid = $routeParams.groupid;
       var sessionid = $routeParams.sessionid;
       var total;
       var tids = [];
       $scope.baseurl = apiBaseURL;
       $scope.buffer = 0;
+      $scope.casetype = 'total';
       $scope.groupid = groupid;  
       if(groupid == undefined || sessionid == undefined){
         return;
@@ -643,7 +700,7 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
       	$scope.selected = {};
       	$scope.master = false;
         $scope.pageindex = page.pagenumber + $scope.buffer;
-        $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&pagenumber='+$scope.pageindex+'&token='+$.cookie('ticket'))
+        $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&pagenumber='+$scope.pageindex+'&token='+$.cookie('ticket')+'&casetype='+$scope.casetype)
           .success(function(ret){
              $scope.cases = ret.data.cases; 
         });
@@ -669,9 +726,11 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
 
       $scope.selected = {};     
       $scope.master = false;
-      $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&pagenumber='+$scope.pageindex+'&token='+$.cookie('ticket'))
+      
+      $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&pagenumber='+$scope.pageindex+'&token='+$.cookie('ticket')+'&casetype='+$scope.casetype)
         .success(function(ret){
           $scope.cases = ret.data.cases; 
+ 
       });
     }
 
@@ -698,7 +757,7 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
           }
 	     $scope.selected = {};
        $scope.master = false;
-       $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&pagenumber='+$scope.pageindex+'&token='+$.cookie('ticket'))
+       $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&pagenumber='+$scope.pageindex+'&token='+$.cookie('ticket')+'&casetype='+$scope.casetype)
         .success(function(ret){
           $scope.cases = ret.data.cases; 
        });
@@ -718,21 +777,15 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
     .success(function(ret){
       $scope.session = ret.data;
       $scope.deviceinfo = ret.data.deviceinfo;
-    var secs = $scope.session.runtime;
-    var seconds = Math.floor( secs % 60);
-    var minute = Math.floor((secs / 60) % 60);
-    var hour = Math.floor((secs / 3600));
-    var result = '';
-    if(hour>0) result += hour+'h';
-    if(minute>0) result += minute+'m';
-    if(seconds>=0) result += seconds+'s';
-      $scope.session.runtime = result;
+      $scope.session.runtime = setruntime($scope.session.runtime);
     });
 
       $scope.getCases = function(casetype){
-
+	$scope.casetype  = casetype;
       	$http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket')+'&casetype='+casetype)
       	.success(function(ret){
+       	    $scope.buffer = 0;
+	    $scope.pageindex = 1;
             $scope.cases = ret.data.cases;
       	    total = ret.data.totalpage;
       	    $scope.totalpage=[];
@@ -747,7 +800,7 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
       	    }
       	});  
       }
-
+$scope.collapse = {};
     $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket'))
       .success(function(ret){
        $scope.cases = ret.data.cases; 
@@ -781,7 +834,11 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
     $scope.setAllTids = function(){
      if($scope.master){ 
         $.each($scope.cases, function(i, o){
-          $scope.selected[o.tid] = true;
+	  if(o.result == 'fail' || o.result == 'error'){
+	     $scope.selected[o.tid] = true;
+	  }else{
+             $scope.selected[o.tid] = false;
+	  }
         });
      }else{
         $.each($scope.cases, function(i, o){
@@ -789,15 +846,17 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
         });
      }
     }
-    $('#addComments')
+
+/*    $('#addComments')
         .dialog({
             resizable:false,
             autoOpen: false,
             modal: true,
             height:320,
 	    width:600
-    });
-   
+    });*/
+
+ 
     var selectedCases = []; 
     $scope.getTids = function(){
 	selectedCases = $.grep($scope.cases, function(cas){
@@ -807,10 +866,80 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
        $.each(selectedCases, function(i, o){
 	  tids.push(o.tid);
        });
-      dialogService.open('#addComments');
+      //dialogService.open('#addComments');
+      var modalInstance = $modal.open({
+	 templateUrl : 'comments.html',
+ 	 controller : CommentCtrl,
+	 resolve : {
+	    tids : function(){
+		return tids;
+	    },
+	    cases : function(){
+		return $scope.cases;
+	    }
+	 }	
+      });
+	modalInstance.result.then(function (comments){
+	  if(comments == 'clear'){
+	      var data = {'tid': tids, 'comments':{'caseresult': '', 'commentinfo': '', 'endsession': 0, 'issuetype': ''}};
+              $http.post(apiBaseURL + '/session/' + sessionid + '/case', {'subc': 'update', 'data': data, 'token': $.cookie('ticket')})
+      		.success(function(ret){
+        	if(ret['result'] == 'ok'){
+           	    $scope.master=false;
+                    var len = tids.length;
+           	    for(var i = 0; i<len; i++){
+              		$scope.selected[tids[i]] = false;
+               		$.each($scope.cases, function(m, n){
+                	    if($scope.cases[m].tid == tids[i]){
+                     		$scope.cases[m].comments = data.comments;
+      	          	    }
+               		});
+            	    }
+        	}
+        	else{
+          	    alert(ret['msg']);
+        	}
+      	     });  
+	  }else{
+	    $scope.comments = comments;
+	    if($scope.comments.endsession){
+	       $scope.comments.endsession=1;
+	    }else{
+	       $scope.comments.endsession =0;
+	    }
+      if($scope.comments.issue == '' || $scope.comments.caseret == '' || $scope.comments.comments == ''){
+        alert("IssueType, caseResult and comments can not be empty!");
+        return;
+      }
+	    var data = {'tid':tids, 'comments':{'caseresult':$scope.comments.caseret,
+					      'commentinfo':$scope.comments.comments,
+					      'endsession':$scope.comments.endsession,
+					      'issuetype':$scope.comments.issue}};
+            $http.post(apiBaseURL + '/session/' + sessionid + '/case', {'subc': 'update', 'data': data, 'token': $.cookie('ticket')})
+              .success(function(ret){
+        	if(ret['result'] == 'ok'){
+           	  $scope.master=false;
+           	  var len = tids.length;
+           	  for(var i = 0; i<len; i++){
+               	    $scope.selected[tids[i]] = false;
+                    $.each($scope.cases, function(m, n){
+                      if($scope.cases[m].tid == tids[i]){
+                        $scope.cases[m].comments = data.comments;
+                      }
+      	            });
+                  }
+                }
+                else{
+          	  alert(ret['msg']);
+        	}
+      	    }); 
+ 	 }
+	}, function(){
+    
+	});
 }
 
-    $scope.clear = function(){
+    /*$scope.clear = function(){
       if(tids.length == 0){
         alert("Please select some cases!");
         $("#addComments").dialog('close');
@@ -835,8 +964,8 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
           alert(ret['msg']);
         }
       });
-    }
-    $scope.commit = function(){
+    }*/
+/*    $scope.commit = function(){
       if(tids.length == 0){
     	   alert('please select some cases!');
          return;
@@ -872,7 +1001,7 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
           	   alert(ret.msg);
           	}
         }); 
-    }
+    }*/
    
     $scope.delMember = function(username){
       var r = window.confirm("Are you sure to delete?");
@@ -900,58 +1029,71 @@ smartControllers.controller('SessionCtrl', ['dialogService','$scope', '$http', '
         }
     }
 
-    $('#snapshots').hide();
-
- 
-      $scope.getImages = function(expectshot, snapshots){ 
-      var index;    
+      $scope.getImages = function(selectedCase){ 
       var rect;
       var zoom = 1;
+      var index = 0;
       var x, y, w, h;
-      $scope.expectshot = {};
-      $scope.snapshots = []; 
-     if($scope.deviceinfo.width >= 400){
-	zoom = ($scope.deviceinfo.width / 400).toFixed(3);
-        $scope.deviceinfo.width = $scope.deviceinfo.width / zoom;
-        $scope.deviceinfo.height = $scope.deviceinfo.height / zoom;
+      var deviceW = parseInt($scope.deviceinfo.width);
+      var deviceH = parseInt($scope.deviceinfo.heigth);
+      var tempstr  = JSON.stringify(selectedCase);
+      var tempcase = angular.fromJson(tempstr);
+      $scope.selectedcase = {};
+      $scope.selectedcase = {'expectshot':tempcase.expectshot,'snapshots':tempcase.snapshots};
+      if(deviceW >= 400){
+	zoom = (deviceW / 400).toFixed(3);
+        deviceW = deviceW / zoom;
+        deviceH = deviceH / zoom;
       }else{
  	zoom = 1;
       }
-      expectshot.url = apiBaseURL + expectshot.url;
-      $scope.expectshot = expectshot;
-      $.each(snapshots, function(i, o){
-        o.url = apiBaseURL + o.url;
+      var tempurl = $scope.selectedcase.expectshot.url;
+      $scope.selectedcase.expectshot.url = apiBaseURL + tempurl;
+      $.each($scope.selectedcase.snapshots, function(i, o){
+	var temp = o.url;
+        o.url = apiBaseURL + temp;
         rect = o.filename.substring(o.filename.indexOf('(')+1,o.filename.indexOf(')'));
         x = parseInt(rect.substring(rect.indexOf('x')+1, rect.indexOf('y')));
         y = parseInt(rect.substring(rect.indexOf('y')+1, rect.indexOf('w')));
         w = parseInt(rect.substring(rect.indexOf('w')+1, rect.indexOf('h')));
         h = parseInt(rect.substring(rect.indexOf('h')+1));
-console.log(zoom);
         o.x = x/zoom;
         o.y = y/zoom;
         o.h = h/zoom;
         o.w = w/zoom;
-        if(o.filename == expectshot.filename){
-          index = i;
-          expectshot.x = x/zoom;
-          expectshot.y = y/zoom;
-          expectshot.h = h/zoom;
-          expectshot.w = w/zoom;
+        if(o.filename == $scope.selectedcase.expectshot.filename){
+	  index = i;
+          $scope.selectedcase.expectshot.x = x/zoom;
+          $scope.selectedcase.expectshot.y = y/zoom;
+          $scope.selectedcase.expectshot.h = h/zoom;
+          $scope.selectedcase.expectshot.w = w/zoom;
         }
       });
-      var temp = snapshots[index];
-      snapshots[index] = snapshots[0];
-      snapshots[0] = temp;
-      $scope.snapshots = snapshots;
-   	$('#snapshots').dialog({
+        var temp = $scope.selectedcase.snapshots[0];
+	$scope.selectedcase.snapshots[0] = $scope.selectedcase.snapshots[index];
+	$scope.selectedcase.snapshots[index] = temp; 
+	var modalInstance = $modal.open({
+	    templateUrl : 'partials/images.html',
+	    controller : ImageCtrl,
+	    windowClass : 'snapshot',
+	    resolve : {
+		selectedcase : function(){
+		    return $scope.selectedcase;
+		},
+		deviceinfo : function(){
+		    return {'width' : deviceW,'height' : deviceH}; 
+		}
+	    }
+	});
+/*   	$('#snapshots').dialog({
             title:'case snapshots',
             resizable:false,
             autoOpen: false,
             modal: true,
 	    height: parseInt($scope.deviceinfo.height)+120 ,
-	    width: $scope.deviceinfo.width*2+80
+	    width: parseInt($scope.deviceinfo.width)*2+80
 });
-       dialogService.open('#snapshots');	
+       dialogService.open('#snapshots');*/	
     }
      
  }]);
@@ -1011,12 +1153,10 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
     });
      });
          $scope.toggleDetail = function($index) {
-        //$scope.isVisible = $scope.isVisible == 0 ? true : false;
         $scope.activePosition = $scope.activePosition == $index ? -1 : $index;
       
     };      
            $scope.toggleDetail1 = function($index) {
-        //$scope.isVisible = $scope.isVisible == 0 ? true : false;
         $scope.activePosition1 = $scope.activePosition1 == $index ? -1 : $index;
       
     }; 
@@ -1075,3 +1215,55 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
     }
 
   }]);
+
+var ModalInstanceCtrl = function ($scope, $modalInstance, users, $http) {
+      $scope.users = users;
+      $scope.selected = {'membername':$scope.users[0].username,
+			 'rolename':'member'};
+      $scope.ok = function () {
+        $modalInstance.close($scope.selected);
+      };
+
+      $scope.cancel = function () {
+        $modalInstance.dismiss('cancel');
+      };
+};
+
+var CommentCtrl = function($scope, $modalInstance, tids, cases, $http){
+     $scope.cases = cases;
+      $scope.selected = {
+	'issue' : '',
+	'caseret' : '',
+	'endsession' : false,
+	'comments' : ''
+      };
+    var len = tids.length;
+    if(len > 1){
+	$scope.disable = true;
+    }
+    $scope.commit = function(){
+      if(len == 0){
+    	   alert('please select some cases!');
+         return;
+    	}
+      $modalInstance.close($scope.selected);
+      }
+    $scope.clear = function(){
+	if(len == 0){
+	   alert('please select some cases!');
+	   return;
+	}
+	$modalInstance.close('clear');
+    }
+}
+
+var ImageCtrl = function($scope, $modalInstance,selectedcase, deviceinfo){
+	$scope.selectedcase = selectedcase;
+	$scope.deviceinfo = deviceinfo;
+	$scope.myInterval = 5000;	
+			
+        console.log($scope.carstyle);
+	$scope.close = function(){
+	    $modalInstance.dismiss("cancle");
+	}
+}

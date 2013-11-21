@@ -32,7 +32,7 @@
                                         <th>Detail</th>
 					<th>Edit</th>
 				</tr></thead>
-				<tr ng-repeat='session in sessions '>
+				<tr ng-repeat='session in sessions | orderBy :["cid", "revision"]'>
 				<td>
                         <div class="btn-group">
                             <a class="btn btn-info btn-mini dropdown-toggle" data-toggle="dropdown" href="#">
@@ -41,10 +41,10 @@
                             </a>
                             <ul class="dropdown-menu">
                                <li ng-repeat='cycle in cycles '>
-                                     <a ng-click='setcycle({{session}},{{cycle.cid}})' href="">{{cycle.cid}}</a>
+                                     <a ng-click='setcycle(session,cycle.cid)' href="">{{cycle.cid}}</a>
                                 </li> 
-                                <li><a ng-click='newcycle({{session}})' href="">New Cycle</a></li>
-                                <li><a ng-click='delcycle({{session}})' href="">Delete Cycle</a></li>
+                                <li><a ng-click='newcycle(session)' href="">New Cycle</a></li>
+                                <li><a ng-click='delcycle(session)' href="">Delete Cycle</a></li>
                             </ul>
                         </div>
                     </td>	
@@ -72,7 +72,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr ng-repeat='cycle in cycles | orderBy:cycle.cid'>
+					<tr ng-repeat='cycle in cycles | orderBy:"cid"'>
 						<td>{{cycle.cid}}</td>
 						<td>{{cycle.product}}</td>
 						<td>{{cycle.revision}}</td>
@@ -100,7 +100,7 @@
 <br><dt><button ng-click='addMember()' class='btn'>Add Member...</button></dt>
 	</dl>
 </div>
-<div id="addMember" title="Add new Member">
+<!--<div  id="addMember" title="Add new Member">
      <div class="content clearfix" style="">
         <form>
             <label for="name">UserName</label>
@@ -114,4 +114,31 @@
             </select>
         </form>
       </div>
+</div>-->
+<div>
+    <script type="text/ng-template" id="myModalContent.html">
+        <div class="modal-header">
+            <h3>Add new Member</h3>
+        </div>
+        <div class="modal-body">
+        <form>
+            <label for="name">UserName</label>
+            <select ng-model='selected.membername' id='name'>
+            	<option ng-repeat="user in users">{{user.username}}</option>
+            </select>
+            <label for="role">UserRole</label>
+            <select ng-model='selected.rolename' id='role'>
+                <option value='member'>member</option>
+                <option value='admin'>admin</option>
+            </select>
+        </form>
+        </div>
+    <div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()">OK</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </script>
+
+    <!--<button class="btn" ng-click="open()">Open me!</button>
+    <div ng-show="selected.membername">Selection from a modal: {{ selected.membername }} {{selected.rolename}}</div>-->
 </div>
