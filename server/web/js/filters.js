@@ -34,6 +34,7 @@ smartFilters.filter('more', function(){
   }
 
 });
+
 smartFilters.filter('role', function(){
   return function(rolenumber){
     if(rolenumber ==10){

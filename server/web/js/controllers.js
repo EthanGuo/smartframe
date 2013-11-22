@@ -328,8 +328,13 @@ smartControllers.controller('SetingCtrl', ['$scope', '$http','$routeParams',
             data: { 'file': $scope.file,'token':$.cookie('ticket') }
         }).
         success(function (data, status, headers, config) {
-            $scope.avatar = apiBaseURL + data.data.url;
-            alert("success!")
+            if(data.result == 'ok'){
+              $scope.avatar = apiBaseURL + data.data.url;
+              alert("success!");
+            }
+            else{
+              alert(data.msg);
+            }
         }).
         error(function (data, status, headers, config) {
             alert("failed!");
