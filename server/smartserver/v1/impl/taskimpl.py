@@ -79,6 +79,7 @@ def caseValidateEndtime():
     """
        Used to validate case endtime
     """
+    print "Start validating the endtime of cases..."
     for case in Cases.objects(endtime=None, result='running'):
         if not case.starttime:
             case.delete()
@@ -87,12 +88,12 @@ def caseValidateEndtime():
                         set__result='error',
                         set__traceinfo='Case has been running for an hour, set it error')
             sessionUpdateSummary(case.sid, [['error', 'running']])
-            sessionUpdateDomainSummary(case.sid, [[case.tid, 'error', '']])
 
 def sessionValidateEndtime():
     """
        Used to validate session endtime
     """
+    print "Start validating the endtime of sessions..."
     for session in Sessions.objects(endtime=None).only('starttime', 'sid'):
         cases = Cases.objects(sid=session.sid).order_by('-tid')
         if not cases:

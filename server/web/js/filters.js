@@ -25,11 +25,11 @@ smartFilters.filter('btntype', function() {
 });
 
 smartFilters.filter('more', function(){
-  return function(count){
-    if(count > 0){
-	return '+';
+  return function(input){
+    if(input){
+	return '-';
     }else{
-	return '';
+	return '+';
     }
   }
 

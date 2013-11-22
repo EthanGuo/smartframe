@@ -68,11 +68,10 @@
 		<tbody ng-repeat="session in sessions">
 			<tr >
 				<td style='text-align:center;'>
-					<span style='font-size:24px;color:#0088cc;cursor:pointer ' ng-click="toggleDetail($index)">{{session.content.failurecount |  more}}</span>
-				<!--	<span style='font-size:24px;color:#0088cc;cursor:pointer' ng-click="toggleDetail($index)" ng-switch-default>+</span>
-					<span ng-switch-when='0'></span>-->
+				    <span style='font-size:24px;color:#0088cc;cursor:pointer ' ng-click="toggleDetail($index)">
+					{{session.content.failurecount}}
+				   </span>
 				</td>
-				
 				<td>{{session.deviceid}}</td>
 				<td>{{session.content.starttime}}</td>
 				<td>{{session.content.endtime}}</td>
@@ -111,7 +110,9 @@
 		</thead>
 		<tbody ng-repeat='domain in domains'>
 			<tr>
-				<td style='text-align:center;font-size:24px;color:#0088cc;cursor:pointer' ng-click="toggleDetail1($index)">+</td>
+				<td style='text-align:center;font-size:24px;color:#0088cc;cursor:pointer' ng-click="toggleDetail1($index)">
+				    {{activePosition1[$index] | more}}
+				</td>
 				<td>{{domain.type}}</td>
 				<td>{{domain.total}}</td>
 				<td>{{domain.pass}}</td>

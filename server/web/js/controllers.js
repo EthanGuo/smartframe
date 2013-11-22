@@ -3,7 +3,7 @@
 /* Controllers */
 
 var smartControllers = angular.module('smartControllers', []);
-var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapid";
+var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
 
 //Controller for index
 
@@ -93,8 +93,7 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
     }
 
     $scope.signout = function(){
-      window.location = '#/smartserver/login';
-      $http.post(apiBaseURL+'/account',{'subc':'logout','data':{}})
+      $http.post(apiBaseURL+'/account',{'subc':'logout','data':{},'token':$.cookie('ticket')})
       .success(function(ret){
         $.cookie('ticket', '', { expires: -1 });
         window.location = '#/smartserver/login';
@@ -411,8 +410,7 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
   };
 
     $scope.signout = function(){
-      window.location = '#/smartserver/login';
-      $http.post(apiBaseURL+'/account',{'subc':'logout','data':{}})
+      $http.post(apiBaseURL+'/account',{'subc':'logout','data':{},'token':$.cookie('ticket')})
       .success(function(ret){
         $.cookie('ticket', '', { expires: -1 });
         window.location = '#/smartserver/login';
@@ -611,13 +609,11 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       } 
      $scope.collapse = {};
      $scope.setCollapse = function(caseid){
-console.log(caseid);
 	$timeout(function(){
 	   $scope.collapse[caseid] = true
            }, 500);
      }	
      $scope.delCollapse = function(caseid){
-console.log(caseid);
 	$timeout(function(){
 	   $scope.collapse[caseid] = false 
            }, 1000);
@@ -694,8 +690,7 @@ console.log(caseid);
 
     }    
     $scope.signout = function(){
-      window.location = '#/smartserver/login';
-      $http.post(apiBaseURL+'/account',{'subc':'logout','data':{}})
+      $http.post(apiBaseURL+'/account',{'subc':'logout','data':{},'token':$.cookie('ticket')})
       .success(function(ret){
         $.cookie('ticket', '', { expires: -1 });
         window.location = '#/smartserver/login';
@@ -1010,8 +1005,7 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
       
     }; 
      $scope.signout = function(){
-      window.location = '#/smartserver/login';
-      $http.post(apiBaseURL+'/account',{'subc':'logout','data':{}})
+      $http.post(apiBaseURL+'/account',{'subc':'logout','data':{},'token':$.cookie('ticket')})
       .success(function(ret){
         $.cookie('ticket', '', { expires: -1 });
         window.location = '#/smartserver/login';
@@ -1111,7 +1105,6 @@ var ImageCtrl = function($scope, $modalInstance,selectedcase, deviceinfo){
 	$scope.deviceinfo = deviceinfo;
 	$scope.myInterval = 5000;	
 			
-        console.log($scope.carstyle);
 	$scope.close = function(){
 	    $modalInstance.dismiss("cancle");
 	}
