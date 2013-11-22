@@ -65,11 +65,12 @@
 			<th>First Failure Uptime</th>
 			<th>Uptime</th>
 		</thead>
-		<tbody ng-repeat="session in sessions">
+		<tbody ng-repeat="session in sessions" ng-switch on='session.content.failurecount'>
 			<tr >
 				<td style='text-align:center;'>
-				    <span style='font-size:24px;color:#0088cc;cursor:pointer ' ng-click="toggleDetail($index)">
-					{{session.content.failurecount}}
+				   <span ng-switch-when='0'></span>
+				   <span ng-switch-default style='font-size:24px;color:#0088cc;cursor:pointer ' ng-click="toggleDetail($index)">
+				       {{activePosition[$index] | more }}
 				   </span>
 				</td>
 				<td>{{session.deviceid}}</td>
