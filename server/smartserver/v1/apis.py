@@ -61,6 +61,7 @@ def doAccountPOST(uid):
     if 'multipart/form-data' in request.content_type:
         data = {'subc': 'update'}
         data['data'] = {'file': request.files.get('data')}
+        data['token'] = request.files.get('token')
     else:
         data = request.json
     return accountPOST(data, uid)

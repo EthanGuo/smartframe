@@ -88,7 +88,7 @@ def accountPOST(data, uid):
     """
        Implement account changepswd/update/invite/logout here.
     """
-    return account_func.get(data['subc'])(data['data'], uid)
+    return account_func.get(data['subc'])(data['data'], data['token'], uid)
 
 def accountGet(data, uid):
     """

@@ -113,7 +113,7 @@ def accountRetrievePasswd(data):
         rmsg, rdata, rstatus = 'Invalid email!', {}, 'error'
     return resultWrapper(rstatus, rdata, rmsg)
 
-def accountChangepasswd(data, uid):
+def accountChangepasswd(data, token, uid):
     """
     params, data: {'oldpassword':(string)oldpassword, 'newpassword':(string)newpassword}
     return, data: {}
@@ -133,7 +133,7 @@ def accountChangepasswd(data, uid):
         rmsg, rdata, rstatus = 'Incorrect original password!', {}, 'error'
     return resultWrapper(rstatus, rdata, rmsg)
 
-def accountInvite(data, uid):
+def accountInvite(data, token, uid):
     """
     params, data: {'email':(string)email, 'username':(string)username, 'baseurl':(string)url}
     return, data: {}
@@ -143,14 +143,14 @@ def accountInvite(data, uid):
     ws_send_invitation_mail.delay(data['email'], data['username'], orguser, data['baseurl'])
     return resultWrapper('ok', {}, '')
 
-def accountLogout(data, uid):
+def accountLogout(data, token, uid):
     """
     params, data: {}
     return, data: {}
     """ 
     #Remove the token then return
     try:
-        UserTokens.objects(uid=uid).delete()
+        UserTokens.objects(token=token).delete()
         rmsg, rdata, rstatus = '', {}, 'ok'
     except OperationError:
         rmsg, rdata, rstatus = 'Remove token failed!', {}, 'error'
@@ -176,7 +176,7 @@ def __updateAvatar(data, uid):
         return resultWrapper('error', {}, 'Update avatar failed!')
     return resultWrapper('ok', {'filename': data['file'].filename, 'url': imageurl}, 'Upload successfully!')
 
-def accountUpdate(data, uid):
+def accountUpdate(data, token, uid):
     """
     params, data: {'appid': (string)appid, 'username': (string)username, 'company': (string)company, 'telephone': (string)phone, 'file': (dict)file}
     return, data: {'token': (string)token}
