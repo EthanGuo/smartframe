@@ -32,11 +32,11 @@ def createToken(appid, uid):
         return {'status': 'error'}
 
 def accountValidToken(token):
-    userToken = UserTokens.objects(token=token).only('uid').first()
-    if not userToken:
+    try:
+        usertoken = UserTokens.objects.get(token=token)
+        return usertoken.uid
+    except DoesNotExist:
         return None
-    else:
-        return userToken.uid
 
 def accountLogin(data):
     """

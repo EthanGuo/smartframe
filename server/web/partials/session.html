@@ -40,8 +40,8 @@
 					<td>{{session.starttime}}</td>
 					<td>{{session.tester}}</td>
 					<td>{{session.runtime}}</td> <td>{{session.deviceinfo.product}}</td>
-					<td style='word-break:break-all;'>{{session.deviceinfo.revision}}</td>
-					<td style='word-break:break-all;'>{{session.deviceinfo.deviceid}}</td>
+					<td style='word-break:break-all;'>{{session.deviceinfo.revision || "NA"}}</td>
+					<td style='word-break:break-all;'>{{session.deviceinfo.deviceid || "NA"}}</td>
 					<td><a href='' ng-click="getCases('total')">{{session.summary.total}}</a></td>
 					<td><a href='' ng-click="getCases('pass')">{{session.summary.pass}}</a></td>
 					<td><a href='' ng-click="getCases('fail')">{{session.summary.fail}}</a></td>

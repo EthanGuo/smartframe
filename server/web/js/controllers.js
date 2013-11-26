@@ -3,7 +3,7 @@
 /* Controllers */
 
 var smartControllers = angular.module('smartControllers', []);
-var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
+var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapid";
 
 //Controller for index
 
@@ -425,6 +425,9 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
       .success(function(ret){
         if(ret.result == 'ok'){
           $scope.sessions = ret.data.sessions;
+          $.each($scope.sessions, function(key, value){
+              value.uptime = setruntime(value.uptime);
+          });
         }else{
           alert(ret.msg);
         }

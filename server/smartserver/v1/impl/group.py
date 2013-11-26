@@ -136,21 +136,22 @@ def groupGetSessions(data, gid, uid):
                                 'tester': (String)name},...]}
     """
     gid, sessions = int(gid), []
-    for session in Sessions.objects(gid=gid).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime'):
+    for session in Sessions.objects(gid=gid).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime', 'runtime'):
         if session.deviceinfo:
             product = session.deviceinfo.product
             revision = session.deviceinfo.revision
+            deviceid = session.deviceinfo.deviceid
         else:
-            product, revision = '', ''
+            product, revision, deviceid = '', '', ''
         user = Users.objects(uid=session.uid).only('username').first()
         tester = user.username if user else ''
         starttime = session.starttime.strftime(TIME_FORMAT) if session.starttime else ''
         endtime = session.endtime.strftime(TIME_FORMAT) if session.endtime else ''
         cycle = Cycles.objects(sids=session.sid).only('cid').first()
         cid = cycle.cid if cycle else ''
-        sessions.append({'gid': gid, 'product': product, 'revision': revision,
+        sessions.append({'gid': gid, 'product': product, 'revision': revision, 'IMEI': deviceid,
                          'sid': session.sid, 'cid': cid, 'tester': tester,
-                         'starttime': starttime,'endtime': endtime})
+                         'starttime': starttime,'endtime': endtime, 'uptime': session.runtime})
     return resultWrapper('ok', {'sessions': sessions}, '')
 
 def groupGetCycles(data, gid, uid):
