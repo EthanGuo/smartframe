@@ -3,7 +3,7 @@
 /* Controllers */
 
 var smartControllers = angular.module('smartControllers', []);
-var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapid";
+var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
 
 //Controller for index
 
