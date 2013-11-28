@@ -98,7 +98,7 @@ def sessionCycle(data, gid, sid, uid):
         return resultWrapper('error', {}, 'Add current session to cycle failed!')
     return resultWrapper('ok', {'cid': cycle.cid}, '')
 
-def sessionUploadXML(data, gid, sid):
+def sessionUploadXML(data, sid):
     """
     params, data: stream data of xml uploaded
     return, data: {}
@@ -109,7 +109,11 @@ def sessionUploadXML(data, gid, sid):
         import xml.etree.ElementTree as ET
     #Parse the xml file to get case result data then save into database one by one.
     summarys, domains = [], []
-    for testcase in ET.parse(data).getroot().iter('testcase'):
+    try:
+        tree = ET.parse(data).getroot().iter('testcase')
+    except ParseError:
+        return resultWrapper('error', {}, 'Invalid result file!')
+    for testcase in tree:
         caseId = testcase.attrib['order']
         casename = ''.join([testcase.attrib['component'],'.',testcase.attrib['id'].split('_')[0]])
         for resultInfo in testcase.iter('result_info'):
@@ -129,6 +133,7 @@ def sessionUploadXML(data, gid, sid):
     ws_update_session_sessionsummary.delay(sid, summarys)
     #Trigger task to update domain summary here.
     ws_update_session_domainsummary.delay(sid, domains)
+    return resultWrapper('ok', {}, '')
 
 def sessionDelete(data, gid, sid, uid):
     """

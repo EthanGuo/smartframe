@@ -888,6 +888,14 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
         }
     }
 
+      $scope.getLog = function(logurl){
+	if(logurl == undefined){
+	    alert("log dosen't exist");
+	    return;
+	}
+	window.location = apiBaseURL + logurl;
+      }
+
       $scope.getImages = function(selectedCase){ 
       var rect;
       var zoom = 1;
@@ -899,6 +907,10 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       var tempcase = angular.fromJson(tempstr);
       $scope.selectedcase = {};
       $scope.selectedcase = {'expectshot':tempcase.expectshot,'snapshots':tempcase.snapshots};
+      if($scope.selectedcase.expectshot.url == undefined && $scope.selectedcase.snapshots.length == 0){
+	alert("Image does't exist");
+	return;
+      }
       if(deviceW >= 400){
 	zoom = (deviceW / 400).toFixed(3);
         deviceW = deviceW / zoom;

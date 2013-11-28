@@ -1,6 +1,10 @@
 /* app css stylesheet */
 
-
+body{
+padding:0;
+width:1280px;
+margin:auto;
+}
 .login-page{
   padding-top: 20px;
   height: 400px;

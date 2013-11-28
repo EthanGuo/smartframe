@@ -66,11 +66,11 @@ def fileGET(fileid):
     """
     return fetchFileData(fileid)
 
-def uploadSessionResult(filedata, gid, sid):
+def uploadSessionResult(filedata, sid):
     """
        Used to upload xml containing case result of a session
     """
-    return sessionUploadXML(filedata, gid, sid)
+    return sessionUploadXML(filedata, sid)
 
 def accountActive(uid):
     """

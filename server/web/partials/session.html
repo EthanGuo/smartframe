@@ -1,23 +1,13 @@
 <div class='session_head'>
-        <div class="" style="width:100%;height:40px;background:#23658B;">
+        <div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
                 <a href="#/smartserver/group/{{groupid}}"><b style='float:left;color:white;margin-top:8px;margin-left:10px;'>Back</b></a>
-                <button type="button" style='float:right;color:white; margin-top:3px' ng-click="signout()" class="btn btn-link">Sign Out</button>
+                <button type="button" style='float:right;color:white;margin-right:10px; margin-top:3px' ng-click="signout()" class="btn btn-link">Sign Out</button>
        </div>
 
 </div>
-        <div class='group_members ' >
-              <dl style='float:right;margin-right:30px;margin-top:20px'>
-		<dt><h3>Members</h3></dt>
-		<dd ng-repeat="member in members">
-			<img style='width:30px;height:30px;margin-bottom:5px;' ng-src='{{member.avatar.url}}'>
-			<span>{{member.username}}</span>
-            <button ng-click='delMember("{{member.username}}")' class='btn btn-mini btn-link'>del</button>
-		</dd>
-	</dl>
-	</div>
-<div class='span10 row session_content' style='margin-left:0px;'>
+<div class='session_content' style='width:976px;float:left;margin-left:40px;margin-top:40px;'>
 
-	<div class='session span10'>
+	<div class='session'>
 		<table class='table table-striped table-hover'>
 			<thead>
 				<tr>
@@ -50,14 +40,14 @@
 			</tbody>
 		</table>
 	</div>
-	<div class="pagination pagination-centered span10">
+	<div class="pagination pagination-centered">
 		<ul>
 			<li ng-click='prepage()'><a href="">&laquo;</a></li>
 			<li ng-click="pagenationTo({{page}})" ng-class='{active:(page.pagenumber + buffer)==pageindex}' ng-repeat="page in totalpage"><a href="">{{page.pagenumber + buffer}}</a></li>
 			<li ng-click='nextpage()'><a href="">&raquo;</a></li>
 		</ul>		
 	</div>
-	<div class='cases span10' >
+	<div class='cases ' >
 		<table class='table table-striped table-hover' >
 			<thead>
 				<th><input ng-model='master' ng-click="setAllTids()" type="checkbox"></th>
@@ -70,31 +60,49 @@
 				<th><a ng-click='getTids()'  href="">Comments</a></th>
 			</thead>
 			<tbody>
-				<tr ng-repeat='case in cases' ng-switch on="case.result">
-                	<td>
-                		<input  ng-model='selected[case.tid]' ng-switch-when="fail" type="checkbox">
-                		<input  ng-model='selected[case.tid]' ng-switch-when="error" type="checkbox">
-                	</td>
-					<td>{{case.tid}}</td>
-					<td>{{case.casename}}</td>
-					<td>{{case.starttime}}</td>
-					<td>{{case.result}}</td>
-					<td><a ng-switch-when="fail" ng-href="{{baseurl}}{{case.log.url}}">log</a><a ng-switch-default href=""></a></td>
-					<td><a ng-switch-when="fail" ng-click="getImages(case)" href="">image</a><a ng-switch-default href=""></a></td>
-					<td> 
-					  <div ng-mouseenter='setCollapse(case.tid)' ng-mouseleave='delCollapse(case.tid)' >
-						{{case.comments.caseresult}} {{case.comments.issuetype}}<br>
-					  <div collapse='!collapse[case.tid]'>	
-					     <span style='display:block;word-break:break-all;max-width:200px;'>
-						{{case.comments.commentinfo}}{{case.comments.endsession | endsession}}
-					     </span>
-					  </div> </div>
-					</td>
-				</tr>			
+			<tr ng-repeat='case in cases' ng-switch on="case.result">
+                            <td>
+                		    <input  ng-model='selected[case.tid]' ng-switch-when="fail" type="checkbox">
+                		    <input  ng-model='selected[case.tid]' ng-switch-when="error" type="checkbox">
+                	    </td>
+			    <td>{{case.tid}}</td>
+			    <td>{{case.casename}}</td>
+			    <td>{{case.starttime}}</td>
+			    <td>{{case.result}}</td>
+			    <td> <!--ng-href="{{baseurl}}{{case.log.url}}"-->
+				<a ng-switch-when="fail" ng-click='getLog(case.log.url)' href=''>
+				log</a>
+				<a ng-switch-default href=""></a>
+			    </td>
+			    <td>
+				<a ng-switch-when="fail" ng-click="getImages(case)" href='' >
+				image</a>
+				<a ng-switch-default href=""></a>
+			    </td>
+			    <td> 
+				  <div ng-mouseenter='setCollapse(case.tid)' ng-mouseleave='delCollapse(case.tid)' >
+					{{case.comments.caseresult}} {{case.comments.issuetype}}<br>
+				  <div collapse='!collapse[case.tid]'>	
+				     <span style='display:block;word-break:break-all;max-width:200px;'>
+					{{case.comments.commentinfo}}{{case.comments.endsession | endsession}}
+				     </span>
+				  </div> </div>
+			    </td>
+			</tr>			
 			</tbody>
 		</table>
 	</div>
 </div>
+        <div class='group_members' style='float:left;width:224px;margin-left:40px;margin-top:40px;' >
+              <dl style=''>
+		<dt><h3>Members</h3></dt>
+		<dd ng-repeat="member in members">
+			<img style='width:30px;height:30px;margin-bottom:5px;' ng-src='{{member.avatar.url}}'>
+			<span>{{member.username}}</span>
+            <button ng-click='delMember("{{member.username}}")' class='btn btn-mini btn-link'>del</button>
+		</dd>
+	</dl>
+	</div>
 
 <script type='text/ng-template' id='comments.html'>
 	<div class='modal-header'>

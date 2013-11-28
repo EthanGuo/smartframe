@@ -1,21 +1,11 @@
 <div class='report_head'>
-        <div class="" style="width:100%;height:40px;background:#23658B;">
+        <div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
                 <a href="#/smartserver/group/{{groupid}}"><b style='float:left;margin-left:10px;margin-top:8px;color:white'>Back</b></a>
-                <button type="button" style='float:right;color:white;margin-top:3px;' ng-click="signout()" class="btn btn-link">Sign Out</button>
+                <button type="button" style='float:right;color:white;margin-top:3px;margin-right:10px' ng-click="signout()" class="btn btn-link">Sign Out</button>
        </div>
 
 </div>
-        <div class='group_members' style='float:right;margin-right:40px;margin-top:20px'>
-              <dl>
-		<dt><h3>Members</h3></dt>
-		<dd ng-repeat="member in members">
-			<img style='width:30px;height:30px;margin-bottom:5px;' ng-src='{{member.avatar.url}}'>
-			<span>{{member.username}}</span>
-            <button ng-click='delMember("{{member.username}}")' class='btn btn-mini btn-link'>del</button>
-		</dd>
-	</dl>
-	</div>
-<div class='span10' >
+<div class='' style='width:976px;float:left;margin-left:40px;margin-top:40px;' >
 
 <h2>Cycle : {{cid}}</h2>
 <div style='margin-bottom:4px;'>
@@ -54,9 +44,18 @@
 		</tbody>
 	</table>
 </div>
+<div class='group_members' style='float:left;margin-left:40px;margin-top:40px'>
+       <dl>
+	  <dt><h3>Members</h3></dt>
+	  <dd ng-repeat="member in members">
+	     <img style='width:30px;height:30px;margin-bottom:5px;' ng-src='{{member.avatar.url}}'>
+	     <span>{{member.username}}</span>
+             <button ng-click='delMember("{{member.username}}")' class='btn btn-mini btn-link'>del</button>
+	  </dd>
+	</dl>
+</div>
 
-
-<div class='span10'>
+<div class=''style='width:976px;float:left;margin-left:40px;margin-top:5px;'>
 	<table class='table table-striped table-hover table-bordered' align='center'>
 		<thead>
 			<tr><th style='text-align:center' colspan="2">Failure Summary</th></tr>
@@ -71,7 +70,7 @@
 	</table>
 </div>
 
-<div class='span10'>
+<div class=''style='width:976px;float:left;margin-left:40px;margin-top:5px;'>
 	<table class='table table-striped table-hover table-bordered'>
 		<thead>
 			<th></th>
@@ -115,7 +114,7 @@
 </div>
 
 
-<div class='span10'>
+<div class=''style='width:976px;float:left;margin-left:40px;margin-top:5px;'>
 	<table class='table table-striped table-hover table-bordered'>
 		<thead>
 			<th></th>
@@ -160,4 +159,5 @@
 
 	</table>
 </div>
+
 
