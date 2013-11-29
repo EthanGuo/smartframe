@@ -111,7 +111,7 @@ def sessionUploadXML(data, sid):
     summarys, domains = [], []
     try:
         tree = ET.parse(data).getroot().iter('testcase')
-    except ParseError:
+    except Exception:
         return resultWrapper('error', {}, 'Invalid result file!')
     for testcase in tree:
         caseId = testcase.attrib['order']
