@@ -6,7 +6,7 @@ import string, json
 from random import choice
 from sendmail import *
 from util import resultWrapper
-from mongoengine import OperationError
+from mongoengine import OperationError, DoesNotExist
 from db import Users, UserTokens, Groups, Sessions, GroupMembers
 from filedealer import saveFile, deleteFile
 from ..tasks import ws_send_activeaccount_mail, ws_send_retrievepswd_mail, ws_send_invitation_mail
@@ -235,16 +235,24 @@ def accountGetGroups(uid):
     return, data: {'usergroup':[{'gid':(int)gid1,'groupname':(string)name1, 'allsession': (int)count, 'livesession': (int)count},...]}
     """ 
     usergroup = []
-    group = GroupMembers.objects(uid=uid)
+    group = Groups.objects()
     if group:
         for g in group:
-            ownerid = GroupMembers.objects(role=10, gid=g.gid).first().uid
+            product = []
+            for session in Sessions.objects(gid=g.gid).only('deviceinfo'):
+                if not session.deviceinfo.product in product:
+                    product.append(session.deviceinfo.product)
+            userrole = 8
+            for member in GroupMembers.objects(gid=g.gid):
+                if member.role == 10:
+                    ownerid = member.uid
+                if member.uid == uid:
+                    userrole = member.role
             ownername = Users.objects(uid=ownerid).only('username').first().username
             targetgroupname = Groups.objects(gid=g.gid).only('groupname').first().groupname
             usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
-                              'userrole': g.role, 'groupowner': ownername,
-                              'allsession': len(Sessions.objects(gid=g.gid).only('uid')),
-                              'livesession': len(Sessions.objects(gid=g.gid, endtime=None).only('uid'))})
+                              'userrole': userrole, 'groupowner': ownername,
+                              'product': product})
     return resultWrapper('ok', {'usergroup': usergroup}, '')
 
 def accountGetSessions(uid):

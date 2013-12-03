@@ -47,7 +47,7 @@ def sessionUpdate(data, gid, sid, uid):
 
 def sessionCycle(data, gid, sid, uid):
     """
-    params, data: {'cid':(int)cid}
+    params, data: {'cid':(int)cid, 'product':(string)product-name}
     return, data: {}
     """
     # If cid = 0, create a new cycle and add sid to it.
@@ -56,7 +56,7 @@ def sessionCycle(data, gid, sid, uid):
         if Cycles.objects(sids=sid):
             return resultWrapper('error', {}, 'Please remove session from current cycle first!')
         else:
-            cycleinst = Cycles(gid=gid, sids=[sid])
+            cycleinst = Cycles(gid=gid, sids=[sid], product=data.get('product', 'NA'))
             try:
                 cycleinst.save()
             except OperationError:
@@ -91,6 +91,8 @@ def sessionCycle(data, gid, sid, uid):
         except OperationError:
             return resultWrapper('error', {}, 'Remove session from current cycle failed!')
     cycle = Cycles.objects(cid=Cid).first()
+    if cycle.product != data.get('product', 'NA'):
+        return resultWrapper('error', {}, 'Should not add different product into one cycle!')
     try:
         cycle.update(push__sids=sid)
         cycle.reload()
@@ -113,13 +115,17 @@ def sessionUploadXML(data, sid):
         tree = ET.parse(data).getroot().iter('testcase')
     except Exception:
         return resultWrapper('error', {}, 'Invalid result file!')
+    failList = []
     for testcase in tree:
         caseId = testcase.attrib['order']
+        cycleId = testcase.attrib['id']
         casename = ''.join([testcase.attrib['component'],'.',testcase.attrib['id'].split('_')[0]])
         for resultInfo in testcase.iter('result_info'):
             starttime = convertTime(resultInfo.find('start').text)
             endtime = convertTime(resultInfo.find('end').text)
             result = resultInfo.find('actual_result').text.lower()
+        if result == 'fail':
+            failList.append({'cycleid': cycleId, 'orderid': caseId})
         try:
             caseInst = Cases().from_json(json.dumps({'sid': sid, 'tid': int(caseId),
                                                      'casename': casename,'result': result,
@@ -133,7 +139,7 @@ def sessionUploadXML(data, sid):
     ws_update_session_sessionsummary.delay(sid, summarys)
     #Trigger task to update domain summary here.
     ws_update_session_domainsummary.delay(sid, domains)
-    return resultWrapper('ok', {}, '')
+    return resultWrapper('ok', failList, '')
 
 def sessionDelete(data, gid, sid, uid):
     """
@@ -163,20 +169,21 @@ def sessionSummary(data, gid, sid):
     """
     params, data: {}
     return, data: {'planname':(string)planname,'tester':(string)tester,
-                   'starttime':(datetime)starttime,'runtime':runtime,
+                   'starttime':(datetime)starttime,'endtime':endtime,
                    'gid':(int)gid, 'sid':(int)sid, 
                    'deviceid':deviceid, summary':casecount,'deviceinfo':deviceinfo}
     """
-    result = Sessions.objects(sid=sid).only('uid', 'deviceinfo', 'starttime', 'planname', 'runtime', 'casecount').first()
+    result = Sessions.objects(sid=sid).only('uid', 'deviceinfo', 'starttime', 'planname', 'endtime', 'casecount').first()
     if result:
         user = Users.objects(uid=result.uid).only('username').first()
         tester = user.username if user else ''
         deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
         starttime = result.starttime.strftime(TIME_FORMAT) if result.starttime else ''
+        endtime = result.endtime.strftime(TIME_FORMAT) if result.endtime else ''
         data ={'planname':result.planname,'tester':tester,
                'deviceinfo':deviceinfo,
                'starttime':starttime,
-               'runtime':result.runtime,
+               'endtime':endtime,
                'summary':result.casecount,
                'gid': gid, 'sid': sid}
         return resultWrapper('ok',data,'')

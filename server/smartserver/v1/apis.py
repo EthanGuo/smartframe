@@ -142,7 +142,7 @@ def doGroupGET(gid, uid):
     |report      |{}   
     -----------------------------------------------------------------------------------------
     """
-    data = {'subc': request.params.get('subc'), 'cid': request.params.get('cid', '')}
+    data = {'subc': request.params.get('subc'), 'data':{'cid': request.params.get('cid', ''), 'product': request.params.get('product', 'NA')}}
     return groupGet(data, gid, uid)
 
 @appweb.route('/group/<gid>/session/<sid>', method='POST', content_type='application/json', data_format=['subc', 'data'])
@@ -160,7 +160,7 @@ def doSessionPOST(gid,sid,uid):
     |create |{'planname':(string),'starttime':(string),
     |       | 'deviceinfo':{'deviceid':(string),'revision':(string),'product':(string), 'width':(int), 'height':(int)}}
     |update |{'endtime':(string)}
-    |cycle  |{'cid':(int)cid}
+    |cycle  |{'cid':(int)cid, 'product':(string)product-name}
     |delete |{}
     -----------------------------------------------------------------------------------------
     """

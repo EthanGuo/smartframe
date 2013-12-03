@@ -113,7 +113,7 @@ def groupGet(data, gid, uid):
     """
        Implement group get info/get related session summary/get report here.
     """
-    return group_func.get(data['subc'])(data['cid'], gid, uid)
+    return group_func.get(data['subc'])(data['data'], gid, uid)
 
 def sessionPOST(data, gid, sid, uid):
     """

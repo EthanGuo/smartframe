@@ -8,7 +8,7 @@ from ..config import TIME_FORMAT
 from ..tasks import ws_del_group
 import json
 
-ROLES = {'OWNER': 10, 'ADMIN': 9, 'MEMBER': 8, 'GUEST': 7}
+ROLES = {'OWNER': 10, 'ADMIN': 9, 'GUEST': 8}
 
 def groupCreate(data, uid):
     """
@@ -129,14 +129,14 @@ def groupGetMembers(data, gid, uid):
 
 def groupGetSessions(data, gid, uid):
     """
-    params, data: {'cid' is contained but wont be used here}
+    params, data: {'product':(string)product}
     return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 'sid': (String),
                                 'revision':(String)revision, 'cid': (int),
                                 'starttime': (String)time, 'endtime': (String)time,
                                 'tester': (String)name},...]}
     """
     gid, sessions = int(gid), []
-    for session in Sessions.objects(gid=gid).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime', 'runtime'):
+    for session in Sessions.objects(gid=gid, deviceinfo__product=data['product']).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime', 'runtime'):
         if session.deviceinfo:
             product = session.deviceinfo.product
             revision = session.deviceinfo.revision
@@ -156,19 +156,16 @@ def groupGetSessions(data, gid, uid):
 
 def groupGetCycles(data, gid, uid):
     """
-    params, data: {'cid' is contained but wont be used here}
+    params, data: {'product':(string)product}
     return, data: {'sessions':[{'cid': (int)cid, 'product': (string)product, 'revision': (string)revision,
                                 'livecount': (int)num, 'devicecount': (int)num},...]}
     """
     gid, cycles, i = int(gid), [], 0
-    for cycle in Cycles.objects(gid=gid).only('cid', 'sids'):
-        cycles.append({'cid': cycle.cid, 'devicecount': 0, 'livecount': 0, 'product': '', 'revision': ''})
+    for cycle in Cycles.objects(gid=gid, product=data['product']).only('cid', 'sids'):
+        cycles.append({'cid': cycle.cid, 'devicecount': 0, 'livecount': 0, 'product': data['product'], 'revision': ''})
         for sid in cycle.sids:
             session = Sessions.objects(sid=sid).only('deviceinfo', 'endtime').first()
             if session:
-                if not cycles[i]['product']:
-                    if session.deviceinfo:
-                        cycles[i]['product'] = session.deviceinfo.product
                 if not cycles[i]['revision']:
                     if session.deviceinfo:
                         cycles[i]['revision'] = session.deviceinfo.revision
@@ -207,7 +204,8 @@ def __calculateResult(sessionresult):
             i += 1
         table3[deviceid] = {'starttime': session['starttime'], 'endtime': session['endtime'],
                             'failurecount': session['failurecount'], 'firstuptime': session['firstuptime'],
-                            'uptime': session['totaluptime'], 'issues': session['issues'], 'sid': session['sid']}
+                            'uptime': session['totaluptime'], 'issues': session['issues'], 'sid': session['sid'],
+                            'firstNC': session['firstNC'], 'firstC': session['firstC']}
 
         for casename in session['domains'].keys():
             domain = casename.strip().split('.')[0]
@@ -229,7 +227,7 @@ def groupGetReport(data, gid, uid):
     params, data: {'cid'}
     return, data: report data
     """
-    gid, cid, sessionresult = int(gid), int(data), []
+    gid, cid, sessionresult = int(gid), int(data['cid']), []
     cycle = Cycles.objects(cid=cid).first()
     if not cycle:
         return resultWrapper('error', {}, 'Invalid cycle id!')
@@ -247,7 +245,7 @@ def groupGetReport(data, gid, uid):
         if not endtime:
             index = len(cases) - 1
             endtime = cases[index].endtime if cases[index].endtime else cases[index].starttime
-        failurecount, firstfailureuptime, blocktime, issues = 0, 0, 0, []
+        failurecount, firstfailureuptime, blocktime, issues, firstNC, firstC= 0, 0, 0, [], [], []
         for case in cases:
             if case.comments:
                 if case['comments']['caseresult'] == 'fail':
@@ -259,16 +257,24 @@ def groupGetReport(data, gid, uid):
                         caseendtime = case.endtime if case.endtime else case.starttime
                         if caseendtime:
                             firstfailureuptime = (caseendtime - starttime).total_seconds()
+                            firstNC.append({'firstNC': firstfailureuptime, 'casename': case.casename, 
+                                            'starttime': casestarttime, 'issueType': case['comments']['issuetype'], 
+                                            'comments': case['comments']['commentinfo']})
                 if case['comments']['caseresult'] == 'block':
                     if case.endtime and case.starttime:
                         blocktime += (case.endtime - case.starttime).total_seconds()
                 if case['comments']['endsession'] == 1:
                     endtime = case.endtime if case.endtime else case.starttime
+                    firstCuptime = (endtime - starttime).total_seconds() - blocktime
+                    firstC.append({'firstC': firstCuptime, 'casename': case.casename, 
+                                   'starttime': casestarttime, 'issueType': case['comments']['issuetype'], 
+                                   'comments': case['comments']['commentinfo']})
                     break
         totaluptime = (endtime - starttime).total_seconds() - blocktime
         sessionresult.append({'deviceid': deviceid, 'product': product, 'revision': revision,
                               'starttime': starttime.strftime(TIME_FORMAT), 'sid': sid,
                               'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,
                               'firstuptime': firstfailureuptime, 'totaluptime': totaluptime,
-                              'issues': issues, 'domains': json.loads(session.domaincount)})
+                              'issues': issues, 'domains': json.loads(session.domaincount),
+                              'firstNC': firstNC, 'firstC': firstC})
     return __calculateResult(sessionresult)

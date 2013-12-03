@@ -102,6 +102,7 @@ class Cycles(Document):
     gid = IntField(required=True)
     sids = ListField(StringField())
     cid = SequenceField()
+    product = StringField(required=True)
 
     meta = {'collection': 'Cycles'}
 
