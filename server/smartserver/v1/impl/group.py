@@ -202,8 +202,9 @@ def __calculateResult(sessionresult):
         else:
             deviceid = 'device_' + str(i)
             i += 1
-        table3[deviceid] = {'starttime': session['starttime'], 'endtime': session['endtime'],
-                            'failurecount': session['failurecount'], 'firstuptime': session['firstuptime'],
+        firstCUptime = session['firstC'][0]['firstC'] if session['firstC'] else ''
+        table3[deviceid] = {'starttime': session['starttime'], 'endtime': session['endtime'],'failurecount': session['failurecount'], 
+                            'firstuptime': session['firstuptime'], 'firstCuptime': firstCUptime,
                             'uptime': session['totaluptime'], 'issues': session['issues'], 'sid': session['sid'],
                             'firstNC': session['firstNC'], 'firstC': session['firstC']}
 
@@ -222,12 +223,11 @@ def __calculateResult(sessionresult):
     return resultWrapper('ok', {'table1': table1, 'table2': table2, 
                                 'table3': table3, 'table4': table4}, '')
 
-def groupGetReport(data, gid, uid):
+def __reportDefaultMethod(cid, gid, uid):
     """
-    params, data: {'cid'}
-    return, data: report data
+       Default method to calculate MTBF report.
     """
-    gid, cid, sessionresult = int(gid), int(data['cid']), []
+    gid, cid, sessionresult = int(gid), int(cid), []
     cycle = Cycles.objects(cid=cid).first()
     if not cycle:
         return resultWrapper('error', {}, 'Invalid cycle id!')
@@ -271,10 +271,21 @@ def groupGetReport(data, gid, uid):
                                    'comments': case['comments']['commentinfo']})
                     break
         totaluptime = (endtime - starttime).total_seconds() - blocktime
+        domains = json.loads(session.domaincount) if session.domaincount else {}
         sessionresult.append({'deviceid': deviceid, 'product': product, 'revision': revision,
                               'starttime': starttime.strftime(TIME_FORMAT), 'sid': sid,
                               'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,
                               'firstuptime': firstfailureuptime, 'totaluptime': totaluptime,
-                              'issues': issues, 'domains': json.loads(session.domaincount),
+                              'issues': issues, 'domains': domains,
                               'firstNC': firstNC, 'firstC': firstC})
     return __calculateResult(sessionresult)
+
+def groupGetReport(data, gid, uid):
+    """
+    params, data: {'cid':(string)cycleId, 'method':(string)method to calculate report}
+    return, data: report data
+
+    Suppose to support different way to calculate report
+    """
+    if data['method'] == 'default':
+        return __reportDefaultMethod(data['cid'], gid, uid)

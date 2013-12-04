@@ -142,7 +142,10 @@ def doGroupGET(gid, uid):
     |report      |{}   
     -----------------------------------------------------------------------------------------
     """
-    data = {'subc': request.params.get('subc'), 'data':{'cid': request.params.get('cid', ''), 'product': request.params.get('product', 'NA')}}
+    data = {'subc': request.params.get('subc'), 
+            'data':{'cid': request.params.get('cid', ''), 
+                    'product': request.params.get('product', 'NA'),
+                    'method': request.params.get('method', 'default')}}
     return groupGet(data, gid, uid)
 
 @appweb.route('/group/<gid>/session/<sid>', method='POST', content_type='application/json', data_format=['subc', 'data'])

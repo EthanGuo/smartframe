@@ -252,7 +252,7 @@ def accountGetGroups(uid):
             targetgroupname = Groups.objects(gid=g.gid).only('groupname').first().groupname
             usergroup.append({'gid': g.gid, 'groupname': targetgroupname,
                               'userrole': userrole, 'groupowner': ownername,
-                              'product': product})
+                              'product': product, 'info': g.info})
     return resultWrapper('ok', {'usergroup': usergroup}, '')
 
 def accountGetSessions(uid):

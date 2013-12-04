@@ -125,7 +125,7 @@ def sessionUploadXML(data, sid):
             endtime = convertTime(resultInfo.find('end').text)
             result = resultInfo.find('actual_result').text.lower()
         if result == 'fail':
-            failList.append({'cycleid': cycleId, 'orderid': caseId})
+            failList.append({'caseid': cycleId, 'tid': caseId})
         try:
             caseInst = Cases().from_json(json.dumps({'sid': sid, 'tid': int(caseId),
                                                      'casename': casename,'result': result,
@@ -139,7 +139,7 @@ def sessionUploadXML(data, sid):
     ws_update_session_sessionsummary.delay(sid, summarys)
     #Trigger task to update domain summary here.
     ws_update_session_domainsummary.delay(sid, domains)
-    return resultWrapper('ok', failList, '')
+    return resultWrapper('ok', {'failures':failList}, '')
 
 def sessionDelete(data, gid, sid, uid):
     """

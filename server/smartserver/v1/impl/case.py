@@ -61,29 +61,18 @@ def __updateCaseResult(data, sid):
         case.reload()
     else:
         orgcommentresult = ''
-    # Fetch all the images saved to memcache before then clear the cache.
-    # If case failed, save all the images fetched from memcache to database
-    if data.get('result').lower() == 'fail':
-        snapshots = cache.getCache(str('sid:' + sid + ':tid:' + str(data['tid']) + ':snaps'))
-    else:
-        snapshots = []
-    if not snapshots:
-        snapshots = []
+
     endtime = convertTime(data.get('time'))
     try:
         case.update(set__result=data.get('result').lower(), 
                     set__endtime=endtime, 
-                    set__traceinfo=data.get('traceinfo',''), 
-                    push_all__snapshots=snapshots)
+                    set__traceinfo=data.get('traceinfo',''))
         case.reload()
     except OperationError:
         case.update(set__result=data.get('result').lower(), 
                     set__endtime=endtime, 
-                    set__traceinfo=data.get('traceinfo',''), 
-                    push_all__snapshots=snapshots)
+                    set__traceinfo=data.get('traceinfo',''))
         case.reload()
-    finally:
-        cache.clearCache(str('sid:' + sid + ':tid:' + str(data['tid']) + ':snaps'))
     ws_update_session_sessionsummary.delay(sid, [[data['result'].lower(), orgresult]])
     ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
     ws_active_testsession.delay(sid)
@@ -115,10 +104,16 @@ def uploadPng(sid, tid, imagedata, stype):
     imageurl = saveFile(imagedata, 'image/png', imagename)
     imagedata.seek(0)
     if imagetype == 'expect':
+        #bond both snapshots and expectshots with case here.
+        snapshots = cache.getCache(str('sid:' + sid + ':tid:' + str(tid) + ':snaps'))
+        if not snapshots:
+            snapshots = []
         try:
-            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl})
+            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl}, push_all__snapshots=snapshots)
         except OperationError:
-            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl})
+            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl}, push_all__snapshots=snapshots)
+        finally:
+            cache.clearCache(str('sid:' + sid + ':tid:' + str(tid) + ':snaps'))
     elif imagetype == 'current':
         snaps.append({'filename': imagename, 'url': imageurl})
         #Following two caches are used for screen monitor
@@ -127,6 +122,7 @@ def uploadPng(sid, tid, imagedata, stype):
         cache.setCache(str('sid:' + sid + ':snaptime'), timenow)
         #Cache history snapshots for a testcase
         cache.setCache(str('sid:' + sid + ':tid:' + tid + ':snaps'), snaps)
+    return resultWrapper('ok', {'fileid': imageurl}, '')
 
 def uploadZip(sid, tid, logdata, xtype):
     """
@@ -139,3 +135,4 @@ def uploadZip(sid, tid, logdata, xtype):
         Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__log={'filename': filename, 'url': fileurl})
     except OperationError:
         Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__log={'filename': filename, 'url': fileurl})
+    return resultWrapper('ok', {'fileid': fileurl}, '')
