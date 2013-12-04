@@ -48,6 +48,9 @@ caseupload_func = {'uploadpng': uploadPng,
                    'uploadzip': uploadZip, #caseFilePUT
             }
 
+#Shortcut to create administrator of server, need full logic.
+ADMIN = createAdministrator()
+
 def getUserId(token):
     """
        Used by login plugin to verify the valid of current token

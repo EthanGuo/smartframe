@@ -31,6 +31,7 @@ class Users(Document):
     appid = StringField()
     avatar = DictField()
     active = BooleanField(default=False)
+    adminU = BooleanField(default=False)
 
     meta = {'collection': 'Users',
             'indexes': [{'fields': ['uid'], 'unique': True}],

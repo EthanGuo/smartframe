@@ -17,6 +17,25 @@ TOKEN_EXPIRES = {'01': 30*24*3600, #For client end upload result purpose
                  '03': 24*3600, #For user to active itself by email. 
                  }
 
+def createAdministrator():
+    """
+       Shortcut to create administrator of server.
+    """
+    if Users.objects(username='administrator').count():
+        return
+    else:
+        m = hashlib.md5()
+        m.update('smartATAdmin')
+        password = m.hexdigest()
+        userinst = Users(username='administrator', password=password, 
+                         appid='02', info={'email':'abcd@163.com'},
+                         active=True, adminU=True)
+        try:
+            userinst.save()
+        except OperationError:
+            userinst.save()
+        return
+
 def createToken(appid, uid):
     """
     Create a token, add it to mongodb, return the token generated.
@@ -215,7 +234,7 @@ def accountGetUserList(uid):
     if not len(users):
         return resultWrapper('error', {}, 'no user found!')
     else:
-        ret = [{'uid': user.uid, 'username': user.username} for user in users]
+        ret = [{'uid': user.uid, 'username': user.username} for user in users if not user.adminU]
         return resultWrapper('ok', {'count': len(ret), 'users': ret}, '')
 
 def accountGetInfo(uid):
@@ -224,9 +243,11 @@ def accountGetInfo(uid):
     return, data: {'uid':(int)uid, 'username':(string)username, 'info': (dict)userinfo, 'avatar':(dict)}
     """ 
     #Return uid's username and info.
-    result = Users.objects(uid=uid).only('username', 'info', 'avatar')
+    result = Users.objects(uid=uid).only('username', 'info', 'avatar', 'adminU')
     useraccount = result.first()
-    uinfo = {'uid': uid, 'username': useraccount.username, 'info': useraccount.info.__dict__['_data'], 'avatar': useraccount.avatar}
+    uinfo = {'uid': uid, 'username': useraccount.username, 
+             'info': useraccount.info.__dict__['_data'], 
+             'avatar': useraccount.avatar, 'admin': useraccount.adminU}
     return resultWrapper('ok', {'userinfo': uinfo}, '')
 
 def accountGetGroups(uid):
