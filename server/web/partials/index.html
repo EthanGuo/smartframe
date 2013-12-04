@@ -14,41 +14,50 @@
 			    <div style="width:400px;height:auto;margin-top:100px;">
 					<ul  class="nav nav-pills" id="mytabs">
 					  <li class="active">
-					    <a id='mygroups' href="#test1">My Groups</a>
+					    <a id='mygroups' href="#test1">All Platform</a>
 					  </li>
 					  <li class="">
-					  	<a id='mysessions' href="#test2">My Sessions</a>
+					  	<a id='mysessions' href="#test2">My Devices</a>
 					  </li>
 					</ul>
 				</div>
 				<div class='tab-content'>
 					<div class='tab-pane active' id='test1'>
-						<div><button class='btn btn-link' ng-click="create()">New Group</button></div>
+						<div ng-show='admin'><button class='btn btn-link' ng-click="create()">New Platform</button></div>
 						<div class='create_group' style='display:none'>
-							<input type='text' ng-model='newgroup' placeholder="New Group Name"><br>
-							<input type='text' ng-model='groupinfo' placeholder='Description for group'><br>
+							<input type='text' ng-model='newgroup' placeholder="New Platform Name"><br>
+							<input type='text' ng-model='groupinfo' placeholder='Description for platform'><br>
 							<button class='btn' ng-click="cancel()">Cancel</button>
 							<button class='btn btn-primary' ng-click="createGroup()">Create</button>
 						</div>
-					<table class='table table-striped table-hover'>
+					<table class='table'>
 							<thead>
-								<th>Group (live/all)</th>
-								<th>Group Owner</th>
+								<th>Platform</th>
+								<th></th>
+								<th>Owner</th>
+								<th>ID</th>
 								<th>Option</th>
 							</thead>
-							<tbody>
-							<tr ng-repeat='group in groups' ng-switch on='group.userrole'>
-							<td class='grouphover' style='width:500px;' ng-click="groupDetail({{group.gid}})">
-							    {{group.groupname}}({{group.livesession}}/{{group.allsession}})
+							<tbody ng-repeat='group in groups' ng-switch on='group.userrole' style='border:none'>
+							<tr class='tripe grouphover' ng-click="showProduct($index)">
+							<td style='width:120px;'>
+							   {{group.groupname}}
 							</td>
-							<td class='grouphover' ng-click="groupDetail({{group.gid}})">
+							<td style='width:380px;color:gray'>
+							   {{group.info}}
+							</td>
+							<td>
                                                         <span style=''>{{group.groupowner}}</span>
 							</td>
-                                                        </td>                                                
+                                                       <td>{{group.gid}} </td>                                                
                                                         <td> 
 							<button style='margin-left:5px;' ng-click="edit({{group.gid}},{{group.userrole}})" type='button 'class='btn btn-mini btn-danger' ng-switch-when='10'>delete</button>
 	<button style='margin-left:5px;' type='button 'class='btn btn-mini btn-danger' ng-switch-default disabled>delete</button>
 						</tr>
+<tr ><td ng-show='activeProduct[$index]' colspan='3'>
+ <button class='btn btn-link' ng-repeat='product in group.product' ng-click='productDetail(group.gid,product)'>{{product}}</button>
+<button class='btn btn-link' ng-hide='group.product' disabled>No Product</button>
+</td></tr>
 							</tbody>
 							
 						</table>	

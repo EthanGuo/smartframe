@@ -30,4 +30,35 @@ smartDirectives.directive('openDialog', function(){
 
 });
 
+smartDirectives.directive('fixhead', function($window){
+    return {
+	link : function(scope, elem, attr){
+	    angular.element($window).bind('scroll',function(){
+		var scrollHeight = $("#fixHead").offset().top;
+		var thwid = [];
+		var ths1 = $('#fixHead').children().children();
+		$.each(ths1, function(i, o){
+		    thwid[i] = $(this).width();
+		});
+		var ths2 = $(elem).children().children();
+		$.each(ths2, function(i, o){
+		    $(this).css('width',thwid[i]+'px');
+		    $(this).css('padding','8px');
+		});
+		if(this.pageYOffset > scrollHeight){
+		   $(elem).css('display','block');
+		   $(elem).css('background-color','#f9f9f9');
+		   $(elem).css('position','fixed');
+		   $(elem).css('top','0');
+		   $(elem).css('left','40px');
+		   $(elem).css('width','975px');
+		   $(elem).css('border-bottom','1px solid #DDDDDD');
+		}else{
+		   $(elem).css('display','none');
+		   $(elem).css('position','');
+		}
 
+	    });
+	}
+    }
+});

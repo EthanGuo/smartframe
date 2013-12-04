@@ -17,33 +17,33 @@ background:#f9f9f9;
        </div>
 </div>
 <div class='group_content' style='float:left;width:976px;margin-left:40px;margin-top:40px;'>
-	<div class=''style="margin-top:20px;margin-left:35px">
+	<div class=''style="margin-top:20px;margin-left:0px">
 	    <ul  class="nav nav-pills" id="mytabs">
 	         <li class="active">
-		    <a id="groupSessions" href="#devices">Devices</a>	    	 
+		    <a id="groupCycles" href="#cycles">Cycles</a>	    	 
 		  </li>
 		  <li class="">
-		    <a id="groupCycles" href="#cycles">Cycles</a>
+		    <a id="groupSessions" href="#devices">Devices</a>
 		  </li>
 		</ul>
 	</div>
 	<div class='tab-content'style='overflow:visible' >
-		<div class='tab-pane active' id='devices' >
+		<div class='tab-pane' id='devices' >
 			<table class='table table-hover' >
 				<thead><tr>
 					<th></th>
 					<th>Cycle</th>
+					<th>Revision</th>
+					<th>Starttime</th>
+					<th>Endtime</th>
 					<th>IMEI</th>
 					<th>Product</th>
-					<th>Starttime</th>
-					<th>Uptime</th>
-					<th>Revision</th>
 					<th>Tester</th>
                                         <th>Detail</th>
 					<th>Edit</th>
 				</tr></thead>
-			<tbody style='border:none' ng-repeat='session in sessions | orderBy :"endtime" | orderBy: "-cid"' ng-class-odd="'odd'" ng-switch on='session.endtime'>
-		            <tr><!--ng-class="{green:!session.endtime}"-->
+			<tbody style='border:none' ng-repeat='session in sessions | orderBy :["-sortcid","-sorttime"]' ng-class-odd="'odd'" ng-switch on='session.endtime'>
+		            <tr>
 				<td>
 				    <div ng-switch-when='' style="height:14px;width:14px">
 					<img src='img/arrow_up.png'>
@@ -67,38 +67,38 @@ background:#f9f9f9;
                             	      </ul>
                         	    </div>
                     		</td>	
-					<td>{{session.IMEI || "NA"}}</td>
-					<td>{{session.product}}</td>
+					<td>{{session.revision || "NA"}}</td>
 					<td>{{session.starttime}}</td>
-					<td>{{session.uptime}}</td>
-					<td style='word-break:break-all;'><span>{{session.revision || "NA"}}</span></td>
+					<td>{{session.endtime || "NA"}}</td>
+					<td>{{session.IMEI}}</td>
+					<td style='word-break:break-all;'><span>{{session.product || "NA"}}</span></td>
 				        <td>{{session.tester}}
-                                   	<td><a href="#/smartserver/group/{{session.gid}}/{{session.sid}}">detail</a></td>
+                                   	<td><a href="#/smartserver/group/{{session.gid}}/product/{{session.product}}/{{session.sid}}">detail</a></td>
 					<td><a href=""  ng-click='delSession({{"session.sid"}})' >delete</a></td>
 			    </tr>
 			</tbody>
 			</table>
 		</div>
-		<div class='tab-pane' id='cycles'>
+		<div class='tab-pane active' id='cycles'>
 			<table class='table table-striped table-hover' >
 				<thead>
 					<tr>
 						<th>Cycle</th>
-						<th>Product</th>
 						<th>Revision</th>
-						<th>Devices</th>
 						<th>Living Devices</th>
+						<th>All Devices</th>
+						<th>Product</th>
 						<th>Report</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr ng-repeat='cycle in cycles | orderBy:"cid"'>
+					<tr ng-repeat='cycle in cycles | orderBy:"-cid"'>
 						<td>{{cycle.cid}}</td>
-						<td>{{cycle.product}}</td>
 						<td>{{cycle.revision || "NA"}}</td>
-						<td>{{cycle.devicecount}}</td>
 						<td>{{cycle.livecount}}</td>
-						<td><a ng-click='report({{cycle.cid}})' href="">report</a></td>
+						<td>{{cycle.devicecount}}</td>
+						<td>{{cycle.product}}</td>
+						<td><a ng-click='report(cycle.cid,cycle.product)' href="">report</a></td>
 					</tr>
 				</tbody>
 			</table>
@@ -117,7 +117,7 @@ background:#f9f9f9;
 			<button ng-click='delMember("{{member.username}}")' class='btn btn-mini btn-link'>del</button>
 
 		</dd>
-<br><dt><button ng-click='addMember()' class='btn'>Add Member...</button></dt>
+<br><dt><button ng-click='addMember()' class='btn'>Grant Admin...</button></dt>
 	</dl>
 </div>
 <div>
@@ -143,7 +143,6 @@ margin-top:100px;
             </select>
             <label for="role">UserRole</label>
             <select ng-model='selected.rolename' id='role'>
-                <option value='member'>member</option>
                 <option value='admin'>admin</option>
             </select>
         </form>

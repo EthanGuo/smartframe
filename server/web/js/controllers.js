@@ -13,8 +13,7 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
     if(!$.cookie('ticket')){
       window.location = '#/smartserver/login';
     }
-    
-    // $scope.username = $routeParams.username;
+    $scope.activeProduct = {}; 
     $("#mytabs a").click(function(e){
         e.preventDefault();
         $(this).tab('show');
@@ -55,6 +54,7 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
      .success(function(ret){
       if(ret.result == 'ok'){
         $scope.username = ret.data.userinfo.username;
+	$scope.admin = ret.data.userinfo.admin;
         if(ret.data.userinfo.avatar.url != undefined){
           $scope.avatar = apiBaseURL + ret.data.userinfo.avatar.url;
         }
@@ -66,10 +66,13 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
       }
     });
 
-    $scope.groupDetail = function(gid){
-	     window.location = "#/smartserver/group/"+gid;
+    $scope.showProduct = function(index){
+	$scope.activeProduct[index] = !$scope.activeProduct[index];
     }
 
+    $scope.productDetail = function(gid, product){
+	window.location = '#/smartserver/group/'+gid+'/product/'+product;
+    }
     $scope.edit = function(groupid, userrole){
 	var r = window.confirm("Are you sure to delete?");
         if(r){
@@ -115,8 +118,10 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
       $http.post(apiBaseURL+'/group',{'subc':'create','data':data, 'token': $.cookie('ticket')})
       .success(function(ret){
         if(ret.result == 'ok'){
+	  $scope.newgroup = '';
+	  $scope.groupinfo = '';
           var gid = ret.data.gid;
-          var newgroup ={"allsession": 0, "groupname": groupname, "gid": gid, "userrole": 10, "groupowner": $scope.username, "livesession": 0};
+          var newgroup ={"allsession": 0, "groupname": groupname, "gid": gid, 'info':groupinfo, "userrole": 10, "groupowner": $scope.username, "livesession": 0};
           $scope.groups.push(newgroup);
           $('.create_group').slideUp();
         }else{
@@ -147,6 +152,7 @@ smartControllers.controller('SignUpCtrl', ['$scope', '$http',
       var telephone = $scope.telephone?$scope.telephone:"1";
       var company = $scope.company?$scope.company:"2";
       if(username == undefined || password == undefined || email == undefined){
+        alert("Username, Password and Email are required!");
         return false;
       }
       var data = {'username':username,'password':hex_md5(password),'appid':'02',
@@ -351,9 +357,12 @@ smartControllers.controller('SetingCtrl', ['$scope', '$http','$routeParams',
 smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$routeParams','$modal','$log', 
   function(dialogService, $scope, $http, $routeParams, $modal, $log) {
     var groupid = $routeParams.groupid;
-    if(groupid == undefined){
+    var product = $routeParams.product;
+    if(groupid == undefined || product == undefined){
       return;
     }
+
+
 
  $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticket'))
        .success(function(ret){
@@ -421,12 +430,21 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
         window.location = '#/smartserver/login';
       });
     }
-    $http.get(apiBaseURL+'/group/'+groupid+'?subc=sessions&appid=02&token='+$.cookie('ticket'))
+    $http.get(apiBaseURL+'/group/'+groupid+'?subc=sessions&product='+product+'&appid=02&token='+$.cookie('ticket'))
       .success(function(ret){
         if(ret.result == 'ok'){
           $scope.sessions = ret.data.sessions;
-          $.each($scope.sessions, function(key, value){
-              value.uptime = setruntime(value.uptime);
+          $.each($scope.sessions, function(i, o){
+	     if(o.cid == '' || o.cid == undefined){
+		o.sortcid = "-1";
+	     }else{
+                o.sortcid = o.cid;
+	     }
+	     if(o.endtime == '' || o.endtime == undefined){
+		o.sorttime = "2200-01-01 00:00:00";	
+	     }else{
+	        o.sorttime = o.endtime;
+	     }
           });
         }else{
           alert(ret.msg);
@@ -434,7 +452,7 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
         
     });
 
-    $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&appid=02&token='+$.cookie('ticket'))
+    $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&product='+product+'&appid=02&token='+$.cookie('ticket'))
       .success(function(ret){
         if(ret.result == 'ok'){
           $scope.cycles = ret.data.cycles;
@@ -466,10 +484,22 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
       e.preventDefault();
       $(this).tab('show');
       if(e.target.id == 'groupSessions'){
-        $http.get(apiBaseURL+'/group/'+groupid+'?subc=sessions&appid=02&token='+$.cookie('ticket'))
+        $http.get(apiBaseURL+'/group/'+groupid+'?subc=sessions&product='+product+'&appid=02&token='+$.cookie('ticket'))
           .success(function(ret){
             if(ret.result == 'ok'){
               $scope.sessions = ret.data.sessions; 
+	      $.each($scope.sessions, function(i, o){
+	     if(o.cid == '' || o.cid == undefined){
+		o.sortcid = -1;
+	     }else{
+                o.sortcid = o.cid;
+	     }
+	     if(o.endtime == '' || o.endtime == undefined){
+		o.sorttime = "2200-01-01 00:00:00";	
+	     }else{
+	        o.sorttime = o.endtime;
+	     }
+          });
             }else{
               alert(ret.msg);
             }
@@ -477,7 +507,7 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
         });
       }
       else if(e.target.id == 'groupCycles'){
-        $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&appid=02&token='+$.cookie('ticket'))
+        $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&product='+product+'&appid=02&token='+$.cookie('ticket'))
           .success(function(ret){
              if(ret.result == 'ok'){
                $scope.cycles = ret.data.cycles;
@@ -495,11 +525,12 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
               index = i;
           }
        });
-       $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':0},'token':$.cookie('ticket')})
+       $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':0,'product':product},'token':$.cookie('ticket')})
          .success(function(ret){
            if(ret.result == 'ok'){
               $scope.sessions[index].cid = ret.data.cid;
-               $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&appid=02&token='+$.cookie('ticket'))
+	      $scope.sessions[index].sortcid = ret.data.cid;
+               $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&product='+product+'&appid=02&token='+$.cookie('ticket'))
                 .success(function(ret1){
                    if(ret1.result == 'ok'){
                         $scope.cycles = ret1.data.cycles;
@@ -526,7 +557,8 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
           .success(function(ret){
             if(ret.result == 'ok'){
                $scope.sessions[index].cid = "";
-	       $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&appid=02&token='+$.cookie('ticket'))
+	       $scope.sessions[index].sortcid = -1;
+	       $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&product='+product+'&appid=02&token='+$.cookie('ticket'))
           	.success(function(ret1){
           	   if(ret1.result == 'ok'){
                		$scope.cycles = ret1.data.cycles;
@@ -541,14 +573,10 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
 
 
   $scope.setcycle = function(session,cycleid){
-      $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':cycleid},'token':$.cookie('ticket')})
+      $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':cycleid,'product':product},'token':$.cookie('ticket')})
       .success(function(ret){
           session.cid = cycleid;
-          $.each($scope.sessions, function(i, o){
-            if(o.sid == session.sid){
-              o.cid = session.cid;
-            }
-          });
+	  session.sortcid = cycleid;	  
       });
   }
 
@@ -595,10 +623,10 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
           });
         }
     }
-    $scope.report = function(cid){
-	     window.location = '#/smartserver/group/'+groupid+'/cycle/'+cid;
+    $scope.report = function(cid, product){
+	     window.location = '#/smartserver/group/'+groupid+'/product/'+product+'/cycle/'+cid;
     } 
-  }]);
+}]);
 
 //Controller for session
 
@@ -606,15 +634,73 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
   function(dialogService, $modal, $scope, $http, $routeParams, $timeout) {
       var groupid = $routeParams.groupid;
       var sessionid = $routeParams.sessionid;
+      var product = $routeParams.product;
       var total;
       var tids = [];
       $scope.baseurl = apiBaseURL;
       $scope.buffer = 0;
       $scope.casetype = 'total';
+      $scope.product = product;
       $scope.groupid = groupid;  
       if(groupid == undefined || sessionid == undefined){
         return;
       } 
+     $http.get(apiBaseURL+'/group/'+groupid+'?subc=members&appid=02&token='+$.cookie('ticket'))
+      .success(function(ret){
+        $scope.members = ret.data.members;
+          $.each($scope.members, function(i, o){
+            if(o.avatar.url){
+               o.avatar.url = apiBaseURL + o.avatar.url;
+            }else{
+               o.avatar.url = "http://storage.aliyun.com/wutong-data/system/1_S.jpg";
+            }
+          });
+    });
+     $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=summary&appid=02&token='+$.cookie('ticket'))
+    .success(function(ret){
+      $scope.session = ret.data;
+      $scope.deviceinfo = ret.data.deviceinfo;
+      $scope.session.runtime = setruntime($scope.session.runtime);
+    });
+
+      $scope.getCases = function(casetype){
+	$scope.casetype  = casetype;
+      	$http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket')+'&casetype='+casetype)
+      	.success(function(ret){
+       	    $scope.buffer = 0;
+	    $scope.pageindex = 1;
+            $scope.cases = ret.data.cases;
+      	    total = ret.data.totalpage;
+      	    $scope.totalpage=[];
+      	    if(total <= 10){
+      	      for(var i=1;i<=total;i++){
+      	        $scope.totalpage.push({'pagenumber':i});
+      	      }
+      	    }else{
+      	       for(var j=1;j<=10;j++){
+      	         $scope.totalpage.push({'pagenumber':j});
+      	       }
+      	    }
+      	});  
+      }
+   
+    $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket'))
+      .success(function(ret){
+       $scope.cases = ret.data.cases; 
+       total = ret.data.totalpage;
+       $scope.totalpage=[];
+       if(total <= 10){
+         for(var i=1;i<=total;i++){
+          $scope.totalpage.push({'pagenumber':i});
+         }      
+       }else{
+         for(var j=1;j<=10;j++){
+          $scope.totalpage.push({'pagenumber':j});
+         }
+       }
+    });  
+
+  
      $scope.collapse = {};
      $scope.setCollapse = function(caseid){
 	$timeout(function(){
@@ -706,61 +792,7 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
     }
 
 
-    $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=summary&appid=02&token='+$.cookie('ticket'))
-    .success(function(ret){
-      $scope.session = ret.data;
-      $scope.deviceinfo = ret.data.deviceinfo;
-      $scope.session.runtime = setruntime($scope.session.runtime);
-    });
 
-      $scope.getCases = function(casetype){
-	$scope.casetype  = casetype;
-      	$http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket')+'&casetype='+casetype)
-      	.success(function(ret){
-       	    $scope.buffer = 0;
-	    $scope.pageindex = 1;
-            $scope.cases = ret.data.cases;
-      	    total = ret.data.totalpage;
-      	    $scope.totalpage=[];
-      	    if(total <= 10){
-      	      for(var i=1;i<=total;i++){
-      	        $scope.totalpage.push({'pagenumber':i});
-      	      }
-      	    }else{
-      	       for(var j=1;j<=10;j++){
-      	         $scope.totalpage.push({'pagenumber':j});
-      	       }
-      	    }
-      	});  
-      }
-   
-    $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket'))
-      .success(function(ret){
-       $scope.cases = ret.data.cases; 
-       total = ret.data.totalpage;
-       $scope.totalpage=[];
-       if(total <= 10){
-         for(var i=1;i<=total;i++){
-          $scope.totalpage.push({'pagenumber':i});
-         }      
-       }else{
-         for(var j=1;j<=10;j++){
-          $scope.totalpage.push({'pagenumber':j});
-         }
-       }
-    });  
-
-    $http.get(apiBaseURL+'/group/'+groupid+'?subc=members&appid=02&token='+$.cookie('ticket'))
-      .success(function(ret){
-        $scope.members = ret.data.members;
-          $.each($scope.members, function(i, o){
-            if(o.avatar.url){
-               o.avatar.url = apiBaseURL + o.avatar.url;
-            }else{
-               o.avatar.url = "http://storage.aliyun.com/wutong-data/system/1_S.jpg";
-            }
-          });
-    });
     $scope.baseurl = apiBaseURL;
     $scope.selected = {};
 
@@ -943,10 +975,15 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
         var temp = $scope.selectedcase.snapshots[0];
 	$scope.selectedcase.snapshots[0] = $scope.selectedcase.snapshots[index];
 	$scope.selectedcase.snapshots[index] = temp; 
+ 
+	var winclass = 'snapshot';	
+        if(!deviceW){
+	   winclass = 'snapshot1';
+        }
 	var modalInstance = $modal.open({
 	    templateUrl : 'partials/images.html',
 	    controller : ImageCtrl,
-	    windowClass : 'snapshot',
+	    windowClass : winclass,
 	    resolve : {
 		selectedcase : function(){
 		    return $scope.selectedcase;
@@ -975,9 +1012,10 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
   function($scope, $http, $routeParams) {
     $scope.groupid = $routeParams.groupid;
     $scope.cid = $routeParams.cid;
+    $scope.product = $routeParams.product;
     var groupid = $routeParams.groupid;
     var cid = $routeParams.cid;
-
+    var product = $routeParams.product;
       $http.get(apiBaseURL+'/group/'+groupid+'?subc=report&cid='+cid+'&token='+$.cookie('ticket'))
       .success(function(ret){
   	var data = ret.data;	
@@ -1082,7 +1120,7 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
 var ModalInstanceCtrl = function ($scope, $modalInstance, users, $http) {
       $scope.users = users;
       $scope.selected = {'membername':$scope.users[0].username,
-			 'rolename':'member'};
+			 'rolename':'admin'};
       $scope.ok = function () {
         $modalInstance.close($scope.selected);
       };
@@ -1124,7 +1162,9 @@ var ImageCtrl = function($scope, $modalInstance,selectedcase, deviceinfo){
 	$scope.selectedcase = selectedcase;
 	$scope.deviceinfo = deviceinfo;
 	$scope.myInterval = 5000;	
-			
+        if(!$scope.deviceinfo.width){
+	    $scope.deviceinfo.width = 240;
+	}			
 	$scope.close = function(){
 	    $modalInstance.dismiss("cancle");
 	}

@@ -39,15 +39,15 @@ smartServer.config(['$routeProvider',
         templateUrl: 'partials/setting.html',
         controller: 'SetingCtrl'
       }).
-      when('/smartserver/group/:groupid',{
+      when('/smartserver/group/:groupid/product/:product',{
         templateUrl:'partials/group.html',
         controller:'GroupCtrl'
       }).
-      when('/smartserver/group/:groupid/:sessionid',{
+      when('/smartserver/group/:groupid/product/:product/:sessionid',{
         templateUrl:'partials/session.html',
         controller:'SessionCtrl'
       }).
-      when('/smartserver/group/:groupid/cycle/:cid',{
+      when('/smartserver/group/:groupid/product/:product/cycle/:cid',{
         templateUrl:'partials/report.html',
         controller:'ReportCtrl'
       }).
