@@ -230,7 +230,7 @@ def accountGetUserList(uid):
     return, data: {'count':(int)count, 'users':[{'uid':(int)uid, 'username':(string)username}...]}
     """ 
     #If users exist in database, return all of them or return error
-    users = Users.objects().only('uid', 'username')
+    users = Users.objects().only('uid', 'username', 'adminU')
     if not len(users):
         return resultWrapper('error', {}, 'no user found!')
     else:

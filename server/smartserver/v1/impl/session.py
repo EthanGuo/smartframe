@@ -149,7 +149,7 @@ def sessionDelete(data, gid, sid, uid):
     gid, uid = int(gid), int(uid)
     member = GroupMembers.objects(gid=gid, uid=uid).only('role').first()
     role = member.role if member else -1
-    session = Sessions.objects(sid=sid, uid=uid).only('endtime').first()
+    session = Sessions.objects(sid=sid).only('endtime').first()
     if session and role > 8 and session.endtime:
         try:
             session.delete()

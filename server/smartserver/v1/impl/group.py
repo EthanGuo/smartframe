@@ -175,7 +175,20 @@ def groupGetCycles(data, gid, uid):
         i += 1
     return resultWrapper('ok', {'cycles': cycles}, '')
 
-def __calculateResult(sessionresult):
+def __getMTBFHour(sessionresult, groupname, table1):
+    if not ('android' in groupname.lower()):
+        mtbf = table1['totaluptime']/table1['totalfailure'] if table1['totalfailure'] else table1['totaluptime']
+        method = ' = (Total Uptime) / (Total Failures)'
+        return {'mtbf': mtbf, 'method': method}
+    else:
+        mtbf = 0
+        for session in sessionresult:
+            if session['totaluptime'] >= 216000:
+                mtbf += session['totaluptime']
+        method = 'Sum the uptime of sessions whose uptime is longer than 60 hours.'
+        return {'mtbf': mtbf, 'method': method}
+
+def __calculateResult(sessionresult, groupname):
     """
        Return the data frontend required.
     """
@@ -219,7 +232,7 @@ def __calculateResult(sessionresult):
                     table4[domain][casename] = session['domains'][casename]
             else:
                 table4[domain] = {casename: session['domains'][casename]}
-    table1['mtbf'] = table1['totaluptime']/table1['totalfailure'] if table1['totalfailure'] else table1['totaluptime']
+    table1.update(__getMTBFHour(sessionresult, groupname, table1))
     return resultWrapper('ok', {'table1': table1, 'table2': table2, 
                                 'table3': table3, 'table4': table4}, '')
 
@@ -229,8 +242,10 @@ def __reportDefaultMethod(cid, gid, uid):
     """
     gid, cid, sessionresult = int(gid), int(cid), []
     cycle = Cycles.objects(cid=cid).first()
-    if not cycle:
-        return resultWrapper('error', {}, 'Invalid cycle id!')
+    group = Groups.objects(gid=gid).only('groupname').first()
+    if (not cycle) or (not group):
+        return resultWrapper('error', {}, 'Invalid ID!')
+    groupname = group.groupname
     for sid in cycle.sids:
         session = Sessions.objects(gid=gid, sid=sid).first()
         cases = Cases.objects(sid=sid).order_by('+tid')
@@ -278,7 +293,7 @@ def __reportDefaultMethod(cid, gid, uid):
                               'firstuptime': firstfailureuptime, 'totaluptime': totaluptime,
                               'issues': issues, 'domains': domains,
                               'firstNC': firstNC, 'firstC': firstC})
-    return __calculateResult(sessionresult)
+    return __calculateResult(sessionresult, groupname)
 
 def groupGetReport(data, gid, uid):
     """
