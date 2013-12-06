@@ -80,7 +80,7 @@ def doAccountGET(uid):
     |accountlist   |{'count':(int), 'users':[{'uid':(string),'username':(string)},...]}}
     |accountinfo   |{'username':(string),'info':{'email':(string), 'telephone':(string), 'company':(string)}, 'avatar':(dict)}
     |groups        |{'usergroup':[{'gid':(int),'groupname':(string), 'allsession': (int)count, 'livesession': (int)count},...]}
-    |sessions      |{'usersession': [{'sid':(int), 'gid':(int), 'groupname':(string)},...]}
+    |sessions      |{'usersession': [{'sid':(int), 'gid':(int), 'groupname':(string), 'product':(string)},...]}
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc')}

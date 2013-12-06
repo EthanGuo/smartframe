@@ -282,10 +282,12 @@ def accountGetSessions(uid):
     return, data: {'usersession': [{'sid':(String)sid, 'gid':(int)gid, 'groupname':(string)name},...]}
     """ 
     usersession = []
-    sessions = Sessions.objects(uid=uid).only('sid', 'gid')
+    sessions = Sessions.objects(uid=uid).only('sid', 'gid', 'deviceinfo')
     if sessions:
         for s in sessions:
-            usersession.append({'sid': s.sid, 'gid': s.gid, 'groupname': Groups.objects(gid=s.gid).only('groupname').first().groupname})
+            product = s.deviceinfo.product if s.deviceinfo else 'NA'
+            usersession.append({'sid': s.sid, 'gid': s.gid, 'product': product,
+                                'groupname': Groups.objects(gid=s.gid).only('groupname').first().groupname})
     return resultWrapper('ok' ,{'usersession': usersession}, '')
 
 def accountActiveUser(uid):
