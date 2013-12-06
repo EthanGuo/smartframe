@@ -34,6 +34,7 @@ smartDirectives.directive('fixhead', function($window){
     return {
 	link : function(scope, elem, attr){
 	    angular.element($window).bind('scroll',function(){
+		if($('#fixHead')){
 		var scrollHeight = $("#fixHead").offset().top;
 		var thwid = [];
 		var ths1 = $('#fixHead').children().children();
@@ -57,7 +58,7 @@ smartDirectives.directive('fixhead', function($window){
 		   $(elem).css('display','none');
 		   $(elem).css('position','');
 		}
-
+		}
 	    });
 	}
     }

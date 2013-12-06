@@ -77,3 +77,22 @@ left:40px;
 width:975px;
 border-bottom:1px solid silver;
 }
+.product_hover{
+padding:4px;
+width:100%;
+min-width:250px;
+}
+.product_hover:hover{
+background-color:#D9EDF7;
+cursor:pointer;
+}
+
+.product_hover span{
+color : #0088CC;
+}
+.firstc{
+background-color:#EFF5FB;
+}
+.firstnc{
+background-color:#EFFBF2;
+}

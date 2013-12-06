@@ -11,7 +11,7 @@
 <div style='margin-bottom:4px;'>
 <a ng-click='toggleInfo()' href=''>Tap here to get more information</a>
 <article id="article" class="show-content" style="background-color: #f9f9f9; display: block;display:none">
-  <b>MTBF</b> = Total Uptime/Total Failures  <br>
+  <b>MTBF</b> {{method}}<br>  
   <b>Product:</b> The device platform and product information. <br>
   <b>Start Time:</b> The test start time. <br>
   <b>End Time: </b>The test finish timestamp. Genericlly the value should be the ciritical issue happen time or the test stop time. 'N/A' means the test is ongoing. <br>
@@ -62,33 +62,51 @@
 <div class=''style='width:1200px;float:left;margin-left:40px;margin-top:5px;'>
 	<table class='table table-hover table-bordered'>
 		<thead>
-			<th></th>
 			<th>IMEI</th>
-			<th>Start Time</th>
-			<th>End Time</th>
-			<th style='background-color:#EFF5FB'>First Critical Failure Uptime</th>
+			<th style="width:80px;max-width:80px">Start Time</th>
+			<th style="width:80px;max-width:80px">End Time</th>
+			<th style="width:100px;max-width:100px">Uptime</th>
+			<th>Failures</th>
+			<th>First Failure</th>
+			<th>First Failure Uptime</th>
+			<th>First Failure Issue</th>
+			<th>First Failure Case</th>
+			<!--<th style='background-color:#EFF5FB'>First Critical Failure Uptime</th>
+			<th style='background-color:#EFF5FB'>First Critical Failure Issue</th>
+			<th style='background-color:#EFF5FB'>First Critical Failure case</th>
 		        <th style='background-color:#EFFBF2'>First None Critical Failure Uptime</th>
-			<th style='background-color:#FBEFEF'>Failures</th>
-			<th>Uptime</th>
+		        <th style='background-color:#EFFBF2'>First None Critical Failure Issue</th>
+		        <th style='background-color:#EFFBF2'>First None Critical Failure case</th>
+			-->
 		</thead>
 		<tbody ng-repeat="session in sessions" ng-switch on='session.content.failurecount'>
 			<tr >
-				<td style='text-align:center;'>
+				<!--<td style='text-align:center;'>
 				   <span ng-switch-when='0'></span>
 				   <span ng-switch-default style='font-size:24px;color:#0088cc;cursor:pointer ' ng-click="toggleDetail($index)">
 				       {{activePosition[$index] | more }}
 				   </span>
-				</td>
-				<td><a href='#/smartserver/group/{{groupid}}/product/{{product}}/{{session.content.sid}}'>{{session.deviceid || "NA"}}</a></td>
-				<td>{{session.content.starttime}}</td>
-				<td>{{session.content.endtime}}</td>
-				<td>{{session.content.uptime}}</td>
-				<td>{{session.content.firstuptime}}</td>
-				<td>{{session.content.failurecount}}</td>
-				<td>{{session.content.uptime}}</td>
+				</td>-->
+				<td rowspan="2"><a href='#/smartserver/group/{{groupid}}/product/{{product}}/{{session.content.sid}}'>{{session.deviceid || "NA"}}</a></td>
+				<td rowspan="2" style="width:80px;max-width:80px">{{session.content.starttime}}</td>
+				<td rowspan="2" style="width:80px;max-width:80px">{{session.content.endtime}}</td>
+				<td rowspan="2">{{session.content.uptime}}</td>
+				<td rowspan='2'>{{session.content.failurecount}}</td>
+				<td class='firstc' style='width:100px;max-width:100px'>First Critical Failure:</td>
+				<td class='firstc'>{{session.content.firstCuptime}}</td>
+				<td class='firstc'>{{session.content.firstC[0].issueType}}<br>{{session.content.firstC[0].comments}}</td>
+				<td class='firstc'>{{session.content.firstC[0].casename}}</td>
+			
+				<!---->
 				
 			</tr>
-			<tr style='background-color:#EFF5FB' ng-show="activePosition[$index] && session.content.firstC">
+			<tr>
+				<td class='firstnc' style='width:100px;max-width:100px'>First None Critical Failure:</td>	
+				<td class='firstnc'>{{session.content.firstuptime}}</td>
+				<td class='firstnc'>{{session.content.firstNC[0].issueType}}<br>{{session.content.firstNC[0].comments}}</td>
+				<td class='firstnc'>{{session.content.firstNC[0].casename}}</td>
+			</tr>
+		<!--	<tr style='background-color:#EFF5FB' ng-show="activePosition[$index] && session.content.firstC">
 			    <th></th><th></th>
 			    <th>First Critical</th>
 			    <th>Case Name</th>
@@ -138,7 +156,7 @@
 				<td>{{issue.starttime}}</td>
 				<td>{{issue.issueType}}</td>
 				<td colspan='2'><span style='word-break:break-all;'>{{issue.comments}}</span></td>
-			</tr>			
+			</tr>-->			
 		</tbody>
 	</table>
 </div>

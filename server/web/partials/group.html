@@ -87,7 +87,6 @@ background:#f9f9f9;
 						<th>Revision</th>
 						<th>Living Devices</th>
 						<th>All Devices</th>
-						<th>Product</th>
 						<th>Report</th>
 					</tr>
 				</thead>
@@ -97,7 +96,6 @@ background:#f9f9f9;
 						<td>{{cycle.revision || "NA"}}</td>
 						<td>{{cycle.livecount}}</td>
 						<td>{{cycle.devicecount}}</td>
-						<td>{{cycle.product}}</td>
 						<td><a ng-click='report(cycle.cid,cycle.product)' href="">report</a></td>
 					</tr>
 				</tbody>
@@ -117,7 +115,7 @@ background:#f9f9f9;
 			<button ng-click='delMember("{{member.username}}")' class='btn btn-mini btn-link'>del</button>
 
 		</dd>
-<br><dt><button ng-click='addMember()' class='btn'>Grant Admin...</button></dt>
+<br><dt><button ng-show='isadmin' ng-click='addMember()' class='btn'>Add Member...</button></dt>
 	</dl>
 </div>
 <div>
