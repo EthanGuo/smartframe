@@ -211,14 +211,19 @@ def __calculateResult(sessionresult, groupname):
                 table2.update({issue['issueType']: 1})
 
         if session['deviceid']:
-            deviceid = session['deviceid']
+            if session['deviceid'] not in table3.keys():
+                deviceid = session['deviceid']
+            else:
+                deviceid = session['deviceid'] + '_' + str(i)
+                i += 1
         else:
             deviceid = 'device_' + str(i)
             i += 1
-        firstCUptime = session['firstC'][0]['firstC'] if session['firstC'] else ''
-        table3[deviceid] = {'starttime': session['starttime'], 'endtime': session['endtime'],'failurecount': session['failurecount'], 
-                            'firstuptime': session['firstuptime'], 'firstCuptime': firstCUptime,
+        firstuptime = session['firstNC'][0]['firstNC'] if session['firstNC'] else ''
+        firstCuptime = session['firstC'][0]['firstC'] if session['firstC'] else ''
+        table3[deviceid] = {'starttime': session['starttime'], 'endtime': session['endtime'],'failurecount': session['failurecount'],
                             'uptime': session['totaluptime'], 'issues': session['issues'], 'sid': session['sid'],
+                            'firstuptime': firstuptime, 'firstCuptime': firstCuptime,
                             'firstNC': session['firstNC'], 'firstC': session['firstC']}
 
         for casename in session['domains'].keys():
@@ -272,6 +277,12 @@ def __reportDefaultMethod(cid, gid, uid):
                         caseendtime = case.endtime if case.endtime else case.starttime
                         if caseendtime:
                             firstfailureuptime = (caseendtime - starttime).total_seconds()
+                            if case['comments']['endsession'] == 1:
+                                endtime = case.endtime if case.endtime else case.starttime
+                                firstC.append({'firstC': firstfailureuptime, 'casename': case.casename, 
+                                               'starttime': casestarttime, 'issueType': case['comments']['issuetype'], 
+                                               'comments': case['comments']['commentinfo']})
+                                break
                             firstNC.append({'firstNC': firstfailureuptime, 'casename': case.casename, 
                                             'starttime': casestarttime, 'issueType': case['comments']['issuetype'], 
                                             'comments': case['comments']['commentinfo']})
@@ -290,8 +301,7 @@ def __reportDefaultMethod(cid, gid, uid):
         sessionresult.append({'deviceid': deviceid, 'product': product, 'revision': revision,
                               'starttime': starttime.strftime(TIME_FORMAT), 'sid': sid,
                               'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,
-                              'firstuptime': firstfailureuptime, 'totaluptime': totaluptime,
-                              'issues': issues, 'domains': domains,
+                              'totaluptime': totaluptime,'issues': issues, 'domains': domains,
                               'firstNC': firstNC, 'firstC': firstC})
     return __calculateResult(sessionresult, groupname)
 
