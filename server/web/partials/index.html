@@ -34,9 +34,8 @@
 							<thead>
 								<th>Projects</th>
 								<th></th>
-								<!--<th>Owner</th>
-								<th>ID</th>
-								<th>Option</th>-->
+								<th ng-show='isadmin'>Group ID</th>
+								<th ng-show='isadmin'>Option</th>
 							</thead>
 							<tbody ng-repeat='group in groups' ng-switch on='group.userrole' style='border:none'>
 							<tr class='tripe grouphover' ng-click="showProduct($index)">
@@ -46,10 +45,7 @@
 							<td style='width:380px;color:gray'>
 							   {{group.info}}
 							</td>
-							<!--<td>
-                                                        <span style=''>{{group.groupowner}}</span>
-							</td>
-                                                       <td>{{group.gid}} </td>-->                                                
+							<td ng-switch-when='10'>{{group.gid}} </td>                                                
                                                         <td> 
 							<button style='margin-left:5px;' ng-click="edit({{group.gid}},{{group.userrole}})" type='button 'class='btn btn-mini btn-danger' ng-switch-when='10'>delete</button>
 </td>
@@ -57,8 +53,7 @@
 <tr ><td ng-show='activeProduct[$index]' colspan='3'>
 <ul style='border:1px solid #f9f9f9;padding:0;'>
 <li class='product_hover' ng-repeat='product in group.product' ng-click='productDetail(group.gid,product)'>
-    <!--<button class='btn btn-link' ng-click='productDetail(group.gid,product)'>{{$index+1}}、{{product}}</button>
-    <button class='btn btn-link' ng-hide='group.product' disabled>No Product</button>-->
+    <button class='btn btn-link' ng-hide='group.product' disabled>No Product</button>
     <span>{{product}}</span>
 </li>
     <label ng-hide='group.product' style='color:gray;cursor:text'>No Product</label>

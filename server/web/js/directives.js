@@ -34,7 +34,7 @@ smartDirectives.directive('fixhead', function($window){
     return {
 	link : function(scope, elem, attr){
 	    angular.element($window).bind('scroll',function(){
-		if($('#fixHead')){
+		if($('#fixHead').offset()){
 		var scrollHeight = $("#fixHead").offset().top;
 		var thwid = [];
 		var ths1 = $('#fixHead').children().children();
