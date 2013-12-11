@@ -294,14 +294,22 @@ def accountActiveUser(uid):
     """
        Active current user and remove the original token
     """
-    try:
-        Users.objects(uid=uid).only('active').update(set__active=True)
-    except OperationError:
-        Users.objects(uid=uid).only('active').update(set__active=True)
-    result = accountLogout({}, uid)
-    if result['result'] != 'ok':
-        accountLogout({}, uid)
-    result = "<script>alert(\"Your account has been activated successfully!\");\
-    window.location = window.location.protocol + \"//\" + window.location.hostname + \
-    (window.location.port ? \":\" + window.location.port : \"\") + \"/smartserver\"</script>"
-    return result
+    user = Users.objects(uid=uid).only('active').first()
+    if user:
+        if not user.active:
+            try:
+                user.update(set__active=True)
+                user.reload()
+                UserTokens.objects(uid=uid).delete()
+            except OperationError:
+                user.update(set__active=True)
+                user.reload()
+                UserTokens.objects(uid=uid).delete()
+            result = "<script>alert(\"Your account has been activated successfully!\");\
+                      window.location = window.location.protocol + \"//\" + window.location.hostname + \
+                      (window.location.port ? \":\" + window.location.port : \"\") + \"/smartserver\"</script>"
+            return result
+        else:
+            return resultWrapper('error', {}, 'Account has been actived already!')
+    else:
+        return resultWrapper('error', {}, 'Invalid user!')
