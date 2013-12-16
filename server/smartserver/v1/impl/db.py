@@ -117,7 +117,7 @@ class Cases(Document):
     """
     db schema of collection case in mongodb
     """
-    choices=('pass', 'fail', 'error', 'running', 'BLOCK') # BLOCK is for testkit-lit
+    choices=('pass', 'fail', 'error', 'running', 'block') # block is for testkit-lit
 
     sid = StringField(required=True)
     tid = IntField(required=True)
