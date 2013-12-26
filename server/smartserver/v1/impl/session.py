@@ -5,7 +5,7 @@ from util import resultWrapper, cache, convertTime
 from mongoengine import OperationError
 from ..config import TIME_FORMAT
 from db import Sessions, Cycles, Users, Cases, GroupMembers
-from ..tasks import ws_update_session_domainsummary, ws_del_session, ws_update_session_sessionsummary
+from ..tasks import ws_update_session_domainsummary, ws_del_session, ws_update_session_sessionsummary, ws_active_testsession
 import json
 
 def sessionCreate(data, gid, sid, uid):
@@ -20,7 +20,7 @@ def sessionCreate(data, gid, sid, uid):
     sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': sid,'uid':int(uid),
                                       'planname':data.get('planname', 'test'),'starttime':starttime,
                                       'deviceinfo':data.get('deviceinfo'),
-                                      'casecount': {'total': 0, 'pass': 0, 'fail': 0, 'error': 0}}))
+                                      'casecount': {'total': 0, 'pass': 0, 'fail': 0, 'error': 0, 'block': 0}}))
     try:
         sessionInst.save()
     except OperationError :
@@ -139,6 +139,8 @@ def sessionUploadXML(data, sid):
     ws_update_session_sessionsummary.delay(sid, summarys)
     #Trigger task to update domain summary here.
     ws_update_session_domainsummary.delay(sid, domains)
+    #Trigger task to active session here.
+    ws_active_testsession.delay(sid)
     return resultWrapper('ok', {'failures':failList}, '')
 
 def sessionDelete(data, gid, sid, uid):
