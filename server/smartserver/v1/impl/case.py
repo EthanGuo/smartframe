@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from util import resultWrapper, cache, convertTime
 from mongoengine import OperationError
-from db import Cases
+from db import Cases, Sessions
 from filedealer import saveFile
 from datetime import datetime
 from ..config import TIME_FORMAT
@@ -30,10 +30,20 @@ def __updateCaseComments(data, sid):
         result = data['comments']['caseresult']
         if not (result in ['fail', 'block', '']):
             return resultWrapper('error', {}, 'Invalid result!')
+        session = Sessions.objects(sid=sid).only('endtid', 'enddomaincount').first()
         for tid in data['tid']:
             case = Cases.objects(sid=sid, tid=tid).only('comments', 'result').first()
             if not (case.result.lower() in ['fail', 'error']):
                 return resultWrapper('error', {}, "Can only add comments to fail/error cases!")
+            if data['comments']['endsession'] == 1:
+                if len(data['tid']) == 1:
+                    session.update(set__endtid=tid)
+                    session.reload()
+                else:
+                    return resultWrapper('error', {}, 'Session end can only be set to one case!')
+            elif session.endtid == tid:
+                session.update(set__endtid=None, set__enddomaincount=None)
+                session.reload()
             if case.comments and case.comments.caseresult:
                 orgcommentresult = case.comments.caseresult
             else:

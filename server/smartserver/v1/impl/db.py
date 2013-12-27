@@ -84,12 +84,14 @@ class Sessions(Document):
     gid = IntField(required=True)
     sid = StringField(required=True)
     uid = IntField()
+    endtid = IntField()
     planname = StringField()
     starttime = DateTimeField()
     endtime = DateTimeField()
     runtime = IntField()
     casecount = DictField()
     domaincount = StringField()
+    enddomaincount = StringField()
     deviceinfo = EmbeddedDocumentField(Device)
 
     meta = {'collection': 'Sessions',
@@ -111,7 +113,7 @@ class CommentInfo(EmbeddedDocument):
     issuetype = StringField()
     commentinfo = StringField()
     caseresult = StringField()
-    endsession = StringField()
+    endsession = IntField()
 
 class Cases(Document):
     """

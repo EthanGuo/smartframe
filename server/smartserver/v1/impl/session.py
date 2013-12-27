@@ -175,19 +175,20 @@ def sessionSummary(data, gid, sid):
                    'gid':(int)gid, 'sid':(int)sid, 
                    'deviceid':deviceid, summary':casecount,'deviceinfo':deviceinfo}
     """
-    result = Sessions.objects(sid=sid).only('uid', 'deviceinfo', 'starttime', 'planname', 'endtime', 'casecount').first()
+    result = Sessions.objects(sid=sid).only('uid', 'deviceinfo', 'starttime', 'planname', 'endtime', 'casecount', 'endtid').first()
     if result:
         user = Users.objects(uid=result.uid).only('username').first()
         tester = user.username if user else ''
         deviceinfo = result.deviceinfo.__dict__['_data'] if result.deviceinfo else ''
         starttime = result.starttime.strftime(TIME_FORMAT) if result.starttime else ''
         endtime = result.endtime.strftime(TIME_FORMAT) if result.endtime else ''
+        endtid = result.endtid if result.endtid else ''
         data ={'planname':result.planname,'tester':tester,
                'deviceinfo':deviceinfo,
                'starttime':starttime,
                'endtime':endtime,
                'summary':result.casecount,
-               'gid': gid, 'sid': sid}
+               'gid': gid, 'sid': sid, 'endtid': endtid}
         return resultWrapper('ok',data,'')
     else:
         return resultWrapper('error', {}, 'Invalid session ID!')
