@@ -3,7 +3,7 @@
 /* Controllers */
 
 var smartControllers = angular.module('smartControllers', []);
-var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
+var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapid";
 //Controller for index
 
 smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
@@ -633,7 +633,19 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
 }]);
 
 //Controller for session
+function checkEndtid(endtid, tids){
+    var flag = false;
+    if(endtid == ""){
+	flag = false;
+    }
+    $.each(tids, function(i, o){
+	if(endtid == tids[i]){
+	    flag = true;
+	}
+    });
+    return flag;
 
+}
 smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope', '$http', '$routeParams', '$timeout',
   function(dialogService, $modal, $scope, $http, $routeParams, $timeout) {
      if(!$.cookie('ticket')){
@@ -844,6 +856,14 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       });
 	modalInstance.result.then(function (comments){
 	  if(comments == 'clear'){
+	      if(checkEndtid($scope.session.endtid, tids)){
+	          var r = window.confirm("The tids you selected contains end tag. Please be careful to clear it");
+		  if(!r){
+	 	      return;
+		  }
+		  $scope.session.endtid = "";
+	      }
+              $('#loading').show();
 	      var data = {'tid': tids, 'comments':{'caseresult': '', 'commentinfo': '', 'endsession': 0, 'issuetype': ''}};
               $http.post(apiBaseURL + '/session/' + sessionid + '/case', {'subc': 'update', 'data': data, 'token': $.cookie('ticket')})
       		.success(function(ret){
@@ -862,22 +882,36 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
         	else{
           	    alert(ret['msg']);
         	}
+                $('#loading').hide();
       	     });  
 	  }else{
+	    
 	    $scope.comments = comments;
 	    if($scope.comments.endsession){
 	       $scope.comments.endsession=1;
 	    }else{
 	       $scope.comments.endsession =0;
 	    }
-      if($scope.comments.issue == '' || $scope.comments.caseret == '' || $scope.comments.comments == ''){
-        alert("IssueType, caseResult and comments can not be empty!");
-        return;
-      }
+      	    if($scope.comments.issue == '' || $scope.comments.caseret == '' || $scope.comments.comments == ''){
+       	        alert("IssueType, caseResult and comments can not be empty!");
+                return;
+      	    }
+            if($scope.comments.endsession == 1){
+		if($scope.session.endtid != "" && $scope.session.endtid != tids[0]){
+		    alert("You've add end tag on " + $scope.session.endtid + ". Please don't modified it hastily! \n If you want to change end tag,please clear end tag first!");
+		    return; 
+		}
+		var r = window.confirm("Please ensure that the tid you selected is the correct end tid");
+	 	if(!r){
+		    return;
+		}
+	        $scope.session.endtid = tids[0];
+	    }
 	    var data = {'tid':tids, 'comments':{'caseresult':$scope.comments.caseret,
 					      'commentinfo':$scope.comments.comments,
 					      'endsession':$scope.comments.endsession,
 					      'issuetype':$scope.comments.issue}};
+	    $('#loading').show();
             $http.post(apiBaseURL + '/session/' + sessionid + '/case', {'subc': 'update', 'data': data, 'token': $.cookie('ticket')})
               .success(function(ret){
         	if(ret['result'] == 'ok'){
@@ -895,6 +929,7 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
                 else{
           	  alert(ret['msg']);
         	}
+		$('#loading').hide();
       	    }); 
  	 }
 	}, function(){
@@ -1176,7 +1211,8 @@ var ImageCtrl = function($scope, $modalInstance,selectedcase, deviceinfo){
 	$scope.deviceinfo = deviceinfo;
 	$scope.myInterval = 5000;	
         if(!$scope.deviceinfo.width){
-	    $scope.deviceinfo.width = 240;
+	    $scope.deviceinfo.width = 400;
+	    $scope.deviceinfo.height = 600;
 	}			
 	$scope.close = function(){
 	    $modalInstance.dismiss("cancle");

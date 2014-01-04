@@ -1,3 +1,4 @@
+<img id='loading' style='display:none;position:fixed;left:50%;top:50%;margin-top:-64px;margin-left:-64px;' src='img/loading.gif'>
 <div class='session_head'>
         <div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
                 <a href="#/smartserver/group/{{groupid}}/product/{{product}}"><b style='float:left;color:white;margin-top:8px;margin-left:10px;'>Back</b></a>
@@ -18,6 +19,7 @@
 					<th>Endtime</th>
 					<th>Product</th>
 					<th>Tester</th>
+					<th>EndTid</th>
 					<th>Total</th>
 					<th>Pass</th>
 					<th>Fail</th>
@@ -33,6 +35,7 @@
 					<td>{{session.endtime || "NA"}}</td>
 					<td style='word-break:break-all;'>{{session.deviceinfo.product}}</td>
 					<td style='word-break:break-all;'>{{session.tester}}</td>
+					<td>{{session.endtid || "NA"}}</td>
 					<td><a href='' ng-click="getCases('total')">{{session.summary.total}}</a></td>
 					<td><a href='' ng-click="getCases('pass')">{{session.summary.pass}}</a></td>
 					<td><a href='' ng-click="getCases('fail')">{{session.summary.fail}}</a></td>
