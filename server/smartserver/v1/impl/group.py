@@ -297,7 +297,12 @@ def __reportDefaultMethod(cid, gid, uid):
                                    'comments': case['comments']['commentinfo']})
                     break
         totaluptime = (endtime - starttime).total_seconds() - blocktime
-        domains = json.loads(session.domaincount) if session.domaincount else {}
+        
+        if not session.endtid:
+            domains = json.loads(session.domaincount) if session.domaincount else {}
+        else:
+            domains = json.loads(session.enddomaincount) if session.enddomaincount else {}
+
         sessionresult.append({'deviceid': deviceid, 'product': product, 'revision': revision,
                               'starttime': starttime.strftime(TIME_FORMAT), 'sid': sid,
                               'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,

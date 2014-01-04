@@ -35,6 +35,14 @@ def ws_update_session_domainsummary(sid, results):
     taskimpl.sessionUpdateDomainSummary(sid, results)
 
 @w.task()
+def ws_create_session_enddomainsummary(sid, endtid):
+	taskimpl.sessionCreateEndDomainSummary(sid, endtid)
+
+@w.task()
+def ws_update_session_enddomainsummary(sid, results):
+	taskimpl.sessionUpdateEndDomainSummary(sid, results)
+
+@w.task()
 def ws_update_session_sessionsummary(sid, results):
 	taskimpl.sessionUpdateSummary(sid, results)
 

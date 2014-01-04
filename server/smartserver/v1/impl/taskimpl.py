@@ -7,6 +7,52 @@ from util import resultWrapper
 import json, time
 from datetime import datetime
 
+def sessionCreateEndDomainSummary(sid, endtid):
+    """
+       Task func to calculate the domain summary till the "session end" case
+    """
+    print "Start creating the end domain summary of session %s" %sid
+    cases = Cases.objects(sid=sid).order_by('+tid').only('casename', 'result')[:endtid]
+    enddomaincount = {}
+    for case in cases:
+        if case.casename in enddomaincount.keys():
+            enddomaincount[case.casename][case.result] += 1
+        else:
+            enddomaincount[case.casename] = {'pass': 0, 'fail': 0, 'error': 0, 'block': 0}
+            enddomaincount[case.casename][case.result] += 1
+    enddomaincount = json.dumps(enddomaincount)
+    try:
+        Sessions.objects(sid=sid).update(set__enddomaincount=enddomaincount)
+    except OperationError:
+        Sessions.objects(sid=sid).update(set__enddomaincount=enddomaincount)
+
+def sessionUpdateEndDomainSummary(sid, results):
+    """
+       Task func to update session end domain count
+    """
+    print "Start updating the end domain summary of session %s" %sid
+    enddomaincount = Sessions.objects(sid=sid).only('enddomaincount').first().enddomaincount
+    if enddomaincount:
+        enddomaincount = json.loads(enddomaincount)
+    else:
+        enddomaincount = {}
+    for result in results:
+        casename = Cases.objects(sid=sid, tid=result[0]).only('casename').first().casename
+        if not result[2]:
+            if casename in enddomaincount.keys():
+                enddomaincount[casename][result[1]] += 1
+            else:
+                enddomaincount[casename] = {'pass': 0, 'fail': 0, 'error': 0, 'block': 0}
+                enddomaincount[casename][result[1]] += 1 
+        else:
+            enddomaincount[casename][result[2]] -= 1
+            enddomaincount[casename][result[1]] += 1
+    enddomaincount = json.dumps(enddomaincount)
+    try:
+        Sessions.objects(sid=sid).update(set__enddomaincount=enddomaincount)
+    except OperationError:
+        Sessions.objects(sid=sid).update(set__enddomaincount=enddomaincount)
+
 def sessionUpdateDomainSummary(sid, results):
     """
        Task func to update session domain count

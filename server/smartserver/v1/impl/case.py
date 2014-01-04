@@ -6,7 +6,7 @@ from db import Cases, Sessions
 from filedealer import saveFile
 from datetime import datetime
 from ..config import TIME_FORMAT
-from ..tasks import ws_update_session_domainsummary, ws_active_testsession, ws_update_session_sessionsummary
+from ..tasks import ws_update_session_domainsummary, ws_active_testsession, ws_update_session_sessionsummary, ws_create_session_enddomainsummary, ws_update_session_enddomainsummary
 
 def caseresultCreate(data, sid):
     """
@@ -25,7 +25,7 @@ def caseresultCreate(data, sid):
     return resultWrapper('ok',{},'')
 
 def __updateCaseComments(data, sid):
-    domains = []
+    endtag, domains, enddomains = False, [], []
     if data.get('comments'):
         result = data['comments']['caseresult']
         if not (result in ['fail', 'block', '']):
@@ -35,26 +35,37 @@ def __updateCaseComments(data, sid):
             case = Cases.objects(sid=sid, tid=tid).only('comments', 'result').first()
             if not (case.result.lower() in ['fail', 'error']):
                 return resultWrapper('error', {}, "Can only add comments to fail/error cases!")
-            if data['comments']['endsession'] == 1:
-                if len(data['tid']) == 1:
-                    session.update(set__endtid=tid)
-                    session.reload()
-                else:
-                    return resultWrapper('error', {}, 'Session end can only be set to one case!')
-            elif session.endtid == tid:
-                session.update(set__endtid=None, set__enddomaincount=None)
-                session.reload()
             if case.comments and case.comments.caseresult:
                 orgcommentresult = case.comments.caseresult
             else:
                 orgcommentresult = case.result
             if not result:
                 result = case.result
+
+            if data['comments']['endsession'] == 1:
+                if len(data['tid']) == 1 and not session.endtid:
+                    session.update(set__endtid=tid)
+                    session.reload()
+                    endtag = True
+                    enddomains.append([tid, result.lower(), orgcommentresult])
+                else:
+                    return resultWrapper('error', {}, 'Session end can only be set to one case!')
+            else: 
+                if session.endtid == tid:
+                    session.update(set__endtid=None, set__enddomaincount=None)
+                    session.reload()
+                elif session.endtid and session.endtid > tid:
+                    enddomains.append([tid, result.lower(), orgcommentresult])
+
             domains.append([tid, result.lower(), orgcommentresult])
         try:
             Cases.objects(sid=sid, tid__in=data['tid']).update(set__comments=data['comments'], multi=True)
         except OperationError:
             Cases.objects(sid=sid, tid__in=data['tid']).update(set__comments=data['comments'], multi=True)
+        if endtag:
+            ws_create_session_enddomainsummary(sid, session.endtid)
+        if session.endtid:
+            ws_update_session_enddomainsummary.delay(sid, enddomains)
         ws_update_session_domainsummary.delay(sid, domains)
         return resultWrapper('ok', {}, 'Update successfully!')
     else:
