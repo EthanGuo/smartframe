@@ -12,8 +12,7 @@ def sessionCreateEndDomainSummary(sid, endtid):
        Task func to calculate the domain summary till the "session end" case
     """
     print "Start creating the end domain summary of session %s" %sid
-    sessionendtid = Cases.objects(sid=sid, tid=endtid).only('uniquetid').first().uniquetid
-    cases = Cases.objects(sid=sid).order_by('+tid').only('casename', 'result', 'comments')[:sessionendtid]
+    cases = Cases.objects(sid=sid).order_by('+tid').only('casename', 'result', 'comments')[:endtid]
     enddomaincount = {}
     for case in cases:
         if case.comments and case.comments.caseresult:

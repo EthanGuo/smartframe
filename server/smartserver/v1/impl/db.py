@@ -121,7 +121,6 @@ class Cases(Document):
     """
     choices=('pass', 'fail', 'error', 'running', 'block') # block is for testkit-lit
     
-    uniquetid = SequenceField()
     sid = StringField(required=True)
     tid = IntField(required=True)
     casename = StringField(required=True)
