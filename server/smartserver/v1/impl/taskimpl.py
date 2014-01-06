@@ -12,14 +12,19 @@ def sessionCreateEndDomainSummary(sid, endtid):
        Task func to calculate the domain summary till the "session end" case
     """
     print "Start creating the end domain summary of session %s" %sid
-    cases = Cases.objects(sid=sid).order_by('+tid').only('casename', 'result')[:endtid]
+    sessionendtid = Cases.objects(sid=sid, tid=endtid).only('uniquetid').first().uniquetid
+    cases = Cases.objects(sid=sid).order_by('+tid').only('casename', 'result', 'comments')[:sessionendtid]
     enddomaincount = {}
     for case in cases:
+        if case.comments and case.comments.caseresult:
+            result = case.comments.caseresult
+        else:
+            result = case.result
         if case.casename in enddomaincount.keys():
-            enddomaincount[case.casename][case.result] += 1
+            enddomaincount[case.casename][result] += 1
         else:
             enddomaincount[case.casename] = {'pass': 0, 'fail': 0, 'error': 0, 'block': 0}
-            enddomaincount[case.casename][case.result] += 1
+            enddomaincount[case.casename][result] += 1
     enddomaincount = json.dumps(enddomaincount)
     try:
         Sessions.objects(sid=sid).update(set__enddomaincount=enddomaincount)
@@ -134,6 +139,10 @@ def caseValidateEndtime():
                         set__result='error',
                         set__traceinfo='Case has been running for an hour, set it error')
             sessionUpdateSummary(case.sid, [['error', 'running']])
+            sessionUpdateDomainSummary(case.sid, [[case.tid, 'error', '']])
+            session = Sessions.objects(sid=case.sid).first()
+            if session.endtid and session.endtid > case.tid:
+                sessionUpdateEndDomainSummary(case.sid, [[case.tid, 'error', '']])
 
 def sessionValidateEndtime():
     """

@@ -124,6 +124,8 @@ def sessionUploadXML(data, sid):
             starttime = convertTime(resultInfo.find('start').text)
             endtime = convertTime(resultInfo.find('end').text)
             result = resultInfo.find('actual_result').text.lower()
+        if not result in ['fail', 'pass', 'error', 'block']:
+            continue
         if result == 'fail':
             failList.append({'caseid': cycleId, 'tid': caseId})
         try:

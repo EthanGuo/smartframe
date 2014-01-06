@@ -120,7 +120,8 @@ class Cases(Document):
     db schema of collection case in mongodb
     """
     choices=('pass', 'fail', 'error', 'running', 'block') # block is for testkit-lit
-
+    
+    uniquetid = SequenceField()
     sid = StringField(required=True)
     tid = IntField(required=True)
     casename = StringField(required=True)
