@@ -32,6 +32,7 @@ def __updateCaseComments(data, sid):
             return resultWrapper('error', {}, 'Invalid result!')
         session = Sessions.objects(sid=sid).only('endtid', 'enddomaincount').first()
         for tid in data['tid']:
+            result = data['comments']['caseresult']
             case = Cases.objects(sid=sid, tid=tid).only('comments', 'result').first()
             if not (case.result.lower() in ['fail', 'error']):
                 return resultWrapper('error', {}, "Can only add comments to fail/error cases!")
@@ -58,12 +59,12 @@ def __updateCaseComments(data, sid):
                     enddomains.append([tid, result.lower(), orgcommentresult])
 
             domains.append([tid, result.lower(), orgcommentresult])
+        if endtag:
+            ws_create_session_enddomainsummary(sid, session.endtid)
         try:
             Cases.objects(sid=sid, tid__in=data['tid']).update(set__comments=data['comments'], multi=True)
         except OperationError:
             Cases.objects(sid=sid, tid__in=data['tid']).update(set__comments=data['comments'], multi=True)
-        if endtag:
-            ws_create_session_enddomainsummary(sid, session.endtid)
         if session.endtid:
             ws_update_session_enddomainsummary.delay(sid, enddomains)
         ws_update_session_domainsummary.delay(sid, domains)
