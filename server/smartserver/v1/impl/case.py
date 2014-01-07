@@ -44,6 +44,8 @@ def __updateCaseComments(data, sid):
                 result = case.result
 
             if data['comments']['endsession'] == 1:
+                if data['comments']['caseresult'] != 'fail':
+                    return resultWrapper('error', {}, 'Session should end at a failed case!')
                 if len(data['tid']) == 1 and not session.endtid:
                     session.update(set__endtid=tid)
                     session.reload()
