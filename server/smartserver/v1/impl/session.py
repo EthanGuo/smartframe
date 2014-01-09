@@ -10,17 +10,15 @@ import json
 
 def sessionCreate(data, gid, sid, uid):
     """
-    params, data: {'planname':(string),'starttime':(string),'deviceinfo':
-                      {'deviceid':(string),'revision':(string),'product':(string), 
-                       'width':(string), 'height':(string)}}
+    params, data: {'tasktype':(string), 'taskinfo':(string), 
+                   'deviceinfo':[{'deviceid':(string),'revision':(string),'product':(list)},...] }
     return, data: {}
     """
     #create a new session if save fail return exception
     starttime = convertTime(data.get('starttime'))
-    sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': sid,'uid':int(uid),
-                                      'planname':data.get('planname', 'test'),'starttime':starttime,
-                                      'deviceinfo':data.get('deviceinfo'),
-                                      'casecount': {'total': 0, 'pass': 0, 'fail': 0, 'error': 0, 'block': 0}}))
+    sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': sid, 'uid':int(uid),
+                                      'tasktype':data.get('tasktype', 'test'), 'taskinfo': data.get('taskinfo', 'test'),
+                                      'starttime':starttime, 'deviceinfo':data.get('deviceinfo') }))
     try:
         sessionInst.save()
     except OperationError :

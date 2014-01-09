@@ -35,6 +35,14 @@ def __getUserRole(uid, gid):
     else:
         return -1 # Invalide gid
 
+def groupUpdate(data, gid, uid):
+    gid = int(gid)
+    try:
+        Groups.objects(gid=gid).update(push__devices=data)
+    except OperationError:
+        Groups.objects(gid=gid).update(push__devices=data)
+    return resultWrapper('ok', {}, '')
+
 def groupDelete(data, gid, uid):
     """
     params, data: {} 
@@ -129,30 +137,25 @@ def groupGetMembers(data, gid, uid):
 
 def groupGetSessions(data, gid, uid):
     """
-    params, data: {'product':(string)product}
-    return, data: {'sessions':[{'gid':(int)gid, 'product':(String)product, 'sid': (String),
-                                'revision':(String)revision, 'cid': (int),
-                                'starttime': (String)time, 'endtime': (String)time,
-                                'tester': (String)name},...]}
+    params, data: {}
+    return, data: {'sessions':[{'gid':(int)gid, 'product':(list)product, 'sid': (String),
+                                'revision':(String)revision, 'starttime': (String)time, 'endtime': (String)time,
+                                'tester': (String)name, 'tasktype': (string), 'taskinfo': (string)},...]}
     """
     gid, sessions = int(gid), []
-    for session in Sessions.objects(gid=gid, deviceinfo__product=data['product']).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime', 'runtime'):
-        if session.deviceinfo:
-            product = session.deviceinfo.product
-            revision = session.deviceinfo.revision
-            deviceid = session.deviceinfo.deviceid
-        else:
-            product, revision, deviceid = '', '', ''
+    devices = Groups.objects(gid=gid).first().devices
+    for session in Sessions.objects(gid=gid):
+        deviceinfo = []
+        for device in session.deviceinfo:
+            deviceinfo.append(device.__dict__['_data'])
         user = Users.objects(uid=session.uid).only('username').first()
         tester = user.username if user else ''
         starttime = session.starttime.strftime(TIME_FORMAT) if session.starttime else ''
         endtime = session.endtime.strftime(TIME_FORMAT) if session.endtime else ''
-        cycle = Cycles.objects(sids=session.sid).only('cid').first()
-        cid = cycle.cid if cycle else ''
-        sessions.append({'gid': gid, 'product': product, 'revision': revision, 'IMEI': deviceid,
-                         'sid': session.sid, 'cid': cid, 'tester': tester,
-                         'starttime': starttime,'endtime': endtime, 'uptime': session.runtime})
-    return resultWrapper('ok', {'sessions': sessions}, '')
+        sessions.append({'gid': gid, 'deviceinfo': deviceinfo,
+                         'sid': session.sid, 'tester': tester,
+                         'starttime': starttime,'endtime': endtime, 'tasktype': session.tasktype, 'taskinfo': session.taskinfo})
+    return resultWrapper('ok', {'sessions': sessions, 'devices': devices}, '')
 
 def groupGetCycles(data, gid, uid):
     """

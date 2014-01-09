@@ -58,6 +58,13 @@ class GroupMembers(Document):
 
     meta = {'collection': 'GroupMembers'}
 
+class Device(EmbeddedDocument):
+    deviceid = StringField()
+    revision = StringField()
+    product = StringField()
+    width = StringField()
+    height = StringField()
+
 class Groups(Document):
     """
     db schema of collection group in mongodb
@@ -65,17 +72,11 @@ class Groups(Document):
     groupname = StringField(required=True, unique=True)
     gid = SequenceField()
     info = StringField()
+    devices = ListField(EmbeddedDocumentField(Device))
 
     meta = {'collection': 'Groups',
             'indexes': [{'fields': ['gid'], 'unique': True}],
             'index_background': True}
-
-class Device(EmbeddedDocument):
-    deviceid = StringField()
-    revision = StringField()
-    product = StringField()
-    width = StringField()
-    height = StringField()
 
 class Sessions(Document):
     """
@@ -85,14 +86,15 @@ class Sessions(Document):
     sid = StringField(required=True)
     uid = IntField()
     endtid = IntField()
-    planname = StringField()
+    tasktype = StringField()
+    taskinfo = StringField()
     starttime = DateTimeField()
     endtime = DateTimeField()
     runtime = IntField()
     casecount = DictField()
     domaincount = StringField()
     enddomaincount = StringField()
-    deviceinfo = EmbeddedDocumentField(Device)
+    deviceinfo = ListField(EmbeddedDocumentField(Device))
 
     meta = {'collection': 'Sessions',
             'indexes': [{'fields': ['sid'], 'unique': True}],

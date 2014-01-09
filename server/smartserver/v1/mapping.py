@@ -21,6 +21,7 @@ account_func = {'register': accountRegister,
             }
 
 group_func = {  'create': groupCreate, #groupBasic
+                'update': groupUpdate,
                 'delete': groupDelete, 
                 'setmember': groupSetMembers,
                 'delmember': groupDelMembers, #groupPOST
@@ -108,7 +109,7 @@ def groupBasic(data, uid):
 
 def groupPOST(data, gid, uid):
     """
-       Implement group delete/(add/set) (member/role)/remove member here.
+       Implement group delete/(add/set) (member/role)/remove member here. add new device into group.
     """
     return group_func.get(data['subc'])(data['data'], gid, uid)
 
