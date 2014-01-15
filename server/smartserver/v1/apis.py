@@ -183,7 +183,8 @@ def doSessionGET(gid, sid):
     |latest     |{'amount': (int)value}
     |history    |{'pagenumber': (int)value, 'pagesize': (int)value, 'casetype': (string)['total/pass/fail/error']}
     |poll       |{'tid': (int)value}
-    |summary    |{}   
+    |summary    |{}
+    |logs       |[{'filename': (string)value, 'url': (string)value},{'filename': (string)value, 'url':(string)value},...]   
     -----------------------------------------------------------------------------------------
     """
     data = {'subc': request.params.get('subc'), 'data':request.params}
@@ -276,7 +277,8 @@ def doUploadSessionResult(sid):
     |subc        |data                   
     -----------------------------------------------------------------------------------------
     """
-    return uploadSessionResult(request.files.get('file').file, sid)
+    subc = request.params.get('subc', 'uploadXML')
+    return sessionUpload(subc, request.files.get('file'), sid)
 
 @appweb.route('/account/active', method='GET')
 def doAccountActive(uid):

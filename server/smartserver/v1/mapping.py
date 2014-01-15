@@ -37,7 +37,10 @@ session_func ={ 'create': sessionCreate,
                 'summary':sessionSummary,
                 'poll':sessionPollStatus,
                 'latest':sessionGetLatestCases,
-                'history': sessionGetHistoryCases, #sessionGET
+                'history': sessionGetHistoryCases, 
+                'logs': sessionGetLogsUrl, #sessionGET
+                'uploadXML': sessionUploadXML,
+                'uploadLog': sessionUploadLog, #sessionUpload
             }
 
 case_func = {   'create':caseresultCreate,
@@ -69,11 +72,11 @@ def fileGET(fileid):
     """
     return fetchFileData(fileid)
 
-def uploadSessionResult(filedata, sid):
+def sessionUpload(subc, filedata, sid):
     """
        Used to upload xml containing case result of a session
     """
-    return sessionUploadXML(filedata, sid)
+    return session_func.get(subc)(filedata, sid)
 
 def accountActive(uid):
     """

@@ -92,6 +92,7 @@ class Sessions(Document):
     casecount = DictField()
     domaincount = StringField()
     enddomaincount = StringField()
+    logs = ListField(DictField())
     deviceinfo = EmbeddedDocumentField(Device)
 
     meta = {'collection': 'Sessions',

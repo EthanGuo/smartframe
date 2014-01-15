@@ -4,6 +4,7 @@
 from util import resultWrapper, cache, convertTime
 from mongoengine import OperationError
 from ..config import TIME_FORMAT
+from filedealer import saveFile
 from db import Sessions, Cycles, Users, Cases, GroupMembers
 from ..tasks import ws_update_session_domainsummary, ws_del_session, ws_update_session_sessionsummary, ws_active_testsession
 import json
@@ -100,9 +101,22 @@ def sessionCycle(data, gid, sid, uid):
         return resultWrapper('error', {}, 'Add current session to cycle failed!')
     return resultWrapper('ok', {'cid': cycle.cid}, '')
 
+def sessionUploadLog(data, sid):
+    """
+    params, data: file object of the log uploaded
+    return, data: {}
+    """
+    filedata, content_type, filename = data.get('file'), data.get('type', 'application/zip'), data.get('filename')
+    fileurl = saveFile(filedata, content_type, filename)
+    try:
+        Sessions.objects(sid=sid).update(push__logs={'url': fileurl, 'filename': filename})
+    except OperationError:
+        Sessions.objects(sid=sid).update(push__logs={'url': fileurl, 'filename': filename})
+    return resultWrapper('ok', {'fileid': fileurl}, '')
+
 def sessionUploadXML(data, sid):
     """
-    params, data: stream data of xml uploaded
+    params, data: file object of the xml uploaded
     return, data: {}
     """    
     try:
@@ -112,7 +126,7 @@ def sessionUploadXML(data, sid):
     #Parse the xml file to get case result data then save into database one by one.
     summarys, domains = [], []
     try:
-        tree = ET.parse(data).getroot().iter('testcase')
+        tree = ET.parse(data.file).getroot().iter('testcase')
     except Exception:
         return resultWrapper('error', {}, 'Invalid result file!')
     failList = []
@@ -265,3 +279,15 @@ def sessionGetHistoryCases(data, gid, sid):
                        'comments': comments})
         #traceinfo can also be returned here.
     return resultWrapper('ok', {'cases': result, 'totalpage': totalpageamount}, '')
+
+def sessionGetLogsUrl(data, gid, sid):
+    """
+    params, data:{}
+    return, data:[{'filename': (string)value, 'url': (string)value},...]
+    """
+    session = Sessions.objects(sid=sid).only('logs').first()
+    if not session:
+        return resultWrapper('error', {}, 'Invalid session ID!')
+    if not session.logs:
+        return resultWrapper('error', {}, 'Log does not exist!')
+    return resultWrapper('ok', session.logs, '')
