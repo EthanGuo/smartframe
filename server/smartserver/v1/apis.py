@@ -274,7 +274,9 @@ def doUploadSessionResult(sid):
     @return: ok-{'result':'ok', 'data':{}, 'msg': ''}
              error-{'result':'error', 'data':{}, 'msg': '(string)info'}
     ----------------------------------------------------------------------------------------
-    |subc        |data                   
+    |subc            |data
+    |"" or uploadXML | file object of result xml
+    |uploadLog       | file object of session log(zip)
     -----------------------------------------------------------------------------------------
     """
     subc = request.params.get('subc', 'uploadXML')
