@@ -37,11 +37,9 @@
 					<td style='word-break:break-all;'>{{session.deviceinfo.product}}</td>
 					<td style='word-break:break-all;'>{{session.tester}}</td>
 					<td>{{session.endtid || "NA"}}</td>
-					<td><div style="position:absolute"><a ng-click='showLogs()' href=''>Logs</a>
+					<td><div style="position:absolute"><a ng-click='showLogs()' href=''>Logs</a><!----> 
 <div id="arrow_down" style="display:none;width:0px;height:0px;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:10px solid silver;"</div>
-<div id='sessionlogs' style="display:none;position:absolute;z-index:1000;background-color:white;border:2px solid silver;border-radius:10px;left:-600px;top:30px;width:820px;padding-bottom:20px;">
-	   <!-- <div style="float:left;width:120px;">log1</div><div style="float:left;width:120px;">log2</div><div style="float:left;width:120px;">log3</div>
-            <div style="float:left;width:120px;">log4</div><div style="float:left;width:120px;">log5</div><div style="float:left;width:120px;">log6</div>		-->
+<div id='sessionlogs' style="display:none;position:absolute;z-index:1000;background-color:white;border:2px solid silver;border-radius:10px;left:-{{maxwidth*2/3}}px;top:30px;width:{{maxwidth}}px;padding-bottom:20px;">
 	<div style="height:30px;width:100%">
 	    <span style="float:left;margin-left:10px;margin-top:10px;font-size:20px">All Session Logs</span>
 	    <img ng-click="hideLogs()" style="float:right;margin-right:20px;margin-top:5px;width:20px;height:20px;cursor:pointer" src='img/no.png'>
@@ -122,17 +120,7 @@
 		</table>
 	</div>
 </div>
-<!--        <div class='group_members' style='float:left;width:224px;margin-left:40px;margin-top:40px;' >
-              <dl style=''>
-		<dt><h3>Members</h3></dt>
-		<dd ng-repeat="member in members">
-			<img style='width:30px;height:30px;margin-bottom:5px;' ng-src='{{member.avatar.url}}'>
-			<span>{{member.username}}</span>
-            <button ng-click='delMember("{{member.username}}")' class='btn btn-mini btn-link'>del</button>
-		</dd>
-	</dl>
-	</div>
--->
+
 <script type='text/ng-template' id='comments.html'>
 	<div class='modal-header'>
 	   <h3> Add your comments</h3>

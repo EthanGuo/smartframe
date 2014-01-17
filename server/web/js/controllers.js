@@ -3,7 +3,7 @@
 /* Controllers */
 
 var smartControllers = angular.module('smartControllers', []);
-var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
+var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapid";
 //Controller for index
 
 smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
@@ -394,28 +394,6 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
           
     });
 
-    /* $http.get(apiBaseURL+'/group/'+groupid+'?subc=sessions&product='+product+'&appid=02&token='+$.cookie('ticket'))
-      .success(function(ret){
-        if(ret.result == 'ok'){
-          $scope.sessions = ret.data.sessions;
-          $.each($scope.sessions, function(i, o){
-	     if(o.cid == '' || o.cid == undefined){
-		o.sortcid = "-1";
-	     }else{
-                o.sortcid = o.cid;
-	     }
-	     if(o.endtime == '' || o.endtime == undefined){
-		o.sorttime = "2200-01-01 00:00:00";	
-	     }else{
-	        o.sorttime = o.endtime;
-	     }
-          });
-        }else{
-          alert(ret.msg);
-        }
-        
-    });*/
-
 $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticket'))
        .success(function(ret){
           if(ret.result == 'ok'){
@@ -712,18 +690,7 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       if(groupid == undefined || sessionid == undefined){
         return;
       } 
-     $http.get(apiBaseURL+'/group/'+groupid+'?subc=members&appid=02&token='+$.cookie('ticket'))
-      .success(function(ret){
-        $scope.members = ret.data.members;
-          $.each($scope.members, function(i, o){
-            if(o.avatar.url){
-               o.avatar.url = apiBaseURL + o.avatar.url;
-            }else{
-               o.avatar.url = "http://storage.aliyun.com/wutong-data/system/1_S.jpg";
-            }
-          });
-    });
-     $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=summary&appid=02&token='+$.cookie('ticket'))
+    $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=summary&appid=02&token='+$.cookie('ticket'))
     .success(function(ret){
       $scope.session = ret.data;
       $scope.deviceinfo = ret.data.deviceinfo;
@@ -1084,19 +1051,27 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 	    }
 	});
     }
-    $scope.showLogs = function(){
-        $http.get(apiBaseURL+"/group/"+groupid+"/session/"+sessionid+"?subc=logs&token="+$.cookie('ticket'))
-            .success(function(ret){
-	        if(ret.result == 'ok'){
-		    $scope.sessionlogs = ret.data;
-		    $("#arrow_down").slideToggle();
-		    $("#sessionlogs").slideToggle();
-		}else{
-		    alert(ret.msg);
-		}	
-        });
+    $scope.maxwidth = 820;
+    $http.get(apiBaseURL+"/group/"+groupid+"/session/"+sessionid+"?subc=logs&token="+$.cookie('ticket'))
+    .success(function(ret){
+        if(ret.result == 'ok'){
+	    $scope.sessionlogs = ret.data;
+	    if($scope.sessionlogs.length == 1){
+		$scope.maxwidth = $scope.maxwidth / 3.0;
+	    }else if($scope.sessionlogs.length == 2){
+		$scope.maxwidth = $scope.maxwidth /1.5;	
+	    }
+	
+	}else{
+	    alert(ret.msg);
+	}	
+    });
 
+    $scope.showLogs = function(){
+	$("#arrow_down").toggle();
+	$("#sessionlogs").toggle();
     }
+
     $scope.hideLogs = function(){
 	$("#arrow_down").slideToggle();
         $("#sessionlogs").slideToggle();
@@ -1180,22 +1155,6 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
 	window.location = '#/smartserver/login';
       });
     }
-    /*$http.get(apiBaseURL+'/group/'+groupid+'?subc=members&appid=02&token='+$.cookie('ticket'))
-      .success(function(ret){
-        if(ret.result == 'ok'){
-          $scope.members = ret.data.members; 
-          $.each($scope.members, function(i, o){
-        	  if(o.avatar.url){
-        	    o.avatar.url = apiBaseURL + o.avatar.url;
-            }else{
-        	    o.avatar.url = "http://storage.aliyun.com/wutong-data/system/1_S.jpg";
-            }
-          });
-        }else{
-          alert(ret.msg);
-        }
-    });*/
-
     $scope.delMember = function(username){
       var r = window.confirm("Are you sure to delete?");
       if(r){   
