@@ -1,15 +1,15 @@
 <img id='loading' style='display:none;position:fixed;left:50%;top:50%;margin-top:-64px;margin-left:-64px;' src='img/loading.gif'>
 <div class='session_head'>
-        <div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
+        <div style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
                 <a href="#/smartserver/group/{{groupid}}/product/{{product}}"><b style='float:left;color:white;margin-top:8px;margin-left:10px;'>Back</b></a>
                 <button type="button" style='float:right;color:white;margin-right:10px; margin-top:3px' ng-click="signout()" class="btn btn-link">Sign Out</button>
        </div>
 
 </div>
-<div class='session_content' style='width:976px;float:left;margin-left:40px;margin-top:40px;'>
+<div class='session_content' style='width:1200px;float:left;margin-left:40px;margin-top:40px;'>
 
 	<div class='session'>
-		<table class='table table-striped table-hover'>
+		<table class='table'>
 			<thead>
 				<tr>
 					<th>Planname</th>
@@ -20,6 +20,7 @@
 					<th>Product</th>
 					<th>Tester</th>
 					<th>EndTid</th>
+					<th>Logs</th>
 					<th>Total</th>
 					<th>Pass</th>
 					<th>Fail</th>
@@ -36,6 +37,19 @@
 					<td style='word-break:break-all;'>{{session.deviceinfo.product}}</td>
 					<td style='word-break:break-all;'>{{session.tester}}</td>
 					<td>{{session.endtid || "NA"}}</td>
+					<td><div style="position:absolute"><a ng-click='showLogs()' href=''>Logs</a>
+<div id="arrow_down" style="display:none;width:0px;height:0px;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:10px solid silver;"</div>
+<div id='sessionlogs' style="display:none;position:absolute;z-index:1000;background-color:white;border:2px solid silver;border-radius:10px;left:-600px;top:30px;width:820px;padding-bottom:20px;">
+	   <!-- <div style="float:left;width:120px;">log1</div><div style="float:left;width:120px;">log2</div><div style="float:left;width:120px;">log3</div>
+            <div style="float:left;width:120px;">log4</div><div style="float:left;width:120px;">log5</div><div style="float:left;width:120px;">log6</div>		-->
+	<div style="height:30px;width:100%">
+	    <span style="float:left;margin-left:10px;margin-top:10px;font-size:20px">All Session Logs</span>
+	    <img ng-click="hideLogs()" style="float:right;margin-right:20px;margin-top:5px;width:20px;height:20px;cursor:pointer" src='img/no.png'>
+        </div>
+	<hr style="padding:0;margin-top:5px;">
+	<div style='float:left;margin-left:10px;width:260px' ng-repeat="log in sessionlogs"><a href="{{baseurl}}{{log.url}}">{{log.filename}}</a></div>
+</div></div>
+					</td>
 					<td><a href='' ng-click="getCases('total')">{{session.summary.total}}</a></td>
 					<td><a href='' ng-click="getCases('pass')">{{session.summary.pass}}</a></td>
 					<td><a href='' ng-click="getCases('fail')">{{session.summary.fail}}</a></td>
@@ -44,6 +58,7 @@
 			</tbody>
 		</table>
 	</div>
+
 	<div class="pagination pagination-centered">
 		<ul>
 			<li ng-click='prepage()'><a href="">&laquo;</a></li>
@@ -107,7 +122,7 @@
 		</table>
 	</div>
 </div>
-        <div class='group_members' style='float:left;width:224px;margin-left:40px;margin-top:40px;' >
+<!--        <div class='group_members' style='float:left;width:224px;margin-left:40px;margin-top:40px;' >
               <dl style=''>
 		<dt><h3>Members</h3></dt>
 		<dd ng-repeat="member in members">
@@ -117,7 +132,7 @@
 		</dd>
 	</dl>
 	</div>
-
+-->
 <script type='text/ng-template' id='comments.html'>
 	<div class='modal-header'>
 	   <h3> Add your comments</h3>

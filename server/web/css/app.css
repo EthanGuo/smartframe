@@ -64,8 +64,7 @@ margin:auto;
 background-color:#f5f5f5;
 cursor:pointer;
 }
-.tripe{
-background-color:#f9f9f9;
+.tripe{ background-color:#f9f9f9;
 }
 
 .fixhead{
@@ -95,4 +94,11 @@ background-color:#EFF5FB;
 }
 .firstnc{
 background-color:#EFFBF2;
+}
+
+#devices th{
+cursor:pointer;
+}
+#cycles th{
+cursor:pointer;
 }

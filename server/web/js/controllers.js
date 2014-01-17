@@ -503,6 +503,7 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
 	     }else{
 	        o.sorttime = o.endtime;
 	     }
+	        $scope.orderparam = ['-sortcid','-sorttime'];
           });
             }else{
               alert(ret.msg);
@@ -515,6 +516,7 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
           .success(function(ret){
              if(ret.result == 'ok'){
                $scope.cycles = ret.data.cycles;
+	       $scope.cyclesort = "cid";
              }else{
                alert(ret.msg);
              }
@@ -522,6 +524,7 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
       }
     });
 
+	       $scope.cyclesort = "cid";
     $scope.newcycle = function(session){
   	   var index;
        $.each($scope.sessions, function(i, o){
@@ -538,7 +541,7 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
                 .success(function(ret1){
                    if(ret1.result == 'ok'){
                         $scope.cycles = ret1.data.cycles;
-                   }else{
+		   }else{
                         alert(ret1.msg);
                    }});
 
@@ -629,6 +632,51 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
     }
     $scope.report = function(cid, product){
 	     window.location = '#/smartserver/group/'+groupid+'/product/'+product+'/cycle/'+cid;
+    }
+
+    $scope.sortParams = ['sortcid','revision','starttime','endtime','IMEI','product'];
+    $scope.sortCycles = ['cid','revision','livecount','devicecount'];
+    $scope.setSort = function(sortparam){
+
+	if($scope.orderparam === sortparam){
+	    $scope.orderparam = '-'+sortparam;
+            $("#"+sortparam).attr('src','img/down.jpg');
+	}else if($scope.orderparam === ('-'+sortparam)){
+	    $scope.orderparam = sortparam;
+	    $("#"+sortparam).attr('src','img/up.jpg');
+	}else{
+	    $scope.orderparam = sortparam;
+            $("#"+sortparam).attr('src','img/up.jpg');
+	}	
+		
+	$.each($scope.sortParams, function(i, o){
+	    if(sortparam == o){
+		$("#"+o).show();
+	    }else{
+	        $("#"+o).hide();
+	    }
+	});
+	
+    }
+    $scope.setCycleSort = function(sortparam){
+	if($scope.cyclesort == sortparam){
+	    $scope.cyclesort = '-'+sortparam;
+            $("."+sortparam).attr('src','img/down.jpg');
+	}else if($scope.cyclesort == ('-'+sortparam)){
+	    $scope.cyclesort = sortparam;
+	    $("."+sortparam).attr('src','img/up.jpg');
+	}else{
+	    $scope.cyclesort = sortparam;
+            $("."+sortparam).attr('src','img/up.jpg');
+	}	
+		
+	$.each($scope.sortCycles, function(i, o){
+	    if(sortparam == o){
+		$("."+o).show();
+	    }else{
+	        $("."+o).hide();
+	    }
+	});
     } 
 }]);
 
@@ -681,7 +729,6 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       $scope.deviceinfo = ret.data.deviceinfo;
       $scope.session.runtime = setruntime($scope.session.runtime);
     });
-
       $scope.getCases = function(casetype){
 	$scope.casetype  = casetype;
       	$http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket')+'&casetype='+casetype)
@@ -1037,7 +1084,23 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 	    }
 	});
     }
-     
+    $scope.showLogs = function(){
+        $http.get(apiBaseURL+"/group/"+groupid+"/session/"+sessionid+"?subc=logs&token="+$.cookie('ticket'))
+            .success(function(ret){
+	        if(ret.result == 'ok'){
+		    $scope.sessionlogs = ret.data;
+		    $("#arrow_down").slideToggle();
+		    $("#sessionlogs").slideToggle();
+		}else{
+		    alert(ret.msg);
+		}	
+        });
+
+    }
+    $scope.hideLogs = function(){
+	$("#arrow_down").slideToggle();
+        $("#sessionlogs").slideToggle();
+    } 
  }]);
 
 //Controller for report

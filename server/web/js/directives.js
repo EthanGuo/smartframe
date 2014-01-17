@@ -52,7 +52,7 @@ smartDirectives.directive('fixhead', function($window){
 		   $(elem).css('position','fixed');
 		   $(elem).css('top','0');
 		   $(elem).css('left','40px');
-		   $(elem).css('width','975px');
+		   $(elem).css('width','1200px');
 		   $(elem).css('border-bottom','1px solid #DDDDDD');
 		}else{
 		   $(elem).css('display','none');
