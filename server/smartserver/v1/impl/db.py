@@ -30,7 +30,7 @@ class Users(Document):
     uid = SequenceField()
     appid = StringField()
     avatar = DictField()
-    active = BooleanField(default=False)
+    active = BooleanField(default=True)
     adminU = BooleanField(default=False)
 
     meta = {'collection': 'Users',

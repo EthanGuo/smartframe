@@ -51,7 +51,8 @@ smartDirectives.directive('fixhead', function($window){
 		   $(elem).css('background-color','#f9f9f9');
 		   $(elem).css('position','fixed');
 		   $(elem).css('top','0');
-		   $(elem).css('left','40px');
+		   $(elem).css('left','50%');
+		   $(elem).css('margin-left','-594px');
 		   $(elem).css('width','1200px');
 		   $(elem).css('border-bottom','1px solid #DDDDDD');
 		}else{

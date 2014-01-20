@@ -3,7 +3,7 @@
 /* Controllers */
 
 var smartControllers = angular.module('smartControllers', []);
-var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
+var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapid";
 //Controller for index
 
 smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
@@ -1063,11 +1063,15 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 	    }
 	
 	}else{
-	    alert(ret.msg);
+	   $scope.logsFlag = false; 
 	}	
     });
 
     $scope.showLogs = function(){
+	if(!$scope.logsFlag){
+	    alert("Log does not exist!");
+	    return;
+	}
 	$("#arrow_down").toggle();
 	$("#sessionlogs").toggle();
     }
