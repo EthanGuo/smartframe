@@ -59,12 +59,12 @@
 
 	<div class="pagination pagination-centered">
 		<ul>
-			<li ng-click='prepage()'><a href="">&laquo;</a></li>
+			<li ng-click='prepage()' ng-class='{active:(currentPageNum==1)}'><a href="">&laquo;</a></li>
 			<li ng-click="pagenationTo({{page}})" ng-class='{active:(page.pagenumber + buffer)==pageindex}' ng-repeat="page in totalpage"><a href="">{{page.pagenumber + buffer}}</a></li>
-			<li ng-click='nextpage()'><a href="">&raquo;</a></li>
+			<li ng-click='nextpage()' ng-class='{active:(currentPageNum == numOfPage)}'><a href="">&raquo;</a></li>
 		</ul>		
 	</div>
-	<div class='cases ' >
+	<div class='cases' >
 		<table class='table table-striped table-hover'>
 			<thead fixHead style='display:none'>
 				<th><input ng-model='master' ng-click="setAllTids()" type="checkbox"></th>

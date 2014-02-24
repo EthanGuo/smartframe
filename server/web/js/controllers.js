@@ -3,7 +3,7 @@
 /* Controllers */
 
 var smartControllers = angular.module('smartControllers', []);
-var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapid";
+var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
 //Controller for index
 
 smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
@@ -672,6 +672,7 @@ function checkEndtid(endtid, tids){
     return flag;
 
 }
+
 smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope', '$http', '$routeParams', '$timeout',
   function(dialogService, $modal, $scope, $http, $routeParams, $timeout) {
      if(!$.cookie('ticket')){
@@ -681,7 +682,12 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       var sessionid = $routeParams.sessionid;
       var product = $routeParams.product;
       var total;
+      var maxsize = 20;
+      //var numOfPage = 0;
+      //var currentPageNum = 1;
       var tids = [];
+      $scope.numOfPage = 0;
+      $scope.currentPageNum = 1;
       $scope.baseurl = apiBaseURL;
       $scope.buffer = 0;
       $scope.casetype = 'total';
@@ -704,13 +710,18 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 	    $scope.pageindex = 1;
             $scope.cases = ret.data.cases;
       	    total = ret.data.totalpage;
+            if(total % maxsize == 0){
+              $scope.numOfPage = total/maxsize;
+            }else{
+              $scope.numOfPage = parseInt(total/maxsize+1);
+            }
       	    $scope.totalpage=[];
-      	    if(total <= 10){
+      	    if(total <= maxsize){
       	      for(var i=1;i<=total;i++){
       	        $scope.totalpage.push({'pagenumber':i});
       	      }
       	    }else{
-      	       for(var j=1;j<=10;j++){
+      	       for(var j=1;j<=maxsize;j++){
       	         $scope.totalpage.push({'pagenumber':j});
       	       }
       	    }
@@ -721,13 +732,18 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       .success(function(ret){
        $scope.cases = ret.data.cases; 
        total = ret.data.totalpage;
+        if(total % maxsize == 0){
+              $scope.numOfPage = total/maxsize;
+        }else{
+              $scope.numOfPage = parseInt(total/maxsize+1);
+        }
        $scope.totalpage=[];
-       if(total <= 10){
+       if(total <= maxsize){
          for(var i=1;i<=total;i++){
           $scope.totalpage.push({'pagenumber':i});
          }      
        }else{
-         for(var j=1;j<=10;j++){
+         for(var j=1;j<=maxsize;j++){
           $scope.totalpage.push({'pagenumber':j});
          }
        }
@@ -760,22 +776,37 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
     }
 
     $scope.prepage = function(){
-      if(total <= 10){
-         if($scope.pageindex > 1){
-              $scope.pageindex = $scope.pageindex -1;
-         }else{
-	   	        return;
-        }
+      if($scope.numOfPage <= 1){
+        return;
       }else{
-         if($scope.pageindex > 1){
-            if($scope.buffer > 0){
-              $scope.buffer = $scope.buffer -1;
-            }
-            $scope.pageindex = $scope.pageindex -1;
-         }else{
-            return;
-         }  
-      } 
+        if($scope.currentPageNum <= 1){
+          return;
+        }else{
+          $scope.currentPageNum--;
+	  $scope.totalpage=[];
+          $scope.pageindex = ($scope.currentPageNum-1)*maxsize+1;
+          for(var j=$scope.pageindex;j<=$scope.currentPageNum*maxsize;j++){
+                 $scope.totalpage.push({'pagenumber':j});
+               }
+        }
+      }
+      
+      // if(total <= 10){
+      //    if($scope.pageindex > 1){
+      //         $scope.pageindex = $scope.pageindex -1;
+      //    }else{
+	   	 //        return;
+      //   }
+      // }else{
+      //    if($scope.pageindex > 1){
+      //       if($scope.buffer > 0){
+      //         $scope.buffer = $scope.buffer -1;
+      //       }
+      //       $scope.pageindex = $scope.pageindex -1;
+      //    }else{
+      //       return;
+      //    }  
+      // } 
 
       $scope.selected = {};     
       $scope.master = false;
@@ -788,26 +819,46 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
     }
 
     $scope.nextpage = function(){
-          if(total <= 10){
-              if($scope.pageindex < total){
-                 $scope.pageindex = $scope.pageindex + 1;
-              }else{
-	         return;
-              }
+      if($scope.numOfPage <= 1){
+        return;
+      }else{
+        if($scope.currentPageNum >= $scope.numOfPage){
+          return;
+        }else{
+          $scope.currentPageNum++;
+          $scope.totalpage=[];
+          $scope.pageindex = ($scope.currentPageNum-1)*maxsize+1;
+          if($scope.currentPageNum == $scope.numOfPage){
+            for(var n=$scope.pageindex;n<=total;n++){
+                $scope.totalpage.push({'pagenumber':n});
+            }
           }else{
-              if($scope.pageindex >= 10){
-                  if($scope.pageindex < total){
-                      if($scope.buffer < (total-10)){
-                          $scope.buffer = $scope.buffer + 1; 
-                      }
-                      $scope.pageindex = $scope.pageindex + 1;
-                  }else{
-		    			       	return;
-		               }
-              }else{
-                  $scope.pageindex = $scope.pageindex + 1;
-              }   
+            for(var j=$scope.pageindex;j<=$scope.currentPageNum*maxsize;j++){
+                 $scope.totalpage.push({'pagenumber':j});
+            }
           }
+        }
+      }
+          // if(total <= 10){
+          //     if($scope.pageindex < total){
+          //        $scope.pageindex = $scope.pageindex + 1;
+          //     }else{
+	         // return;
+          //     }
+          // }else{
+          //     if($scope.pageindex >= 10){
+          //         if($scope.pageindex < total){
+          //             if($scope.buffer < (total-10)){
+          //                 $scope.buffer = $scope.buffer + 1; 
+          //             }
+          //             $scope.pageindex = $scope.pageindex + 1;
+          //         }else{
+		    			 //       	return;
+		        //        }
+          //     }else{
+          //         $scope.pageindex = $scope.pageindex + 1;
+          //     }   
+          // }
 	     $scope.selected = {};
        $scope.master = false;
        $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&pagenumber='+$scope.pageindex+'&token='+$.cookie('ticket')+'&casetype='+$scope.casetype)
