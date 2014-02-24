@@ -60,7 +60,7 @@
 	<div class="pagination pagination-centered">
 		<ul>
 			<li ng-click='prepage()' ng-class='{active:(currentPageNum==1)}'><a href="">&laquo;</a></li>
-			<li ng-click="pagenationTo({{page}})" ng-class='{active:(page.pagenumber + buffer)==pageindex}' ng-repeat="page in totalpage"><a href="">{{page.pagenumber + buffer}}</a></li>
+			<li ng-click="pagenationTo(page)" ng-class='{active:(page.pagenumber + buffer)==pageindex}' ng-repeat="page in totalpage"><a href="">{{page.pagenumber + buffer}}</a></li>
 			<li ng-click='nextpage()' ng-class='{active:(currentPageNum == numOfPage)}'><a href="">&raquo;</a></li>
 		</ul>		
 	</div>
