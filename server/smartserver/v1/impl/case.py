@@ -74,9 +74,16 @@ def __updateCaseComments(data, sid):
     else:
         return resultWrapper('error',{}, 'Comments can not be empty!')
 
+def __caseresultInsert(data, sid):
+    """
+    This method will be used to insert a case result into database directly for the realtime upload request from Intel.
+    """
+    pass
+
 def __updateCaseResult(data, sid):
     case = Cases.objects(sid=sid, tid=data['tid']).only('result', 'comments').first()
     if not case:
+        __caseresultInsert()
         return resultWrapper('error', {}, 'Invalid case ID!')
     orgresult = case.result
     if case.comments and case.comments.caseresult:
