@@ -95,7 +95,7 @@ def __caseresultInsert(data, sid):
 def __updateCaseResult(data, sid):
     case = Cases.objects(sid=sid, tid=data['tid']).only('result', 'comments').first()
     if not case:
-        __caseresultInsert()
+        __caseresultInsert(data, sid)
     orgresult = case.result
     if case.comments and case.comments.caseresult:
         orgcommentresult = case.comments.caseresult
