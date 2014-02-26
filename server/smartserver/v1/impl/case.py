@@ -77,14 +77,25 @@ def __updateCaseComments(data, sid):
 def __caseresultInsert(data, sid):
     """
     This method will be used to insert a case result into database directly for the realtime upload request from Intel.
+    data: {'tid':(int), 'casename':(string), 'starttime':(string), 'result':['Pass'/'Fail'/'Error/BLOCK'],'endtime':(string)endtime, 'traceinfo':(string)traceinfo}
     """
-    pass
+    starttime = convertTime(data.get('starttime'))
+    endtime = convertTime(data.get('time'))
+    orgresult, orgcommentresult = 'running', ''
+    caseInst = Cases(sid=sid, tid=data.get('tid'), casename=data.get('casename'), starttime=starttime, endtime=endtime, result=data.get('result').lower(), traceinfo=data.get('traceinfo', ''))
+    try:
+        caseInst.save()
+    except OperationError:
+        caseInst.save()
+    ws_update_session_sessionsummary.delay(sid, [[data['result'].lower(), orgresult]])
+    ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
+    ws_active_testsession.delay(sid)
+    return resultWrapper('ok', {}, '')
 
 def __updateCaseResult(data, sid):
     case = Cases.objects(sid=sid, tid=data['tid']).only('result', 'comments').first()
     if not case:
         __caseresultInsert()
-        return resultWrapper('error', {}, 'Invalid case ID!')
     orgresult = case.result
     if case.comments and case.comments.caseresult:
         orgcommentresult = case.comments.caseresult
