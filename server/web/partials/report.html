@@ -7,7 +7,7 @@
 </div>
 <div class='' style='width:1200px;float:left;margin-left:40px;margin-top:40px;' >
 
-<h2>Cycle : {{cid}}</h2>
+<h2>Report : {{cid}}</h2>
 <div style='margin-bottom:4px;'>
 <a ng-click='toggleInfo()' href=''>Tap here to get more information</a>
 <article id="article" class="show-content" style="background-color: #f9f9f9; display: block;display:none">
@@ -26,7 +26,7 @@
 
 	<table class='table table-striped table-hover table-bordered'>
 		<thead><tr> <th>Product</th>
-			<th>Revision</th>
+			<th>Build ID</th>
 			<th>Devices</th>
 			<th>Total Failures</th>
 			<th>Total Uptime</th>
@@ -62,15 +62,14 @@
 <div class=''style='width:1200px;float:left;margin-left:40px;margin-top:5px;'>
 	<table class='table table-hover table-bordered'>
 		<thead>
-			<th>IMEI</th>
+			<th>Device ID</th>
 			<th style="width:80px;max-width:80px">Start Time</th>
 			<th style="width:80px;max-width:80px">End Time</th>
 			<th style="width:100px;max-width:100px">Uptime</th>
 			<th>Failures</th>
-			<th>First Failure</th>
-			<th>First Failure Uptime</th>
-			<th>First Failure Issue</th>
-			<th>First Failure Case</th>
+			<th>Failure Uptime</th>
+			<th>Failure Issue</th>
+			<th>Failure Case</th>
 			<!--<th style='background-color:#EFF5FB'>First Critical Failure Uptime</th>
 			<th style='background-color:#EFF5FB'>First Critical Failure Issue</th>
 			<th style='background-color:#EFF5FB'>First Critical Failure case</th>
@@ -92,8 +91,7 @@
 				<td rowspan="2" style="width:80px;max-width:80px">{{session.content.endtime}}</td>
 				<td rowspan="2">{{session.content.uptime}}</td>
 				<td rowspan='2'>{{session.content.failurecount}}</td>
-				<td class='firstc' style='width:100px;max-width:100px'>First Critical Failure:</td>
-				<td class='firstc'>{{session.content.firstCuptime}}</td>
+				<td class='firstc'>First Critical Failure: {{session.content.firstCuptime}}</td>
 				<td class='firstc'>{{session.content.firstC[0].issueType}}<br>{{session.content.firstC[0].comments}}</td>
 				<td class='firstc'>{{session.content.firstC[0].casename}}</td>
 			
@@ -101,8 +99,7 @@
 				
 			</tr>
 			<tr>
-				<td class='firstnc' style='width:100px;max-width:100px'>First None Critical Failure:</td>	
-				<td class='firstnc'>{{session.content.firstuptime}}</td>
+				<td class='firstnc'>First None-Critical Failure: {{session.content.firstuptime}}</td>
 				<td class='firstnc'>{{session.content.firstNC[0].issueType}}<br>{{session.content.firstNC[0].comments}}</td>
 				<td class='firstnc'>{{session.content.firstNC[0].casename}}</td>
 			</tr>
@@ -171,7 +168,7 @@
 			<th>Pass</th>
 			<th>Fail</th>
 			<th>Block</th>
-			<th>Success Rate</th>
+			<th>Pass Rate</th>
 		</thead>
 		<tbody ng-repeat='domain in domains'>
 			<tr>
@@ -192,7 +189,7 @@
 				<th>Pass</th>
 				<th>Fail</th>
 				<th>Block</th>
-				<th>Success Rate</th>
+				<th>Pass Rate</th>
 			</tr>
 			<tr ng-show="activePosition1[$parent.$index]" ng-repeat='case in domain.cases'>
 				<td></td>
