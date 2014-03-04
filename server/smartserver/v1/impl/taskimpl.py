@@ -6,6 +6,8 @@ from filedealer import deleteFile
 from util import resultWrapper
 import json, time
 from datetime import datetime
+from mongoengine.context_managers import switch_db
+from ..config import FILE_DB_NAME
 
 def sessionCreateEndDomainSummary(sid, endtid):
     """
@@ -212,7 +214,8 @@ def groupRemoveAll(gid):
 def _dirtyFileRemoveAll():
     #Remove dirty records in Files.
     casefileids, avatarids = set(), set()
-    fileids = set(Files.objects().distinct('fileid'))
+    with switch_db(Files, FILE_DB_NAME) as File:
+        fileids = set(File.objects().distinct('fileid'))
     for case in Cases.objects(result='fail'):
         if case.log:
             casefileids.add(_getID(case.log))
