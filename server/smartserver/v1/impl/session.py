@@ -150,7 +150,16 @@ def sessionUploadXML(data, sid):
             summarys.append([result, 'running'])
             domains.append([int(caseId), result, ''])
         except OperationError:
-            return resultWrapper('error', {}, 'Create case failed!')
+            print "Create case failed for the first time, going to try again."
+            caseInst = Cases().from_json(json.dumps({'sid': sid, 'tid': int(caseId),
+                                                     'casename': casename,'result': result,
+                                                     'starttime': starttime, 'endtime': endtime,}))
+            caseInst.save()
+            summarys.append([result, 'running'])
+            domains.append([int(caseId), result, ''])
+        except Exception, e:
+            print e
+            continue
     #update session summary here.
     ws_update_session_sessionsummary.delay(sid, summarys)
     #Trigger task to update domain summary here.
