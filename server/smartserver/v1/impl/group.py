@@ -146,7 +146,7 @@ def groupGetSessions(data, gid, uid):
         cycle = Cycles.objects(sids=session.sid).only('cid').first()
         cid = cycle.cid if cycle else ''
         if revision not in sessions.keys():
-            sessions[revision] = {'cid': cid, 'revision': revision, 
+            sessions[revision] = {'cid': cid, 'revision': revision, 'product': product,
                                   'livecount': 0, 'devicecount': 1, 
                                   'sessions': [{'gid': gid, 'product': product, 'revision': revision, 'IMEI': deviceid,
                                                 'sid': session.sid, 'cid': cid, 'tester': tester,
@@ -155,6 +155,8 @@ def groupGetSessions(data, gid, uid):
         else:
             if not sessions[revision]['cid']:
                 sessions[revision]['cid'] = cid
+            if not sessions[revision]['product']:
+                sessions[revision]['product'] = product
             sessions[revision]['devicecount'] += 1
             sessions[revision]['sessions'].append({'gid': gid, 'product': product, 'revision': revision, 'IMEI': deviceid,
                                                    'sid': session.sid, 'cid': cid, 'tester': tester,
