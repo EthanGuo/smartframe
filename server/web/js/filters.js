@@ -61,9 +61,9 @@ smartFilters.filter('endsession', function(){
 smartFilters.filter("status", function(){
     return function(input){
 	if(input){
-	   return "finished";
+	   return "Finished";
 	}else{
-	   return "running";
+	   return "Running";
 	}
     }
 });

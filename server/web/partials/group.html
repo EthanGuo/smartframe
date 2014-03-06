@@ -11,7 +11,7 @@ width:1200px;float:left;margin-bottom:10px;
 }
 .test_h span{
 float:left;
-width:199px;
+width:171px;
 display:block;
 font-size:16px;
 font-weight:bold;
@@ -25,7 +25,7 @@ width:1200px;float:left;border-top:1px solid #CCC;border-bottom:1px solid #ccc;
 .test_b span{
 line-height:36px;
 float:left;
-width:199px;
+width:171px;
 display:block;
 height:36px;
 }
@@ -137,6 +137,7 @@ box-shadow: 5px 5px 3px #888888;
 			<span>Build</span>
 			<span>Live Devices</span>
 			<span>All Devices</span>
+			<span>Product</span>
 			<span>Status</span>
 			<span>Report</span>
 			</div>
@@ -145,6 +146,7 @@ box-shadow: 5px 5px 3px #888888;
 			<span><a ng-click="showAndHide($index)" href="">{{cycle.revision}}</a></span>
 			<span>{{cycle.livecount}}</span>
 			<span>{{cycle.devicecount}}</span>
+			<span>{{cycle.product}}</span>
 			<span>{{cycle.livecount == 0 | status}}</span>
 		<span><img ng-click='report(cycle.cid,cycle.product)' src="img/summary_s.png" width="20" height="20" style="cursor:pointer"></span>
 <table class='table table-hover table-bordered' style="width:1150px;margin-left:25px;display:none;background:white">
@@ -154,7 +156,6 @@ box-shadow: 5px 5px 3px #888888;
 		<th>Starttime </th>
 		<th>Endtime</th>
 		<th>Device ID </th>
-		<th>Product</th>
 		<th>Tester</th>
         	<th>Detail</th>
 		<th>Edit</th>
@@ -162,9 +163,12 @@ box-shadow: 5px 5px 3px #888888;
 	<tbody>
 	<tr ng-repeat="session in cycle.sessions" ng-switch on='cycle.cid'>
 		<td>
-		<div>
-		<img style="width:12px;height:12px;" src='img/check.png'>
-		</div>
+		    <div ng-hide="session.endtime" style="height:14px;width:14px">
+			<img src='img/arrow_up.png'>
+		    </div>
+		    <div ng-show="session.endtime" style="height:12px;width:12px">
+			<img src='img/check.png'>
+		    </div>
 		</td>	
 		<td>
 		    <div class="btn-group">
@@ -181,10 +185,9 @@ box-shadow: 5px 5px 3px #888888;
 	<td>{{session.starttime || "NA"}}</td>
 	<td>{{session.endtime || "NA"}}</td>
 	<td>{{session.IMEI || "NA"}}</td>
-	<td>{{session.product || "NA"}}</td>
-        <td>tester</td>
-  	<td><a href="#/smartserver/group/{{session.gid}}/product/{{session.product}}/{{session.sid}}">detail</a></td>
-	<td><a ng-click="delSession(session.sid)">delete</a></td>
+        <td>{{session.tester || "NA"}}</td>
+  	<td><a href="#/smartserver/group/{{session.gid}}/product/{{session.product}}/{{session.sid}}"><img width="20" height="20" src="img/detail.png"></a></td>
+	<td><a ng-click="delSession(session.sid)" href=""><img width="20" height="20" src="img/delete.png"></a></td>
         </tr>
 	</tbody>
 </table>
