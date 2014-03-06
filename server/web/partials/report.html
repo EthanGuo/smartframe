@@ -26,7 +26,7 @@
 
 	<table class='table table-striped table-hover table-bordered'>
 		<thead><tr> <th>Product</th>
-			<th>Build ID</th>
+			<th>Build</th>
 			<th>Devices</th>
 			<th>Total Failures</th>
 			<th>Total Uptime</th>
@@ -44,7 +44,7 @@
 		</tbody>
 	</table>
 </div>
-<div class=''style='width:1200px;float:left;margin-left:40px;margin-top:5px;'>
+<div ng-show="issues" class=''style='width:1200px;float:left;margin-left:40px;margin-top:5px;'>
 	<table class='table table-striped table-hover table-bordered' align='center'>
 		<thead>
 			<tr><th style='text-align:center' colspan="2">Failure Summary</th></tr>
@@ -98,7 +98,7 @@
 				<!---->
 				
 			</tr>
-			<tr>
+			<tr>	
 				<td class='firstnc'>First None-Critical Failure: {{session.content.firstuptime}}</td>
 				<td class='firstnc'>{{session.content.firstNC[0].issueType}}<br>{{session.content.firstNC[0].comments}}</td>
 				<td class='firstnc'>{{session.content.firstNC[0].casename}}</td>

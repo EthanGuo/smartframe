@@ -30,6 +30,7 @@ smartDirectives.directive('openDialog', function(){
 
 });
 
+
 smartDirectives.directive('fixhead', function($window){
     return {
 	link : function(scope, elem, attr){

@@ -367,8 +367,9 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
     if(!$.cookie('ticket')){
       window.location = '#/smartserver/login';
     }
+    
     $scope.isadmin = $.cookie('isadmin');
-    $http.get(apiBaseURL+'/group/'+groupid+'?subc=members&appid=02&token='+$.cookie('ticket'))
+/*    $http.get(apiBaseURL+'/group/'+groupid+'?subc=members&appid=02&token='+$.cookie('ticket'))
       .success(function(ret){
         if(ret.result == 'ok'){
           $scope.members = ret.data.members; 
@@ -452,7 +453,7 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
       $log.info('Modal dismissed at: ' + new Date());
     });
   };
-
+*/
     $scope.signout = function(){
       $http.post(apiBaseURL+'/account',{'subc':'logout','data':{},'token':$.cookie('ticket')})
       .success(function(ret){
@@ -461,8 +462,13 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
         window.location = '#/smartserver/login';
       });
     }
-
-    $("#mytabs a").click(function(e){
+$http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+	.success(function(ret){
+	    if(ret.result == "ok"){
+		$scope.cycledata = ret.data;	
+	    }
+	});
+ /*   $("#mytabs a").click(function(e){
       e.preventDefault();
       $(this).tab('show');
       if(e.target.id == 'groupSessions'){
@@ -499,12 +505,46 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
                alert(ret.msg);
              }
         });
+      }else if(e.target.id == 'testui'){
+	$http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+	.success(function(ret){
+	    if(ret.result == "ok"){
+		$scope.cycledata = ret.data;	
+	    }
+	});
       }
+    });
+*/
+    $("#mytabs a").click(function(e){
+        e.preventDefault();
+        $(this).tab('show');
+        if(e.target.id == 'testui'){
+	    $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+	    .success(function(ret){
+	        if(ret.result == "ok"){
+		    $scope.cycledata = ret.data;	
+	        }
+	    });
+        }
     });
 
 	       $scope.cyclesort = "cid";
     $scope.newcycle = function(session){
-  	   var index;
+        $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':0,'product':product},'token':$.cookie('ticket')})
+         .success(function(ret){
+           if(ret.result == 'ok'){
+              session.cid = ret.data.cid;
+		$http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+		.success(function(ret){
+	   	 if(ret.result == "ok"){
+			$scope.cycledata = ret.data;	
+	   	 }
+		});
+           }else{
+    	        alert(ret.msg);
+           }
+       });
+/*  	   var index;
        $.each($scope.sessions, function(i, o){
           if(o.sid == session.sid){
               index = i;
@@ -526,12 +566,27 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
            }else{
     	        alert(ret.msg);
            }
-       });
+       });*/
     }
 
 
    $scope.delcycle = function(session){
-	      var index;
+        $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':-1},'token':$.cookie('ticket')})
+          .success(function(ret){
+            if(ret.result == 'ok'){
+               session.cid = "";
+               $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+                .success(function(ret){
+                 if(ret.result == "ok"){
+                        $scope.cycledata = ret.data;
+                 }
+                });
+
+	    }else{
+    	         alert(ret.msg);
+            }
+        });
+	   /*   var index;
         $.each($scope.sessions, function(i, o){
           if(o.sid == session.sid){
       	    index = i;
@@ -553,7 +608,7 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
             }else{
     	         alert(ret.msg);
             }
-        });
+        });*/
     }
 
 
@@ -561,7 +616,7 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
       $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':cycleid,'product':product},'token':$.cookie('ticket')})
       .success(function(ret){
           session.cid = cycleid;
-	  session.sortcid = cycleid;	  
+	 // session.sortcid = cycleid;	  
       });
   }
 
@@ -571,13 +626,19 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
          $http.post(apiBaseURL+'/group/'+groupid+'/session/'+sid,{'subc':'delete','data':{},'token':$.cookie('ticket')})
           .success(function(ret){
             if(ret.result == 'ok'){
-              var delIndex;
+              /*var delIndex;
               $.each($scope.sessions, function(i, o){
                 if(o.sid == sid){
                   delIndex = i;
                 }
               });
-              $scope.sessions.splice(delIndex, 1);
+              $scope.sessions.splice(delIndex, 1);*/
+	      $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+                .success(function(ret){
+                   if(ret.result == "ok"){
+                        $scope.cycledata = ret.data;
+                   }
+              });
             }else{
               alert(ret.msg);
             }
@@ -609,7 +670,11 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
         }
     }
     $scope.report = function(cid, product){
-	     window.location = '#/smartserver/group/'+groupid+'/product/'+product+'/cycle/'+cid;
+	 if(cid == "" || cid == undefined){
+		alert("No Report");
+	 }else{
+	 	window.location = '#/smartserver/group/'+groupid+'/product/'+product+'/cycle/'+cid;
+	 }
     }
 
     $scope.sortParams = ['sortcid','revision','starttime','endtime','IMEI','product'];
@@ -655,7 +720,20 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
 	        $("."+o).hide();
 	    }
 	});
-    } 
+    }
+
+    $scope.showAndHide = function(index){
+	$("table:eq("+index+")").toggle();
+    }
+
+    $scope.showTip = function(cid){
+	$("#report"+cid).tooltip({
+	    animation:true,
+	    placement:'bottom',
+	    title:'Report Summary',
+	    trigger:'hover'
+	});
+    }
 }]);
 
 //Controller for session

@@ -13,7 +13,7 @@
 			<thead>
 				<tr>
 					<th>Plan name</th>
-					<th>Build ID</th>
+					<th>Build</th>
 					<th>Device ID</th>
 					<th>Starttime</th>
 					<th>Endtime</th>
@@ -95,7 +95,10 @@
 			    <td>{{case.tid}}</td>
 			    <td>{{case.casename}}</td>
 			    <td>{{case.starttime}}</td>
-			    <td>{{case.result}}</td>
+			    <td>
+				<span ng-switch-when="fail" style="color:#B80000">Fail</span>
+				<span ng-switch-default>{{case.result}}</span>
+			    </td>
 			    <td> 
 				<a ng-switch-when="fail" ng-click='getLog(case.log.url)' href=''>
 				log</a>

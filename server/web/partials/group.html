@@ -6,6 +6,33 @@ border:none;
 .odd{
 background:#f9f9f9;
 }
+.test_h{
+width:1200px;float:left;margin-bottom:10px;
+}
+.test_h span{
+float:left;
+width:199px;
+display:block;
+font-size:16px;
+font-weight:bold;
+}
+.test_h img{
+}
+.test_b{
+background:#F9F9F9;
+width:1200px;float:left;border-top:1px solid #CCC;border-bottom:1px solid #ccc;
+}
+.test_b span{
+line-height:36px;
+float:left;
+width:199px;
+display:block;
+height:36px;
+}
+table{
+-moz-box-shadow: 5px 5px 3px #888888; /* 老的 Firefox */
+box-shadow: 5px 5px 3px #888888;
+}
 </style>
 <div class='group_head'> <div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;"> <a href="#/smartserver/index"><b style='float:left;color:white;margin-left:10px;margin-top:8px;'>Back</b></a>
 		<button type="button" style='float:right;color:white;margin-top:3px;margin-right:10px' ng-click="signout()" class="btn btn-link">Sign Out</button>
@@ -14,19 +41,22 @@ background:#f9f9f9;
 		</a>
        </div>
 </div>
-<div class='group_content' style='float:left;width:976px;margin-left:40px;margin-top:40px'>
+<div class='group_content' style='float:left;width:1200px;margin-left:40px;margin-top:40px'>
 	<div class=''style="margin-top:20px;margin-left:0px">
 	    <ul  class="nav nav-pills" id="mytabs">
-	         <li class="active">
+	         <!--<li class="">
 		    <a id="groupCycles" href="#cycles">Reports</a>	    	 
 		  </li>
 		  <li class="">
 		    <a id="groupSessions" href="#devices">Devices</a>
+		  </li>-->
+		  <li class="active">
+		    <a id="testui" href="#tests">Reports</a>
 		  </li>
 		</ul>
 	</div>
 	<div class='tab-content'style='overflow:visible' >
-		<div class='tab-pane' id='devices' >
+		<!--<div class='tab-pane' id='devices' >
 			<table class='table table-hover' >
 				<thead><tr>
 					<th></th>
@@ -77,8 +107,8 @@ background:#f9f9f9;
 			</tbody>
 			</table>
 			
-		</div>
-		<div class='tab-pane active' id='cycles'>
+		</div>-->
+		<!--<div class='tab-pane' id='cycles'>
 			<table class='table table-striped table-hover' >
 				<thead>
 					<tr>
@@ -95,16 +125,78 @@ background:#f9f9f9;
 						<td>{{cycle.revision || "NA"}}</td>
 						<td>{{cycle.livecount}}</td>
 						<td>{{cycle.devicecount}}</td>
-						<td><a ng-click='report(cycle.cid,cycle.product)' href="">summary</a></td>
+						<td><img id="report{{cycle.cid}}" style="cursor:pointer" ng-mouseover="showTip(cycle.cid)" ng-click='report(cycle.cid,cycle.product)' width="20" height="20" src="img/summary_s.png"></td>
 					</tr>
 				</tbody>
 			</table>
+		</div>-->
+
+		<div class='tab-pane active' id='tests'>
+			<div class="test_h">
+			<span>ID</span>
+			<span>Build</span>
+			<span>Live Devices</span>
+			<span>All Devices</span>
+			<span>Status</span>
+			<span>Report</span>
+			</div>
+			<div class="test_b" style="" ng-repeat="cycle in cycledata">
+			<span>{{cycle.cid || "Undefined"}}</span>
+			<span><a ng-click="showAndHide($index)" href="">{{cycle.revision}}</a></span>
+			<span>{{cycle.livecount}}</span>
+			<span>{{cycle.devicecount}}</span>
+			<span>{{cycle.livecount == 0 | status}}</span>
+		<span><img ng-click='report(cycle.cid,cycle.product)' src="img/summary_s.png" width="20" height="20" style="cursor:pointer"></span>
+<table class='table table-hover table-bordered' style="width:1150px;margin-left:25px;display:none;background:white">
+	<thead><tr>
+		<th></th>
+		<th>ID</th>
+		<th>Starttime </th>
+		<th>Endtime</th>
+		<th>Device ID </th>
+		<th>Product</th>
+		<th>Tester</th>
+        	<th>Detail</th>
+		<th>Edit</th>
+	</tr></thead>
+	<tbody>
+	<tr ng-repeat="session in cycle.sessions" ng-switch on='cycle.cid'>
+		<td>
+		<div>
+		<img style="width:12px;height:12px;" src='img/check.png'>
 		</div>
-	</div>
+		</td>	
+		<td>
+		    <div class="btn-group">
+        		<a class="btn btn-info btn-mini dropdown-toggle" data-toggle="dropdown" href="#">{{session.cid || 'Edit'}} </a>
+        		<ul ng-switch-when="" class="dropdown-menu">
+        	    	    <li><a ng-click='newcycle(session)' href="">New ID</a></li>
+        		</ul>
+			<ul ng-switch-default class="dropdown-menu">
+		    	    <li><a ng-hide="session.cid" ng-click='setcycle(session,cycle.cid)' href="">{{cycle.cid}}</a></li> 
+        	    	    <li><a ng-show="session.cid" ng-click='delcycle(session)' href="">Delete ID</a></li>
+        		</ul>
+        	    </div>
+       		</td>	
+	<td>{{session.starttime || "NA"}}</td>
+	<td>{{session.endtime || "NA"}}</td>
+	<td>{{session.IMEI || "NA"}}</td>
+	<td>{{session.product || "NA"}}</td>
+        <td>tester</td>
+  	<td><a href="#/smartserver/group/{{session.gid}}/product/{{session.product}}/{{session.sid}}">detail</a></td>
+	<td><a ng-click="delSession(session.sid)">delete</a></td>
+        </tr>
+	</tbody>
+</table>
+			</div>
+			
+
 
 </div>
 
-<!-- <div class='member_content'style='float:left;width:214px;margin-left:40px;margin-top:40px' >
+</div>
+
+<!--<div class='member_content'style='float:left;width:214px;margin-left:40px;margin-top:40px' >
 	
 	<dl>
 		<dt><h3>Members</h3></dt>
