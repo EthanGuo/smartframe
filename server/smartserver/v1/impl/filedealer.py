@@ -70,7 +70,7 @@ def zipfileFilter(namelist, filetype):
 
 def listLogs(fileid, filename):
     with switch_db(Files, FILE_DB_NAME) as File:
-        targetfile = File.object(fileid=fileid).first()
+        targetfile = File.objects(fileid=fileid).first()
         if targetfile:
             try:
                 z = zipfile.ZipFile(targetfile.filedata, 'r')
@@ -86,7 +86,7 @@ def listLogs(fileid, filename):
 
 def listImages(fileid, filename):
     with switch_db(Files, FILE_DB_NAME) as File:
-        targetfile = File.object(fileid=fileid).first()
+        targetfile = File.objects(fileid=fileid).first()
         if targetfile:
             try:
                 z = zipfile.ZipFile(targetfile.filedata, 'r')
@@ -102,7 +102,7 @@ def listImages(fileid, filename):
 
 def fetchFile(fileid, filename):
     with switch_db(Files, FILE_DB_NAME) as File:
-        targetfile = File.object(fileid=fileid).first()
+        targetfile = File.objects(fileid=fileid).first()
         if targetfile:
             try:
                 z = zipfile.ZipFile(targetfile.filedata, 'r')
