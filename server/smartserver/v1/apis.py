@@ -238,18 +238,31 @@ def doFileGET(fileid):
     @param fileid: (string)
     @rtype: image/png, application/zip
     @return: image(bytes), attachment
+    ----------------------------------------------------------------------------------------
+    |subc                 |data                                                          
+    |fetchavatar          |"Avatar of current account"
+    |listlogs             |['filename_1', 'filename_2', 'filename_3'...]
+    |listimages           |['imagename_1', 'imagename_2', ...]
+    |fetchlog             |"log data"
+    |fetchimage           |"image data"
+    -----------------------------------------------------------------------------------------
     """
-    data = fileGET(fileid)
+    subc = request.params.get("subc")
+    filename = request.params.get("filename", "")
+    data = fileGET(subc, fileid, filename)
     if data['result'] == 'error':
         return data
+    if subc in ['listlogs', 'listimages']:
+        return data
+    elif subc in ['fetchavatar']:
+        response.set_header('Content-Type', data['data']['content_type'])
+        return data['data']['filedata']
+    elif subc in ['fetchimage']:
+        response.set_header('Content-Type', 'image/png')
+        return data['data']['filedata']       
     else:
-        if data['data']['content_type'] in ['image/png', 'image/jpg', 'image/jpeg']:
-            response.set_header('Content-Type', data['data']['content_type'])
-            return data['data']['filedata']
-        elif data['data']['content_type'] in ['application/zip']:
-            response.set_header('Content-Type', 'application/x-download')
-            response.set_header('Content-Disposition', 'attachment; filename=' + data['data']['filename'])
-            return data['data']['filedata']
+        response.set_header('Content-Type', 'text/plain')
+        return data['data']['filedata']
 
 @appweb.route('/file', method='PUT', login=False)
 def doFilePUT():

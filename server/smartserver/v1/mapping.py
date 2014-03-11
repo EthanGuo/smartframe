@@ -51,6 +51,13 @@ caseupload_func = {'uploadpng': uploadPng,
                    'uploadzip': uploadZip, #caseFilePUT
             }
 
+files_func = {'fetchavatar': fetchFileData,
+              'listlogs': listLogs,
+              'listimages': listImages,
+              'fetchlog': fetchFile,
+              'fetchimage': fetchFile, #fileGET
+             }
+
 #Shortcut to create administrator of server, need full logic.
 ADMIN = createAdministrator()
 
@@ -66,11 +73,11 @@ def filePUT(content_type, filedata):
     """
     return saveFile(filedata, content_type)
 
-def fileGET(fileid):
+def fileGET(subc, fileid, filename):
     """
-       Used to get the image/log data of testcase. 
+       Used to fetch all kinds of files.
     """
-    return fetchFileData(fileid)
+    return files_func.get(subc)(fileid, filename)
 
 def sessionUpload(subc, filedata, sid):
     """

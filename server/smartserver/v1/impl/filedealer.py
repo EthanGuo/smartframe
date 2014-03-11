@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from db import Files
 import uuid, hashlib
+import zipfile
 from mongoengine import OperationError
 from mongoengine.context_managers import switch_db
 from ..config import FILE_DB_NAME
@@ -29,7 +30,7 @@ def saveFile(filedata, content_type, filename=''):
             new.save()
         return ('/file/' + fileid)
 
-def fetchFileData(fileid):
+def fetchFileData(fileid, filename=""):
     """
     params, data: {'fileid':(string)fileid}
     return, data: {'filedata':(bytes)filedata, 'filename': (string)filename, 'content_type': (string)type}
@@ -60,3 +61,59 @@ def deleteFile(fids):
                 except OperationError:
                     f.filedata.delete()
                     f.delete()                
+
+def zipfileFilter(namelist, filetype):
+    if filetype == "log":
+        return [name for name in namelist if '.png' not in name]
+    elif filetype == "image":
+        return [name for name in namelist if '.png' in name]
+
+def listLogs(fileid, filename):
+    with switch_db(Files, FILE_DB_NAME) as File:
+        targetfile = File.object(fileid=fileid).first()
+        if targetfile:
+            try:
+                z = zipfile.ZipFile(targetfile.filedata, 'r')
+            except zipfile.BadZipfile:
+                return resultWrapper('error', {}, "The file is broken!")
+            except Exception, e:
+                print e
+                return
+            loglist = zipfileFilter(z.namelist(), 'log')
+            return resultWrapper('ok', loglist, '')
+        else:
+            return resultWrapper('error', {}, 'Invalid ID!')
+
+def listImages(fileid, filename):
+    with switch_db(Files, FILE_DB_NAME) as File:
+        targetfile = File.object(fileid=fileid).first()
+        if targetfile:
+            try:
+                z = zipfile.ZipFile(targetfile.filedata, 'r')
+            except zipfile.BadZipfile:
+                return resultWrapper('error', {}, "The file is broken!")
+            except Exception, e:
+                print e
+                return 
+            imagelist = zipfileFilter(z.namelist(), 'image')
+            return resultWrapper('ok', imagelist, '')
+        else:
+            return resultWrapper('error', {}, 'Invalid ID!')
+
+def fetchFile(fileid, filename):
+    with switch_db(Files, FILE_DB_NAME) as File:
+        targetfile = File.object(fileid=fileid).first()
+        if targetfile:
+            try:
+                z = zipfile.ZipFile(targetfile.filedata, 'r')
+            except zipfile.BadZipfile:
+                return resultWrapper('error', {}, "The file is broken!")
+            except Exception, e:
+                print e
+                return 
+            if filename in z.namelist():
+                return resultWrapper('ok', {'filedata': z.open(filename, 'r').read()}, '')
+            else:
+                return resultWrapper('error', {}, 'Invalid file name!')
+        else:
+            return resultWrapper('error', {}, 'Invalid ID!')
