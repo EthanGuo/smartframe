@@ -56,7 +56,7 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
         $scope.isadmin = ret.data.userinfo.admin;
 	$.cookie('isadmin', ret.data.userinfo.admin, { expires: 7 });
         if(ret.data.userinfo.avatar.url != undefined){
-          $scope.avatar = apiBaseURL + ret.data.userinfo.avatar.url;
+          $scope.avatar = apiBaseURL + ret.data.userinfo.avatar.url+"?subc=fetchavatar";
         }
         else{
           $scope.avatar = undefined;
@@ -369,91 +369,6 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
     }
     
     $scope.isadmin = $.cookie('isadmin');
-/*    $http.get(apiBaseURL+'/group/'+groupid+'?subc=members&appid=02&token='+$.cookie('ticket'))
-      .success(function(ret){
-        if(ret.result == 'ok'){
-          $scope.members = ret.data.members; 
-          $.each($scope.members, function(i, o){
-        	  if(o.avatar.url){
-        	    o.avatar.url = apiBaseURL + o.avatar.url;
-            }else{
-        	    o.avatar.url = "http://storage.aliyun.com/wutong-data/system/1_S.jpg";
-            }
-          });
-        }else{
-          alert(ret.msg);
-        }
-    });
-
-    $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&product='+product+'&appid=02&token='+$.cookie('ticket'))
-      .success(function(ret){
-        if(ret.result == 'ok'){
-          $scope.cycles = ret.data.cycles;
-        }else{
-          alert(ret.msg);
-        }
-          
-    });
-
-$http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticket'))
-       .success(function(ret){
-          if(ret.result == 'ok'){
-            $scope.users = ret.data.users;
-	  }
-       });
-
-  $scope.addMember = function () {
-
-    var modalInstance = $modal.open({
-      templateUrl: 'myModalContent.html',
-      controller: ModalInstanceCtrl,
-      windowClass : 'addMember',
-      resolve: {
-        users: function () {
-          return $scope.users;
-        }
-      }
-    });
-
-    modalInstance.result.then(function (selected) {
-	$scope.selected = selected;
-        var uid = '';
-        var roleId = 0;
-        if($scope.selected.membername  && $scope.selected.rolename){
-             $.each($scope.users, function(i, o){
-                  if(o.username == $scope.selected.membername){
-                       uid = o.uid
-                  }
-             });
-             if($scope.selected.rolename == 'member'){
-                  roleId = 8
-             }else if($scope.selected.rolename == 'admin'){
-                  roleId = 9;
-             }
-             }
-             var data = {'members':[{'uid':uid,'role':roleId}]};
-                 $http.post(apiBaseURL+'/group/'+groupid, {'subc':'setmember','data':data,'token':$.cookie('ticket')})
-                    .success(function(ret){
-                        if(ret.result == 'ok'){
-                  	   var flag = false;
-                  	   $.each($scope.members, function(i, o){
-                           if(o.username == $scope.selected.membername){
-                      	      flag = true;
-			      o.role = roleId;
-                      	    }
-                           });
-                           if(!flag){
-                               $scope.members.push({'username':$scope.selected.membername,'uid':uid,'role':roleId,'avatar':{'url': "http://storage.aliyun.com/wutong-data/system/1_S.jpg"}});
-                            }
-		        }else{
-                            alert(ret.msg);
-		        }
-                  }); 
-    }, function () {
-      $log.info('Modal dismissed at: ' + new Date());
-    });
-  };
-*/
     $scope.signout = function(){
       $http.post(apiBaseURL+'/account',{'subc':'logout','data':{},'token':$.cookie('ticket')})
       .success(function(ret){
@@ -462,70 +377,35 @@ $http.get(apiBaseURL+'/account?subc=accountlist&appid=02&token='+$.cookie('ticke
         window.location = '#/smartserver/login';
       });
     }
+	$scope.mtbf = {'12':'asdf'};
+        $scope.mtbf.value = [];
 $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
 	.success(function(ret){
 	    if(ret.result == "ok"){
 		$scope.cycledata = ret.data;	
-	    }
-	});
- /*   $("#mytabs a").click(function(e){
-      e.preventDefault();
-      $(this).tab('show');
-      if(e.target.id == 'groupSessions'){
-        $http.get(apiBaseURL+'/group/'+groupid+'?subc=sessions&product='+product+'&appid=02&token='+$.cookie('ticket'))
-          .success(function(ret){
-            if(ret.result == 'ok'){
-              $scope.sessions = ret.data.sessions; 
-	      $.each($scope.sessions, function(i, o){
-	     if(o.cid == '' || o.cid == undefined){
-		o.sortcid = -1;
-	     }else{
-                o.sortcid = o.cid;
-	     }
-	     if(o.endtime == '' || o.endtime == undefined){
-		o.sorttime = "2200-01-01 00:00:00";	
-	     }else{
-	        o.sorttime = o.endtime;
-	     }
-	        $scope.orderparam = ['-sortcid','-sorttime'];
-          });
-            }else{
-              alert(ret.msg);
+ 		var cycleLen = $scope.cycledata.length;
+	for(var i = 0;i<cycleLen; i++){
+	    if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
+                continue;   
             }
-             
-        });
-      }
-      else if(e.target.id == 'groupCycles'){
-        $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&product='+product+'&appid=02&token='+$.cookie('ticket'))
-          .success(function(ret){
-             if(ret.result == 'ok'){
-               $scope.cycles = ret.data.cycles;
-	       $scope.cyclesort = "cid";
-             }else{
-               alert(ret.msg);
-             }
-        });
-      }else if(e.target.id == 'testui'){
-	$http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
-	.success(function(ret){
-	    if(ret.result == "ok"){
-		$scope.cycledata = ret.data;	
+	    $http.get(apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+$scope.cycledata[i].cid+'&token='+$.cookie('ticket'))
+                .success(function(res){
+		    console.log(res);
+		    if(res.result == "ok"){
+	//		$scope.mtbf.value.push({$scope.cycledata[i].cid:res.data.mtbf});
+		    } 
+	    })
+	}
 	    }
 	});
-      }
-    });
-*/
+	
+	       
+
     $("#mytabs a").click(function(e){
         e.preventDefault();
         $(this).tab('show');
         if(e.target.id == 'testui'){
-	    $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
-	    .success(function(ret){
-	        if(ret.result == "ok"){
-		    $scope.cycledata = ret.data;	
-	        }
-	    });
-        }
+	}
     });
 
 	       $scope.cyclesort = "cid";
@@ -544,31 +424,7 @@ $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid
     	        alert(ret.msg);
            }
        });
-/*  	   var index;
-       $.each($scope.sessions, function(i, o){
-          if(o.sid == session.sid){
-              index = i;
-          }
-       });
-       $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':0,'product':product},'token':$.cookie('ticket')})
-         .success(function(ret){
-           if(ret.result == 'ok'){
-              $scope.sessions[index].cid = ret.data.cid;
-	      $scope.sessions[index].sortcid = ret.data.cid;
-               $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&product='+product+'&appid=02&token='+$.cookie('ticket'))
-                .success(function(ret1){
-                   if(ret1.result == 'ok'){
-                        $scope.cycles = ret1.data.cycles;
-		   }else{
-                        alert(ret1.msg);
-                   }});
-
-           }else{
-    	        alert(ret.msg);
-           }
-       });*/
     }
-
 
    $scope.delcycle = function(session){
         $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':-1},'token':$.cookie('ticket')})
@@ -586,29 +442,6 @@ $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid
     	         alert(ret.msg);
             }
         });
-	   /*   var index;
-        $.each($scope.sessions, function(i, o){
-          if(o.sid == session.sid){
-      	    index = i;
-          }
-        });
-
-        $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':-1},'token':$.cookie('ticket')})
-          .success(function(ret){
-            if(ret.result == 'ok'){
-               $scope.sessions[index].cid = "";
-	       $scope.sessions[index].sortcid = -1;
-	       $http.get(apiBaseURL+'/group/'+groupid+'?subc=cycles&product='+product+'&appid=02&token='+$.cookie('ticket'))
-          	.success(function(ret1){
-          	   if(ret1.result == 'ok'){
-               		$scope.cycles = ret1.data.cycles;
-		   }else{
-		        alert(ret1.msg);
-		   }});
-            }else{
-    	         alert(ret.msg);
-            }
-        });*/
     }
 
 
@@ -616,7 +449,6 @@ $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid
       $http.post(apiBaseURL+'/group/'+groupid+'/session/'+session.sid,{'subc':'cycle','data':{'cid':cycleid,'product':product},'token':$.cookie('ticket')})
       .success(function(ret){
           session.cid = cycleid;
-	 // session.sortcid = cycleid;	  
       });
   }
 
@@ -626,14 +458,7 @@ $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid
          $http.post(apiBaseURL+'/group/'+groupid+'/session/'+sid,{'subc':'delete','data':{},'token':$.cookie('ticket')})
           .success(function(ret){
             if(ret.result == 'ok'){
-              /*var delIndex;
-              $.each($scope.sessions, function(i, o){
-                if(o.sid == sid){
-                  delIndex = i;
-                }
-              });
-              $scope.sessions.splice(delIndex, 1);*/
-	      $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+      	      $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
                 .success(function(ret){
                    if(ret.result == "ok"){
                         $scope.cycledata = ret.data;
@@ -1106,13 +931,51 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
         }
     }
 
-      $scope.getLog = function(logurl){
-	if(logurl == undefined){
-	    alert("log dosen't exist");
-	    return;
-	}
-	window.location = apiBaseURL + logurl;
+      $scope.getLog = function(Case){
+	$http.get(apiBaseURL+Case.log.url+"?subc=listlogs").success(function(ret){
+	    console.log(ret);
+	    if(ret.result == 'ok'){
+		var data = ret.data;
+		var content = "";
+		if(data.length == 0){
+		   content = "<h3>No Logs</h3>";
+		}else{
+		   content = "<ol>";
+		   $.each(data, function(i, o){
+		       content = content + "<li><a target='_blank' href='"+apiBaseURL+Case.log.url+"?subc=fetchlog&filename="+o+"'>"+o+"</a></li>";
+	     	   });
+		   content = content + "</ol>";
+		}
+	        $("#log_"+Case.tid).popover({
+		    animation:true,
+	            html:true,
+		    placement:'right',
+	            title:'Session Logs...',
+		    content:content,
+	            trigger:'click'
+	    	});
+	    }else{
+		$("#log_"+Case.tid).popover({
+		    animation:true,
+	            html:true,
+		    placement:'right',
+	            title:'Session Logs...',
+		    content:ret.msg,
+	            trigger:'click'
+	    	});
+	    }
+	}).error(function(){
+	    $("#log_"+Case.tid).popover({
+		    animation:true,
+	            html:true,
+		    placement:'right',
+	            title:'Session Logs...',
+		    content:"No logs",
+	            trigger:'click'
+	    	});
+	});
       }
+
 
       $scope.getImages = function(selectedCase){ 
       var rect;
@@ -1121,46 +984,62 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       var x, y, w, h;
       var deviceW = parseInt($scope.deviceinfo.width);
       var deviceH = parseInt($scope.deviceinfo.heigth);
-      var tempstr  = JSON.stringify(selectedCase);
-      var tempcase = angular.fromJson(tempstr);
-      $scope.selectedcase = {};
-      $scope.selectedcase = {'expectshot':tempcase.expectshot,'snapshots':tempcase.snapshots};
-      if($scope.selectedcase.expectshot.url == undefined && $scope.selectedcase.snapshots.length == 0){
-	alert("Image does't exist");
+      if(selectedCase.log.url == undefined){
+	alert("No Snapshots");
 	return;
       }
-      if(deviceW >= 400){
-	zoom = (deviceW / 400).toFixed(3);
-        deviceW = deviceW / zoom;
-        deviceH = deviceH / zoom;
-      }else{
- 	zoom = 1;
-      }
-      var tempurl = $scope.selectedcase.expectshot.url;
-      $scope.selectedcase.expectshot.url = apiBaseURL + tempurl;
-      $.each($scope.selectedcase.snapshots, function(i, o){
-	var temp = o.url;
-        o.url = apiBaseURL + temp;
-        rect = o.filename.substring(o.filename.indexOf('(')+1,o.filename.indexOf(')'));
-        x = parseInt(rect.substring(rect.indexOf('x')+1, rect.indexOf('y')));
-        y = parseInt(rect.substring(rect.indexOf('y')+1, rect.indexOf('w')));
-        w = parseInt(rect.substring(rect.indexOf('w')+1, rect.indexOf('h')));
-        h = parseInt(rect.substring(rect.indexOf('h')+1));
-        o.x = x/zoom;
-        o.y = y/zoom;
-        o.h = h/zoom;
-        o.w = w/zoom;
-        if(o.filename == $scope.selectedcase.expectshot.filename){
-	  index = i;
-          $scope.selectedcase.expectshot.x = x/zoom;
-          $scope.selectedcase.expectshot.y = y/zoom;
-          $scope.selectedcase.expectshot.h = h/zoom;
-          $scope.selectedcase.expectshot.w = w/zoom;
-        }
-      });
+      $http.get(apiBaseURL+selectedCase.log.url+"?subc=listimages")
+        .success(function(ret){
+	    if(ret.result == "ok"){
+	        if(ret.data.length == 0){
+	            alert("No images");
+		    return;
+	        }
+      //var tempstr  = JSON.stringify(selectedCase);
+      //var tempcase = angular.fromJson(tempstr);
+              $scope.selectedcase = {};
+	      $scope.selectedcase.snapshots = [];
+      //$scope.selectedcase = {'expectshot':tempcase.expectshot,'snapshots':tempcase.snapshots};
+      //if($scope.selectedcase.expectshot.url == undefined && $scope.selectedcase.snapshots.length == 0){
+	//alert("Image does't exist");
+	//return;
+      //}
+	$.each(ret.data, function(i, o){
+	   $scope.selectedcase.snapshots.push({'url':apiBaseURL+selectedCase.log.url+"?subc=fetchimage&filename="+o,'filename':o});
+	});
+	console.log($scope.selectedcase);
+                if(deviceW >= 400){
+	            zoom = (deviceW / 400).toFixed(3);
+                    deviceW = deviceW / zoom;
+                    deviceH = deviceH / zoom;
+       	        }else{
+ 		    zoom = 1;
+      	        }
+     	        /*var tempurl = $scope.selectedcase.expectshot.url;
+                $scope.selectedcase.expectshot.url = apiBaseURL + tempurl;
+      	        $.each($scope.selectedcase.snapshots, function(i, o){
+		var temp = o.url;
+        	o.url = apiBaseURL + temp;
+        	rect = o.filename.substring(o.filename.indexOf('(')+1,o.filename.indexOf(')'));
+        	x = parseInt(rect.substring(rect.indexOf('x')+1, rect.indexOf('y')));
+        	y = parseInt(rect.substring(rect.indexOf('y')+1, rect.indexOf('w')));
+        	w = parseInt(rect.substring(rect.indexOf('w')+1, rect.indexOf('h')));
+        	h = parseInt(rect.substring(rect.indexOf('h')+1));
+        	o.x = x/zoom;
+        	o.y = y/zoom;
+        	o.h = h/zoom;
+        	o.w = w/zoom;
+        	if(o.filename == $scope.selectedcase.expectshot.filename){
+		  index = i;
+        	  $scope.selectedcase.expectshot.x = x/zoom;
+        	  $scope.selectedcase.expectshot.y = y/zoom;
+        	  $scope.selectedcase.expectshot.h = h/zoom;
+        	  $scope.selectedcase.expectshot.w = w/zoom;
+        	}
+      		});
         var temp = $scope.selectedcase.snapshots[0];
 	$scope.selectedcase.snapshots[0] = $scope.selectedcase.snapshots[index];
-	$scope.selectedcase.snapshots[index] = temp; 
+	$scope.selectedcase.snapshots[index] = temp;*/ 
  
 	var winclass = 'snapshot';	
         if(!deviceW){
@@ -1178,6 +1057,8 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 		    return {'width' : deviceW,'height' : deviceH}; 
 		}
 	    }
+	});
+      }
 	});
     }
     $scope.maxwidth = 820;
@@ -1198,8 +1079,8 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 
     $scope.showLogs = function(){
 	if(!$scope.logsFlag){
-	    alert("Log does not exist!");
-	    return;
+	   // alert("Log does not exist!");
+	   // return;
 	}
 	$("#arrow_down").toggle();
 	$("#sessionlogs").toggle();

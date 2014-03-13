@@ -133,20 +133,20 @@ box-shadow: 5px 5px 3px #888888;
 
 		<div class='tab-pane active' id='tests'>
 			<div class="test_h">
-			<span>ID</span>
 			<span>Build</span>
+			<span>ID</span>
 			<span>Live Devices</span>
 			<span>All Devices</span>
-			<span>Product</span>
+			<span>MTBF</span>
 			<span>Status</span>
 			<span>Report</span>
 			</div>
 			<div class="test_b" style="" ng-repeat="cycle in cycledata">
-			<span>{{cycle.cid || "Undefined"}}</span>
 			<span><a ng-click="showAndHide($index)" href="">{{cycle.revision}}</a></span>
+			<span>{{cycle.cid || "Undefined"}}</span>
 			<span>{{cycle.livecount}}</span>
 			<span>{{cycle.devicecount}}</span>
-			<span>{{cycle.product}}</span>
+			<span>{{}}</span>
 			<span>{{cycle.livecount == 0 | status}}</span>
 		<span><img ng-click='report(cycle.cid,cycle.product)' src="img/summary_s.png" width="20" height="20" style="cursor:pointer"></span>
 <table class='table table-hover table-bordered' style="width:1150px;margin-left:25px;display:none;background:white">

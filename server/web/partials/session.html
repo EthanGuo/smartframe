@@ -100,7 +100,7 @@
 				<span ng-switch-default>{{case.result}}</span>
 			    </td>
 			    <td> 
-				<a ng-switch-when="fail" ng-click='getLog(case.log.url)' href=''>
+				<a id="log_{{case.tid}}" ng-switch-when="fail" ng-mouseenter='getLog(case)' href=''>
 				log</a>
 				<a ng-switch-default href=""></a>
 			    </td>
@@ -110,13 +110,15 @@
 				<a ng-switch-default href=""></a>
 			    </td>
 			    <td> 
-				  <div ng-mouseenter='setCollapse(case.tid)' ng-mouseleave='delCollapse(case.tid)' >
-					{{case.comments.caseresult}} {{case.comments.issuetype}}<br>
-				  <div collapse='!collapse[case.tid]'>	
-				     <span style='display:block;word-break:break-all;width:150px;max-width:150px;'>
-					{{case.comments.commentinfo}}{{case.comments.endsession | endsession}}
-				     </span>
-				  </div> </div>
+				  <div style="width:250px;height:auto;" ng-mouseenter='setCollapse(case.tid)' ng-mouseleave='delCollapse(case.tid)'>
+				      <span style="display:block;float:left;">{{case.comments.caseresult}} {{case.comments.issuetype}}</span>
+				      <img style="float:left;margin-left:20px;cursor:pointer" src="img/comments.png" ng-click="getTids()">
+				      <div style="float:left" collapse='!collapse[case.tid]'>	
+				         <span style='display:block;word-break:break-all;width:200px;max-width:200px;'>
+					    {{case.comments.commentinfo}}{{case.comments.endsession | endsession}}
+				         </span>
+				      </div> 
+				  </div>
 			    </td>
 			</tr>			
 			</tbody>
