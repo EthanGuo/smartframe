@@ -226,7 +226,7 @@ def __getMTBFHour(sessionresult, groupname, table1):
         method = 'Sum the uptime of sessions whose uptime is longer than 60 hours.'
         return {'mtbf': mtbf, 'method': method}
 
-def __calculateResult(sessionresult, groupname):
+def __getDefaultReport(sessionresult, groupname):
     """
        Return the data frontend required.
     """
@@ -279,7 +279,7 @@ def __calculateResult(sessionresult, groupname):
     return resultWrapper('ok', {'table1': table1, 'table2': table2, 
                                 'table3': table3, 'table4': table4}, '')
 
-def __reportDefaultMethod(cid, gid, uid):
+def __reportGetBasicData(cid, gid, uid):
     """
        Default method to calculate MTBF report.
     """
@@ -346,7 +346,18 @@ def __reportDefaultMethod(cid, gid, uid):
                               'endtime': endtime.strftime(TIME_FORMAT), 'failurecount': failurecount,
                               'totaluptime': totaluptime,'issues': issues, 'domains': domains,
                               'firstNC': firstNC, 'firstC': firstC})
-    return __calculateResult(sessionresult, groupname)
+    return sessionresult, groupname
+
+def __getMTBFHourOnly(sessionresult, groupname):
+    table1, table1['totalfailure'], table1['totaluptime'] = {}, 0, 0
+    table1['devicecount'] = len(sessionresult)
+
+    for session in sessionresult:
+        table1['totalfailure'] += session['failurecount']
+        table1['totaluptime'] += session['totaluptime']
+
+    table1.update(__getMTBFHour(sessionresult, groupname, table1))
+    return resultWrapper('ok', {'mtbf': table1['mtbf']}, '')
 
 def groupGetReport(data, gid, uid):
     """
@@ -355,5 +366,8 @@ def groupGetReport(data, gid, uid):
 
     Suppose to support different way to calculate report
     """
+    sessionresult, groupname = __reportGetBasicData(data['cid'], gid, uid)
     if data['method'] == 'default':
-        return __reportDefaultMethod(data['cid'], gid, uid)
+        return __getDefaultReport(sessionresult, groupname)
+    elif data['method'] == 'mtbfonly':
+        return __getMTBFHourOnly(sessionresult, groupname)
