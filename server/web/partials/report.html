@@ -70,22 +70,11 @@
 			<th>Failure Uptime</th>
 			<th>Failure Issue</th>
 			<th>Failure Case</th>
-			<!--<th style='background-color:#EFF5FB'>First Critical Failure Uptime</th>
-			<th style='background-color:#EFF5FB'>First Critical Failure Issue</th>
-			<th style='background-color:#EFF5FB'>First Critical Failure case</th>
-		        <th style='background-color:#EFFBF2'>First None Critical Failure Uptime</th>
-		        <th style='background-color:#EFFBF2'>First None Critical Failure Issue</th>
-		        <th style='background-color:#EFFBF2'>First None Critical Failure case</th>
-			-->
+			
 		</thead>
 		<tbody ng-repeat="session in sessions" ng-switch on='session.content.failurecount'>
 			<tr >
-				<!--<td style='text-align:center;'>
-				   <span ng-switch-when='0'></span>
-				   <span ng-switch-default style='font-size:24px;color:#0088cc;cursor:pointer ' ng-click="toggleDetail($index)">
-				       {{activePosition[$index] | more }}
-				   </span>
-				</td>-->
+			
 				<td rowspan="2"><a href='#/smartserver/group/{{groupid}}/product/{{product}}/{{session.content.sid}}'>{{session.deviceid || "NA"}}</a></td>
 				<td rowspan="2" style="width:80px;max-width:80px">{{session.content.starttime}}</td>
 				<td rowspan="2" style="width:80px;max-width:80px">{{session.content.endtime}}</td>
@@ -95,65 +84,13 @@
 				<td class='firstc'>{{session.content.firstC[0].issueType}}<br>{{session.content.firstC[0].comments}}</td>
 				<td class='firstc'>{{session.content.firstC[0].casename}}</td>
 			
-				<!---->
-				
 			</tr>
 			<tr>	
 				<td class='firstnc'>First None-Critical Failure: {{session.content.firstuptime}}</td>
 				<td class='firstnc'>{{session.content.firstNC[0].issueType}}<br>{{session.content.firstNC[0].comments}}</td>
 				<td class='firstnc'>{{session.content.firstNC[0].casename}}</td>
 			</tr>
-		<!--	<tr style='background-color:#EFF5FB' ng-show="activePosition[$index] && session.content.firstC">
-			    <th></th><th></th>
-			    <th>First Critical</th>
-			    <th>Case Name</th>
-			    <th>Happend Time</th>
-			    <th>Issue Type</th>
-			    <th colspan='2'>Comments</th>
-			</tr>
-			<tr ng-show="activePosition[$parent.$index]" ng-repeat='firstc in session.content.firstC'>
-			    <td></td><td></td>
-			    <td>{{session.content.uptime}}</td>
-			    <td>{{firstc.casename}}</td>
-			    <td>{{firstc.starttime}}</td>
-			    <td>{{firstc.issueType}}</td>
-			    <td colspan='2'><span style='word-break:break-all;'>{{firstc.comments}}</span></td> 
-			</tr>
-			<tr style='background-color:#EFFBF2' ng-show="activePosition[$index] && session.content.firstNC">
-			    <th></th><th></th>
-			    <th>First None Critical</th>
-			    <th>Case Name</th>
-			    <th>Happend Time</th>
-			    <th>Issue Type</th>
-			    <th colspan='2'>Comments</th>
-			</tr>
-			<tr ng-show="activePosition[$parent.$index]" ng-repeat='firstnc in session.content.firstNC'>
-			    <td></td><td></td>
-			    <td>{{session.content.firstuptime}}</td>
-			    <td>{{firstnc.casename}}</td>
-			    <td>{{firstnc.starttime}}</td>
-			    <td>{{firstnc.issueType}}</td>
-			    <td colspan='2'><span style='word-break:break-all;'>{{firstnc.comments}}</span></td> 
-			</tr>
-			<tr style='background-color:#FBEFEF' ng-show="activePosition[$index]">
-				<th></th><th></th>
-				<th>Failures</th>
-				<th>Case Name</th>
-				<th>Happend Time</th>
-				<th>Issue Type</th>
-				<th colspan='2'>Comments</th>
-			</tr>
-			
-			<tr ng-show="activePosition[$parent.$index]" ng-repeat='issue in session.content.issues'>
-				<td></td>
-				<td></td>
-				<td>{{$index+1}}</td>
-
-				<td>{{issue.casename}}</td>
-				<td>{{issue.starttime}}</td>
-				<td>{{issue.issueType}}</td>
-				<td colspan='2'><span style='word-break:break-all;'>{{issue.comments}}</span></td>
-			</tr>-->			
+				
 		</tbody>
 	</table>
 </div>

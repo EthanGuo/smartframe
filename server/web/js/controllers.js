@@ -586,8 +586,6 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       var product = $routeParams.product;
       var total;
       var maxsize = 20;
-      //var numOfPage = 0;
-      //var currentPageNum = 1;
       var tids = [];
       $scope.numOfPage = 0;
       $scope.currentPageNum = 1;
@@ -694,23 +692,6 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
         }
       }
       
-      // if(total <= 10){
-      //    if($scope.pageindex > 1){
-      //         $scope.pageindex = $scope.pageindex -1;
-      //    }else{
-	   	 //        return;
-      //   }
-      // }else{
-      //    if($scope.pageindex > 1){
-      //       if($scope.buffer > 0){
-      //         $scope.buffer = $scope.buffer -1;
-      //       }
-      //       $scope.pageindex = $scope.pageindex -1;
-      //    }else{
-      //       return;
-      //    }  
-      // } 
-
       $scope.selected = {};     
       $scope.master = false;
       
@@ -742,26 +723,6 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
           }
         }
       }
-          // if(total <= 10){
-          //     if($scope.pageindex < total){
-          //        $scope.pageindex = $scope.pageindex + 1;
-          //     }else{
-	         // return;
-          //     }
-          // }else{
-          //     if($scope.pageindex >= 10){
-          //         if($scope.pageindex < total){
-          //             if($scope.buffer < (total-10)){
-          //                 $scope.buffer = $scope.buffer + 1; 
-          //             }
-          //             $scope.pageindex = $scope.pageindex + 1;
-          //         }else{
-		    			 //       	return;
-		        //        }
-          //     }else{
-          //         $scope.pageindex = $scope.pageindex + 1;
-          //     }   
-          // }
 	     $scope.selected = {};
        $scope.master = false;
        $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&pagenumber='+$scope.pageindex+'&token='+$.cookie('ticket')+'&casetype='+$scope.casetype)
@@ -930,10 +891,15 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
           });
         }
     }
-
+	var currentPop = "";
+	$(document).click(function(e){
+	   if(e.target.id !== currentPop){
+		$(currentPop).popover("hide");
+	   }
+	});
       $scope.getLog = function(Case){
 	$http.get(apiBaseURL+Case.log.url+"?subc=listlogs").success(function(ret){
-	    console.log(ret);
+		currentPop = "#log_"+Case.tid;
 	    if(ret.result == 'ok'){
 		var data = ret.data;
 		var content = "";
@@ -942,30 +908,34 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 		}else{
 		   content = "<ol>";
 		   $.each(data, function(i, o){
-		       content = content + "<li><a target='_blank' href='"+apiBaseURL+Case.log.url+"?subc=fetchlog&filename="+o+"'>"+o+"</a></li>";
+		       content = content + "<li><a target='_blank' href='"+apiBaseURL+Case.log.url
+					+"?subc=fetchlog&filename="+o+"'><span style='width:220px;word-break:break-all;'>"+o+"</span></a></li>";
 	     	   });
 		   content = content + "</ol>";
 		}
-	        $("#log_"+Case.tid).popover({
+	        $(currentPop).popover({
 		    animation:true,
 	            html:true,
 		    placement:'right',
 	            title:'Session Logs...',
 		    content:content,
-	            trigger:'click'
+	            trigger:'manual'
 	    	});
+		$(currentPop).popover("toggle");
 	    }else{
-		$("#log_"+Case.tid).popover({
+		$(currentPop).popover({
 		    animation:true,
 	            html:true,
 		    placement:'right',
 	            title:'Session Logs...',
 		    content:ret.msg,
-	            trigger:'click'
+	            trigger:'manual'
 	    	});
+		$("#log_"+Case.tid).popover("toggle");
 	    }
 	}).error(function(){
-	    $("#log_"+Case.tid).popover({
+		currentPop = "#log_"+Case.tid;
+	    $(currentPop).popover({
 		    animation:true,
 	            html:true,
 		    placement:'right',
@@ -973,6 +943,7 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 		    content:"No logs",
 	            trigger:'click'
 	    	});
+		$("#log_"+Case.tid).popover("toggle");
 	});
       }
 
@@ -1061,36 +1032,7 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       }
 	});
     }
-    $scope.maxwidth = 820;
-    $http.get(apiBaseURL+"/group/"+groupid+"/session/"+sessionid+"?subc=logs&token="+$.cookie('ticket'))
-    .success(function(ret){
-        if(ret.result == 'ok'){
-	    $scope.sessionlogs = ret.data;
-	    if($scope.sessionlogs.length == 1){
-		$scope.maxwidth = $scope.maxwidth / 3.0;
-	    }else if($scope.sessionlogs.length == 2){
-		$scope.maxwidth = $scope.maxwidth /1.5;	
-	    }
-	
-	}else{
-	   $scope.logsFlag = false; 
-	}	
-    });
-
-    $scope.showLogs = function(){
-	if(!$scope.logsFlag){
-	   // alert("Log does not exist!");
-	   // return;
-	}
-	$("#arrow_down").toggle();
-	$("#sessionlogs").toggle();
-    }
-
-    $scope.hideLogs = function(){
-	$("#arrow_down").slideToggle();
-        $("#sessionlogs").slideToggle();
-    } 
- }]);
+      }]);
 
 //Controller for report
  function setruntime(secs){
