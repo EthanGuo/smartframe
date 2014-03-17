@@ -132,7 +132,7 @@ def groupGetSessions(data, gid, uid):
     This method is used to implement the new requirements from Intel which is to sort test sessions by revision.
     """
     gid, sessions = int(gid), {}
-    for session in Sessions.objects(gid=gid, deviceinfo__product=data['product']).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime', 'runtime'):
+    for session in Sessions.objects(gid=gid, deviceinfo__product=data['product']).only('deviceinfo', 'uid', 'sid', 'starttime', 'endtime', 'runtime', 'status'):
         if session.deviceinfo:
             product = session.deviceinfo.product
             revision = session.deviceinfo.revision
@@ -149,7 +149,7 @@ def groupGetSessions(data, gid, uid):
             sessions[revision] = {'cid': cid, 'revision': revision, 'product': product,
                                   'livecount': 0, 'devicecount': 1, 
                                   'sessions': [{'gid': gid, 'product': product, 'revision': revision, 'IMEI': deviceid,
-                                                'sid': session.sid, 'cid': cid, 'tester': tester,
+                                                'sid': session.sid, 'cid': cid, 'tester': tester, 'status': session.status,
                                                 'starttime': starttime,'endtime': endtime, 'uptime': session.runtime}]
                                 }
         else:
@@ -159,7 +159,7 @@ def groupGetSessions(data, gid, uid):
                 sessions[revision]['product'] = product
             sessions[revision]['devicecount'] += 1
             sessions[revision]['sessions'].append({'gid': gid, 'product': product, 'revision': revision, 'IMEI': deviceid,
-                                                   'sid': session.sid, 'cid': cid, 'tester': tester,
+                                                   'sid': session.sid, 'cid': cid, 'tester': tester, 'status': session.status,
                                                    'starttime': starttime,'endtime': endtime, 'uptime': session.runtime})
         if not endtime:
             sessions[revision]['livecount'] += 1

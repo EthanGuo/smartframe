@@ -21,7 +21,7 @@ def caseresultCreate(data, sid):
     except OperationError:
         caseInst.save()
     #Set session alive here, clear endtime in another way.
-    ws_active_testsession.delay(sid)
+    #ws_active_testsession.delay(sid)
     return resultWrapper('ok',{},'')
 
 def __updateCaseComments(data, sid):
@@ -89,7 +89,7 @@ def __caseresultInsert(data, sid):
         caseInst.save()
     ws_update_session_sessionsummary.delay(sid, [[data['result'].lower(), orgresult]])
     ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
-    ws_active_testsession.delay(sid)
+    #ws_active_testsession.delay(sid)
     return resultWrapper('ok', {}, '')
 
 def __updateCaseResult(data, sid):
@@ -117,7 +117,7 @@ def __updateCaseResult(data, sid):
         case.reload()
     ws_update_session_sessionsummary.delay(sid, [[data['result'].lower(), orgresult]])
     ws_update_session_domainsummary.delay(sid, [[data['tid'], data['result'].lower(), orgcommentresult]])
-    ws_active_testsession.delay(sid)
+    #ws_active_testsession.delay(sid)
     return resultWrapper('ok', {},'')
 
 def caseresultUpdate(data, sid):

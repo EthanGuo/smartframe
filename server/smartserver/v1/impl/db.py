@@ -88,6 +88,7 @@ class Sessions(Document):
     planname = StringField()
     starttime = DateTimeField()
     endtime = DateTimeField()
+    status = FloatField(min_value=0.0, max_value=1.0)
     runtime = IntField()
     casecount = DictField()
     domaincount = StringField()

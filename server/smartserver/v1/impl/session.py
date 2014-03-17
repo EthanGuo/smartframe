@@ -20,7 +20,7 @@ def sessionCreate(data, gid, sid, uid):
     starttime = convertTime(data.get('starttime'))
     sessionInst = Sessions().from_json(json.dumps({'gid': int(gid), 'sid': sid,'uid':int(uid),
                                       'planname':data.get('planname', 'test'),'starttime':starttime,
-                                      'deviceinfo':data.get('deviceinfo'),
+                                      'deviceinfo':data.get('deviceinfo'), 'status': 0.0,
                                       'casecount': {'total': 0, 'pass': 0, 'fail': 0, 'error': 0, 'block': 0}}))
     try:
         sessionInst.save()
@@ -35,16 +35,32 @@ def sessionUpdate(data, gid, sid, uid):
     """
     #update session endtime
     gid = int(gid)
-    if 'endtime' in data:
-        #Clear the cached image for screen monitor
-        cache.clearCache(str('sid:' + sid + ':snap'))
-        cache.clearCache(str('sid:' + sid + ':snaptime'))
-        endtime = convertTime(data.get('endtime'))
-        try:
-            Sessions.objects(sid=sid).only('endtime').update(set__endtime=endtime)
-        except OperationError:
-            Sessions.objects(sid=sid).only('endtime').update(set__endtime=endtime)
+    sess = Sessions.objects(sid=sid).first()
+    if sess:
+        if 'endtime' in data:
+            #Clear the cached image for screen monitor
+            cache.clearCache(str('sid:' + sid + ':snap'))
+            cache.clearCache(str('sid:' + sid + ':snaptime'))
+            endtime = convertTime(data.get('endtime'))
+            try:
+                sess.update(set__endtime=endtime)
+                sess.reload()
+            except OperationError:
+                sess.update(set__endtime=endtime)
+                sess.reload()
+        if 'status' in data:
+            if data['status'] >= 0.0 and data['status'] <= 1.0:
+                try:
+                    sess.update(set__status=data['status'])
+                    sess.reload()
+                except OperationError:
+                    sess.update(set__status=data['status'])
+                    sess.reload()                    
+            else:
+                return resultWrapper('error', {}, 'Invalid status data!')
         return resultWrapper('ok', {}, '')
+    else:
+        return resultWrapper('error', {}, 'Invalid session ID!')      
 
 def sessionCycle(data, gid, sid, uid):
     """
