@@ -65,7 +65,7 @@ box-shadow: 5px 5px 3px #888888;
 			<span>{{cycle.cid || "Undefined"}}</span>
 			<span>{{cycle.livecount}}</span>
 			<span>{{cycle.devicecount}}</span>
-			<span>{{}}</span>
+			<span>{{mtbf[cycle.cid]}}</span>
 			<span>{{cycle.livecount == 0 | status}}</span>
 		<span><img ng-click='report(cycle.cid,cycle.product)' src="img/summary_s.png" width="20" height="20" style="cursor:pointer"></span>
 <table class='table table-hover table-bordered' style="width:1150px;margin-left:25px;display:none;background:white">

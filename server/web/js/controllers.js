@@ -377,25 +377,53 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
         window.location = '#/smartserver/login';
       });
     }
-	$scope.mtbf = {'12':'asdf'};
-        $scope.mtbf.value = [];
+	$scope.mtbf = {'a':'a','b':'b'};
 $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
 	.success(function(ret){
 	    if(ret.result == "ok"){
 		$scope.cycledata = ret.data;	
  		var cycleLen = $scope.cycledata.length;
-	for(var i = 0;i<cycleLen; i++){
+		var flag = true;
+		for(var i = 0;i<cycleLen; i++){
+	    	    if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
+                        continue;   
+            	    }
+	            var cyclecid = $scope.cycledata[i].cid;
+		$.ajax({
+		    type:'get',
+		    async:false,
+		    url:apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'),
+		    success:function(ret){
+			$scope.mtbf[cyclecid] = ret.data.mtbf;	
+		    }
+		});
+                }
+	/*for(var i = 0;i<cycleLen; i++){
 	    if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
                 continue;   
             }
-	    $http.get(apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+$scope.cycledata[i].cid+'&token='+$.cookie('ticket'))
+	    var cyclecid = $scope.cycledata[i].cid;
+	    $http.get(apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'))
                 .success(function(res){
-		    console.log(res);
 		    if(res.result == "ok"){
-	//		$scope.mtbf.value.push({$scope.cycledata[i].cid:res.data.mtbf});
+			$scope.mtbf[cyclecid] = res.data.mtbf;
+		    console.log($scope.mtbf);
 		    } 
 	    })
 	}
+		var j = 0;
+	        while(j < cycleLen){
+		    var cyclecid = $scope.cycledata[j].cid;
+		    flag = false;
+		    $http.get(apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'))
+                	.success(function(res){
+			    if(res.result == "ok"){
+				flag = true;
+				
+				$scope.mtbf[cyclecid] = res.data.mtbf;
+			    }
+		    });
+		}*/
 	    }
 	});
 	
