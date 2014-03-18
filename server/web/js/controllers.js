@@ -377,54 +377,11 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
         window.location = '#/smartserver/login';
       });
     }
-	$scope.mtbf = {'a':'a','b':'b'};
-$http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+    $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
 	.success(function(ret){
 	    if(ret.result == "ok"){
 		$scope.cycledata = ret.data;	
- 		var cycleLen = $scope.cycledata.length;
-		var flag = true;
-		for(var i = 0;i<cycleLen; i++){
-	    	    if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
-                        continue;   
-            	    }
-	            var cyclecid = $scope.cycledata[i].cid;
-		$.ajax({
-		    type:'get',
-		    async:false,
-		    url:apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'),
-		    success:function(ret){
-			$scope.mtbf[cyclecid] = ret.data.mtbf;	
-		    }
-		});
-                }
-	/*for(var i = 0;i<cycleLen; i++){
-	    if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
-                continue;   
-            }
-	    var cyclecid = $scope.cycledata[i].cid;
-	    $http.get(apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'))
-                .success(function(res){
-		    if(res.result == "ok"){
-			$scope.mtbf[cyclecid] = res.data.mtbf;
-		    console.log($scope.mtbf);
-		    } 
-	    })
-	}
-		var j = 0;
-	        while(j < cycleLen){
-		    var cyclecid = $scope.cycledata[j].cid;
-		    flag = false;
-		    $http.get(apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'))
-                	.success(function(res){
-			    if(res.result == "ok"){
-				flag = true;
-				
-				$scope.mtbf[cyclecid] = res.data.mtbf;
-			    }
-		    });
-		}*/
-	    }
+ 	   }
 	});
 	
 	       
@@ -922,12 +879,12 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 	var currentPop = "";
 	$(document).click(function(e){
 	   if(e.target.id !== currentPop){
-		$(currentPop).popover("hide");
+		$("#"+currentPop).popover("hide");
 	   }
 	});
       $scope.getLog = function(Case){
 	$http.get(apiBaseURL+Case.log.url+"?subc=listlogs").success(function(ret){
-		currentPop = "#log_"+Case.tid;
+		currentPop = "log_"+Case.tid;
 	    if(ret.result == 'ok'){
 		var data = ret.data;
 		var content = "";
@@ -941,7 +898,7 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 	     	   });
 		   content = content + "</ol>";
 		}
-	        $(currentPop).popover({
+	        $("#"+currentPop).popover({
 		    animation:true,
 	            html:true,
 		    placement:'right',
@@ -949,9 +906,9 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 		    content:content,
 	            trigger:'manual'
 	    	});
-		$(currentPop).popover("toggle");
+		$("#"+currentPop).popover("show");
 	    }else{
-		$(currentPop).popover({
+		$("#"+currentPop).popover({
 		    animation:true,
 	            html:true,
 		    placement:'right',
@@ -959,11 +916,11 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 		    content:ret.msg,
 	            trigger:'manual'
 	    	});
-		$("#log_"+Case.tid).popover("toggle");
+		$("#log_"+Case.tid).popover("show");
 	    }
 	}).error(function(){
-		currentPop = "#log_"+Case.tid;
-	    $(currentPop).popover({
+		currentPop = "log_"+Case.tid;
+	    $("#"+currentPop).popover({
 		    animation:true,
 	            html:true,
 		    placement:'right',
@@ -971,7 +928,7 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 		    content:"No logs",
 	            trigger:'click'
 	    	});
-		$("#log_"+Case.tid).popover("toggle");
+		$("#"+currentPop).popover("show");
 	});
       }
 

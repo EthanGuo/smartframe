@@ -1,7 +1,6 @@
 'use strict';
 
-/* Filters */
-
+/* Filters */ 
 var smartFilters = angular.module('smartFilters', [])
 smartFilters.filter('checkmark', function() {
   return function(input) {
@@ -65,5 +64,16 @@ smartFilters.filter("status", function(){
 	}else{
 	   return "Running";
 	}
+    }
+});
+
+smartFilters.filter("progress", function(){
+    return function(input){
+	/*if(input == null || input == "" || input == undefined){
+	    return 34.34;
+	}else{
+	    return input;
+	}*/
+	return input*100;
     }
 });

@@ -13,8 +13,7 @@ width:1200px;float:left;margin-bottom:10px;
 float:left;
 width:171px;
 display:block;
-font-size:16px;
-font-weight:bold;
+font-size:16px; font-weight:bold;
 }
 .test_h img{
 }
@@ -62,10 +61,10 @@ box-shadow: 5px 5px 3px #888888;
 			</div>
 			<div class="test_b" style="" ng-repeat="cycle in cycledata">
 			<span><a ng-click="showAndHide($index)" href="">{{cycle.revision}}</a></span>
-			<span>{{cycle.cid || "Undefined"}}</span>
+			<span>{{cycle.cid || "New"}}</span>
 			<span>{{cycle.livecount}}</span>
 			<span>{{cycle.devicecount}}</span>
-			<span>{{mtbf[cycle.cid]}}</span>
+			<span>{{mtbf[cycle.cid] || "NA"}}</span>
 			<span>{{cycle.livecount == 0 | status}}</span>
 		<span><img ng-click='report(cycle.cid,cycle.product)' src="img/summary_s.png" width="20" height="20" style="cursor:pointer"></span>
 <table class='table table-hover table-bordered' style="width:1150px;margin-left:25px;display:none;background:white">
@@ -80,12 +79,12 @@ box-shadow: 5px 5px 3px #888888;
 		<th>Edit</th>
 	</tr></thead>
 	<tbody>
-	<tr ng-repeat="session in cycle.sessions" ng-switch on='cycle.cid'>
-		<td>
-		    <div ng-hide="session.endtime" style="height:14px;width:14px">
+	<tr ng-repeat="session in cycle.sessions | orderBy : '-status'" ng-switch on='cycle.cid'>
+		<td ng-switch on = "session.status">
+		    <div ng-switch-default style="height:14px;width:14px">
 			<img src='img/arrow_up.png'>
 		    </div>
-		    <div ng-show="session.endtime" style="height:12px;width:12px">
+		    <div ng-switch-when=1 style="height:12px;width:12px">
 			<img src='img/check.png'>
 		    </div>
 		</td>	
@@ -102,7 +101,12 @@ box-shadow: 5px 5px 3px #888888;
         	    </div>
        		</td>	
 	<td>{{session.starttime || "NA"}}</td>
-	<td>{{session.endtime || "NA"}}</td>
+	<td ng-switch on = "session.status">
+	<div ng-switch-when=1>{{session.endtime || "NA"}}</div>
+	<div ng-switch-default class="progress progress-info progress-striped">
+	    <div class="bar" style="width: {{session.status | progress | number : 2}}%;color:black">{{session.status | progress | number : 2}}%</div>
+	</div>
+	</td>
 	<td>{{session.IMEI || "NA"}}</td>
         <td>{{session.tester || "NA"}}</td>
   	<td><a href="#/smartserver/group/{{session.gid}}/product/{{session.product}}/{{session.sid}}"><img width="20" height="20" src="img/detail.png"></a></td>

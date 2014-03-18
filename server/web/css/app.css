@@ -102,3 +102,6 @@ cursor:pointer;
 #cycles th{
 cursor:pointer;
 }
+.progress{
+margin-bottom:5px;
+}
