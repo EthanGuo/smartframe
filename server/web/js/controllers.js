@@ -2,7 +2,7 @@
 
 /* Controllers */
 
-var smartControllers = angular.module('smartControllers', []);
+var smartControllers = angular.module('smartControllers', ['ngSanitize']);
 var apiBaseURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "")+"/smartapi";
 //Controller for index
 
@@ -377,14 +377,31 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
         window.location = '#/smartserver/login';
       });
     }
+        $scope.mtbf = {};
     $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
-	.success(function(ret){
-	    if(ret.result == "ok"){
-		$scope.cycledata = ret.data;	
- 	   }
-	});
-	
-	       
+        .success(function(ret){
+            if(ret.result == "ok"){
+                $scope.cycledata = ret.data;
+                var cycleLen = $scope.cycledata.length;
+                var flag = true;
+                for(var i = 0;i<cycleLen; i++){
+                    if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
+                        continue;
+                    }
+                    var cyclecid = $scope.cycledata[i].cid;
+                $scope.mtbf[cyclecid] = "获取中...";
+                $.ajax({
+                    type:'get',
+                    async:false,
+                    url:apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'),
+                    success:function(ret){
+                        $scope.mtbf[cyclecid] = setruntime(ret.data.mtbf);
+                    }
+                });
+                }
+            }
+        });
+
 
     $("#mytabs a").click(function(e){
         e.preventDefault();
@@ -882,7 +899,8 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 		$("#"+currentPop).popover("hide");
 	   }
 	});
-      $scope.getLog = function(Case){
+	
+      /*$scope.getLog = function(Case){
 	$http.get(apiBaseURL+Case.log.url+"?subc=listlogs").success(function(ret){
 		currentPop = "log_"+Case.tid;
 	    if(ret.result == 'ok'){
@@ -930,8 +948,27 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 	    	});
 		$("#"+currentPop).popover("show");
 	});
-      }
+      }*/
 
+      $scope.getLog = function(Case){
+	 $http.get(apiBaseURL+Case.log.url+"?subc=listlogs").success(function(ret){
+	     console.log(ret);
+	     var logs = ret.data;
+	     var modalInstance = $modal.open({
+                 templateUrl : 'partials/logs.html',
+                 controller : LogCtrl,
+            	 windowClass : 'logModal',
+	         resolve : {
+               	     logs : function(){
+                         return logs;
+                     },
+		     caseurl : function(){
+			 return Case.log.url;
+		     }
+                 }
+             });
+	 });
+      }
 
       $scope.getImages = function(selectedCase){ 
       var rect;
@@ -963,7 +1000,6 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 	$.each(ret.data, function(i, o){
 	   $scope.selectedcase.snapshots.push({'url':apiBaseURL+selectedCase.log.url+"?subc=fetchimage&filename="+o,'filename':o});
 	});
-	console.log($scope.selectedcase);
                 if(deviceW >= 400){
 	            zoom = (deviceW / 400).toFixed(3);
                     deviceW = deviceW / zoom;
@@ -1177,6 +1213,27 @@ var ImageCtrl = function($scope, $modalInstance,selectedcase, deviceinfo){
 	    $scope.deviceinfo.width = 400;
 	    $scope.deviceinfo.height = 600;
 	}			
+	$scope.close = function(){
+	    $modalInstance.dismiss("cancle");
+	}
+}
+
+var LogCtrl = function($scope, $modalInstance, $http, logs, caseurl){
+	$scope.logs = logs;
+	$scope.selectedlog = logs[0];
+	$http.get(apiBaseURL+caseurl+"?subc=fetchlog&filename="+$scope.selectedlog)
+	    .success(function(ret){
+		//$scope.logContent = ret.replace(/\r\n/g, "<br/>");
+	//replace(/<(br|p|div)[^>]*>/g, "\n").replace(/<\/?\w+[^>]*>/g, ""); 
+		$("#logcontent").html(ret.replace(/\r\n/g, "<p></p>"));
+	    });
+	    
+        $scope.showLogContent = function(log){
+	    $http.get(apiBaseURL+caseurl+"?subc=fetchlog&filename="+log)
+		.success(function(ret){
+		    $scope.logContent = ret;
+		});
+	}
 	$scope.close = function(){
 	    $modalInstance.dismiss("cancle");
 	}
