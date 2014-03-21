@@ -676,7 +676,29 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
          }
        }
     });  
-
+    
+    $scope.caseRefresh = function(){
+      $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket'))
+      .success(function(ret){
+       $scope.cases = ret.data.cases; 
+       total = ret.data.totalpage;
+        if(total % maxsize == 0){
+              $scope.numOfPage = total/maxsize;
+        }else{
+              $scope.numOfPage = parseInt(total/maxsize+1);
+        }
+       $scope.totalpage=[];
+       if(total <= maxsize){
+         for(var i=1;i<=total;i++){
+          $scope.totalpage.push({'pagenumber':i});
+         }      
+       }else{
+         for(var j=1;j<=maxsize;j++){
+          $scope.totalpage.push({'pagenumber':j});
+         }
+       }
+    }); 
+    }
   
      $scope.collapse = {};
      $scope.setCollapse = function(caseid){
