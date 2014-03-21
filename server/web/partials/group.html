@@ -45,7 +45,7 @@ box-shadow: 5px 5px 3px #888888;
 	    <ul  class="nav nav-pills" id="mytabs">
 		  <li class="active">
 		    <!-- <a id="testui" href="#tests">Reports</a> -->
-		    <a id="testui" ng-click="addRefresh()">Refresh</a>
+		    <button type='button' id="testui" ng-click="addRefresh()" class='btn btn-primary'>Refresh</button>
 		  </li>
 		</ul>
 	</div>
@@ -60,7 +60,7 @@ box-shadow: 5px 5px 3px #888888;
 			<span>Status</span>
 			<span>Report</span>
 			</div>
-			<div class="test_b" style="" ng-repeat="cycle in cycledata | orderBy : '-livecount'">
+			<div class="test_b" style="" ng-repeat="cycle in cycledata | orderBy : '-cid'">
 			<span><a ng-click="showAndHide($index)" href="">{{cycle.revision}}</a></span>
 			<span>{{cycle.cid || "New"}}</span>
 			<span>{{cycle.livecount}}</span>
