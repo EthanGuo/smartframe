@@ -402,6 +402,31 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
             }
         });
 
+    $scope.addRefresh = function(){
+        $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+        .success(function(ret){
+            if(ret.result == "ok"){
+                $scope.cycledata = ret.data;
+                var cycleLen = $scope.cycledata.length;
+                var flag = true;
+                for(var i = 0;i<cycleLen; i++){
+                    if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
+                        continue;
+                    }
+                    var cyclecid = $scope.cycledata[i].cid;
+                $scope.mtbf[cyclecid] = "获取中...";
+                $.ajax({
+                    type:'get',
+                    async:false,
+                    url:apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'),
+                    success:function(ret){
+                        $scope.mtbf[cyclecid] = setruntime(ret.data.mtbf);
+                    }
+                });
+                }
+            }
+        });
+    }
 
     $("#mytabs a").click(function(e){
         e.preventDefault();

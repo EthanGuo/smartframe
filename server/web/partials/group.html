@@ -44,7 +44,8 @@ box-shadow: 5px 5px 3px #888888;
 	<div class=''style="margin-top:20px;margin-left:0px">
 	    <ul  class="nav nav-pills" id="mytabs">
 		  <li class="active">
-		    <a id="testui" href="#tests">Reports</a>
+		    <!-- <a id="testui" href="#tests">Reports</a> -->
+		    <a id="testui" ng-click="addRefresh()">Refresh</a>
 		  </li>
 		</ul>
 	</div>
@@ -59,12 +60,12 @@ box-shadow: 5px 5px 3px #888888;
 			<span>Status</span>
 			<span>Report</span>
 			</div>
-			<div class="test_b" style="" ng-repeat="cycle in cycledata">
+			<div class="test_b" style="" ng-repeat="cycle in cycledata | orderBy : '-livecount'">
 			<span><a ng-click="showAndHide($index)" href="">{{cycle.revision}}</a></span>
 			<span>{{cycle.cid || "New"}}</span>
 			<span>{{cycle.livecount}}</span>
 			<span>{{cycle.devicecount}}</span>
-			<span>{{mtbf[cycle.cid] || "NA"}}</span>
+			<span>{{mtbf[cycle.cid] || "-"}}</span>
 			<span>{{cycle.livecount == 0 | status}}</span>
 		<span><img ng-click='report(cycle.cid,cycle.product)' src="img/summary_s.png" width="20" height="20" style="cursor:pointer"></span>
 <table class='table table-hover table-bordered' style="width:1150px;margin-left:25px;display:none;background:white">
@@ -75,7 +76,7 @@ box-shadow: 5px 5px 3px #888888;
 		<th>Endtime</th>
 		<th>Device ID </th>
 		<th>Tester</th>
-        	<th>Detail</th>
+        <th>Detail</th>
 		<th>Edit</th>
 	</tr></thead>
 	<tbody>
