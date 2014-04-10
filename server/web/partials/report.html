@@ -1,10 +1,26 @@
-<div class='report_head'>
+<div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
+    <div ng-click="goHome()" class="mtbf">Mean Time Between Failure Portal</div>	
+    <a class="btn opacity" href="#/smartserver/group/{{groupid}}/product/{{product}}" style="float:right;margin-right:15px;margin-top:4px;">
+ <i class="icon-backward"></i><span>  Back</span></a>
+    <div style="float:right; margin:4px 10px 0 0;" class="btn-group">
+        <a class="btn dropdown-toggle opacity" data-toggle="dropdown" href="">
+	    <i class="icon-user"></i><span>  {{username}}  </span><i class="icon-chevron-down"></i></a>
+        <ul class="dropdown-menu" style="margin-left:-75px;">
+    	    <li><a ng-click="signout()" href=""><i class="icon-user"></i> Sign Out</a></li>
+    	    <li class="divider"></li>
+    	    <li><a href="#/smartserver/setting/{{username}}"><i class="icon-cog"></i> Setting</a></li>
+    	</ul>
+    </div>	
+</div>
+
+<!--<div class='report_head'>
         <div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
                 <a href="#/smartserver/group/{{groupid}}/product/{{product}}"><b style='float:left;margin-left:10px;margin-top:8px;color:white'>Back</b></a>
+<div style="position:absolute;left:50%;top:10px;margin-left:-100px;color:white;text-align:center;width:280px;font-size:16px"><b>Mean Time Between Failure Portal</b></div>
                 <button type="button" style='float:right;color:white;margin-top:3px;margin-right:10px' ng-click="signout()" class="btn btn-link">Sign Out</button>
        </div>
 
-</div>
+</div>-->
 <div class='' style='width:1200px;float:left;margin-left:40px;margin-top:40px;' >
 
 <h2>Report : {{cid}}</h2>

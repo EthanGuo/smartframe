@@ -1,11 +1,26 @@
 <img id='loading' style='display:none;position:fixed;left:50%;top:50%;margin-top:-64px;margin-left:-64px;' src='img/loading.gif'>
-<div class='session_head'>
+<div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
+    <div ng-click="goHome()" class="mtbf">Mean Time Between Failure Portal</div>	
+    <a class="btn opacity" href="#/smartserver/group/{{groupid}}/product/{{product}}" style="float:right;margin-right:15px;margin-top:4px;">
+ <i class="icon-backward"></i><span>  Back</span></a>
+    <div style="float:right; margin:4px 10px 0 0;" class="btn-group">
+        <a class="btn dropdown-toggle opacity" data-toggle="dropdown" href="">
+	    <i class="icon-user"></i><span>  {{username}}  </span><i class="icon-chevron-down"></i></a>
+        <ul class="dropdown-menu" style="margin-left:-75px;">
+    	    <li><a ng-click="signout()" href=""><i class="icon-user"></i> Sign Out</a></li>
+    	    <li class="divider"></li>
+    	    <li><a href="#/smartserver/setting/{{username}}"><i class="icon-cog"></i> Setting</a></li>
+    	</ul>
+    </div>	
+</div>
+<!--<div class='session_head'>
         <div style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
                 <a href="#/smartserver/group/{{groupid}}/product/{{product}}"><b style='float:left;color:white;margin-top:8px;margin-left:10px;'>Back</b></a>
+<div style="position:absolute;left:50%;top:10px;margin-left:-100px;color:white;text-align:center;width:280px;font-size:16px"><b>Mean Time Between Failure Portal</b></div>
                 <button type="button" style='float:right;color:white;margin-right:10px; margin-top:3px' ng-click="signout()" class="btn btn-link">Sign Out</button>
        </div>
 
-</div>
+</div>-->
 <div class='session_content' style='width:1200px;float:left;margin-left:40px;margin-top:40px;'>
 
 	<div class='session'>
@@ -18,9 +33,7 @@
 					<th>Starttime</th>
 					<th>Endtime</th>
 					<th>Product</th>
-					<th>Tester</th>
-					<th>End Tid</th>
-					<th>Total</th>
+					<th>Tester</th> <th>End Tid</th> <th>Total</th>
 					<th>Pass</th>
 					<th>Fail</th>
 					<th>Error</th>
@@ -35,7 +48,7 @@
 					<td>{{session.endtime || "NA"}}</td>
 					<td style='word-break:break-all;'>{{session.deviceinfo.product}}</td>
 					<td style='word-break:break-all;'>{{session.tester}}</td>
-					<td>{{session.endtid || "-"}}</td>
+					<td>{{session.endtid || "NA"}}</td>
 					<td><a href='' ng-click="getCases('total')">{{session.summary.total}}</a></td>
 					<td><a href='' ng-click="getCases('pass')">{{session.summary.pass}}</a></td>
 					<td><a href='' ng-click="getCases('fail')">{{session.summary.fail}}</a></td>
@@ -44,7 +57,7 @@
 			</tbody>
 		</table>
 	</div>
-	<button type='button' class='btn btn-primary' style="float:left" ng-click="caseRefresh()">Refresh</button>
+
 	<div class="pagination pagination-centered">
 		<ul>
 			<li ng-click='prepage()' ng-class='{active:(currentPageNum==1)}'><a href="">&laquo;</a></li>
@@ -52,6 +65,9 @@
 			<li ng-click='nextpage()' ng-class='{active:(currentPageNum == numOfPage)}'><a href="">&raquo;</a></li>
 		</ul>		
 	</div>
+<a class="btn btn-primary" href="" ng-click="refresh()" style="float:right;margin-top:-32px">
+<i class="icon-refresh icon-white"></i><span> Refresh</span>
+</a>
 	<div class='cases' >
 		<table class='table table-striped table-hover'>
 			<thead fixHead style='display:none'>
@@ -89,19 +105,23 @@
 				<span ng-switch-when="fail" style="color:#B80000">Fail</span>
 			    </td>
 			    <td> 
-				<a href="" id="log_{{case.tid}}" ng-switch-when="fail" ng-click='getLog(case)' style="float:left">
-				>></a>
+				<a href="" id="log_{{case.tid}}" ng-switch-when="fail" ng-class="{'opacity':logLength(case.log)}" ng-click='getLog(case)' style="float:left">
+				&gt;&gt;</a>
+				<a href="" id="log_{{case.tid}}" ng-switch-when="error" ng-class="{'opacity':logLength(case.log)}" ng-click='getLog(case)' style="float:left">
+				&gt;&gt;</a>
 				<a ng-switch-default href=""></a>
 			    </td>
 			    <td>
 				<a ng-switch-when="fail" ng-click="getImages(case)" href='' >
+				<img src="img/screenshot.png" width="20" height="20" ng-class="{'opacity':logLength(case.log)}" style="float:left;margin-left:30px;"></a>
+				<a ng-switch-when="error" ng-click="getImages(case)" ng-class="{'opacity':logLength(case.log)}" href='' >
 				<img src="img/screenshot.png" width="20" height="20" style="float:left;margin-left:30px"></a>
 				<a ng-switch-default href=""></a>
 			    </td>
 			    <td> 
 				  <div style="width:250px;height:auto;" ng-mouseenter='setCollapse(case.tid)' ng-mouseleave='delCollapse(case.tid)'>
 				      <span style="display:block;float:left;">{{case.comments.caseresult}} {{case.comments.issuetype}}</span>
-				      <img style="float:left;margin-left:20px;cursor:pointer" width="20" height="20" src="img/comments.png" ng-click="getTids()">
+				    <img ng-hide="case.result == 'pass'" style="float:left;margin-left:20px;cursor:pointer" width="20" height="20" src="img/comments.png" ng-click="getTids({{case.tid}})">
 				      <div style="float:left" collapse='!collapse[case.tid]'>	
 				         <span style='display:block;word-break:break-all;width:200px;max-width:200px;'>
 					    {{case.comments.commentinfo}}{{case.comments.endsession | endsession}}

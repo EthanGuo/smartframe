@@ -27,9 +27,9 @@
 
 - Servers for development 
     
-     Before running the server, you must set up `mongodb`, `memcached`, `redis` on your local PC.
+     Before running the server, you must set up `mongodb` on your local PC.
 
-        $ sudo apt-get install mongodb memcached redis-server
+        $ sudo apt-get install mongodb
 
 # Run the test
 

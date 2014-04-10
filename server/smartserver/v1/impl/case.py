@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from util import resultWrapper, cache, convertTime
+from util import resultWrapper, convertTime
 from mongoengine import OperationError
 from db import Cases, Sessions
 from filedealer import saveFile
@@ -137,33 +137,17 @@ def uploadPng(sid, tid, imagedata, stype):
     params, data: {'sid':(string)sid, 'tid':(string)tid, 'imagedata':(Bytes)imagedata, 'stype':(string)(imagetype:imagename)}
     return, data: {}
     """
-    #If the image uploaded is type:expect, save it to database, if type:current, save it to memcache
-    snaps = cache.getCache(str('sid:' + sid + ':tid:' + tid + ':snaps'))
-    if not snaps:
-        snaps = []
+    #If the image uploaded is type:expect, save it to expectshot, if type:current, save it to snapshots
     values = stype.split(':')
     imagetype, imagename = values[0], values[1]
     imageurl = saveFile(imagedata, 'image/png', imagename)
-    imagedata.seek(0)
-    if imagetype == 'expect':
-        #bond both snapshots and expectshots with case here.
-        snapshots = cache.getCache(str('sid:' + sid + ':tid:' + str(tid) + ':snaps'))
-        if not snapshots:
-            snapshots = []
-        try:
-            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl}, push_all__snapshots=snapshots)
-        except OperationError:
-            Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl}, push_all__snapshots=snapshots)
-        finally:
-            cache.clearCache(str('sid:' + sid + ':tid:' + str(tid) + ':snaps'))
-    elif imagetype == 'current':
-        snaps.append({'filename': imagename, 'url': imageurl})
-        #Following two caches are used for screen monitor
-        timenow = datetime.now().strftime(TIME_FORMAT)
-        cache.setCache(str('sid:' + sid + ':snap'), imagedata.read())
-        cache.setCache(str('sid:' + sid + ':snaptime'), timenow)
-        #Cache history snapshots for a testcase
-        cache.setCache(str('sid:' + sid + ':tid:' + tid + ':snaps'), snaps)
+    snapfile = {'filename': imagename, 'url': imageurl}
+    if imagetype == "expect":
+        Cases.objects(sid=sid, tid=int(tid)).only('tid').update(set__expectshot={'filename': imagename, 'url': imageurl})
+    elif imagetype == "current":
+        Cases.objects(sid=sid, tid=int(tid)).only('tid').update(push__snapshots={'filename': imagename, 'url': imageurl})
+    else:
+        return resultWrapper('error', {}, 'Invalid image type value:%s!' % stype)
     return resultWrapper('ok', {'fileid': imageurl}, '')
 
 def uploadZip(sid, tid, logdata, xtype):

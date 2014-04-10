@@ -7,8 +7,8 @@ billiard==2.7.3.28
 bottle==0.11.6
 bottle-extras==0.1.0
 bottle-redis==0.2.1
-celery==3.0.19
-celery-with-redis==3.0
+celery==3.1.10
+celery-with-mongodb=3.0
 distribute==0.6.35
 gevent==0.13.8
 gevent-websocket==0.3.6

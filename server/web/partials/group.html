@@ -33,19 +33,34 @@ table{
 box-shadow: 5px 5px 3px #888888;
 }
 </style>
-<div class='group_head'> <div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;"> <a href="#/smartserver/index"><b style='float:left;color:white;margin-left:10px;margin-top:8px;'>Back</b></a>
+<div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;">
+    <div ng-click="goHome()" class="mtbf">Mean Time Between Failure Portal</div>	
+    <a class="btn opacity" href="#/smartserver/index" style="float:right;margin-right:15px;margin-top:4px;">
+	<i class="icon-backward"></i><span>  Back</span></a>
+    <div style="float:right; margin:4px 10px 0 0;" class="btn-group">
+        <a class="btn dropdown-toggle opacity" data-toggle="dropdown" href="">
+	    <i class="icon-user"></i><span>  {{username}}  </span><i class="icon-chevron-down"></i></a>
+        <ul class="dropdown-menu" style="margin-left:-75px;">
+    	    <li><a ng-click="signout()" href=""><i class="icon-user"></i> Sign Out</a></li>
+    	    <li class="divider"></li>
+    	    <li><a href="#/smartserver/setting/{{username}}"><i class="icon-cog"></i> Setting</a></li>
+    	</ul>
+    </div>	
+</div>
+<!--<div class='group_head'>
+<div class="" style="position:absolute;left:0px;top:0px;min-width:1280px;width:100%;height:40px;background:#23658B;"> <a href="#/smartserver/index"><b style='float:left;color:white;margin-left:10px;margin-top:8px;'>Back</b></a>
+<div style="position:absolute;left:50%;top:10px;margin-left:-100px;color:white;text-align:center;width:280px;font-size:16px"><b>Mean Time Between Failure Portal</b></div>
 		<button type="button" style='float:right;color:white;margin-top:3px;margin-right:10px' ng-click="signout()" class="btn btn-link">Sign Out</button>
 		<a style='float:right;color:white;margin-top:3px;' href="#/smartserver/setting/{{username}}"> 
 		   <button style='color:white' class='btn btn-link'>Account Settings</button>
 		</a>
        </div>
-</div>
+</div>-->
 <div class='group_content' style='float:left;width:1200px;margin-left:40px;margin-top:40px'>
 	<div class=''style="margin-top:20px;margin-left:0px">
 	    <ul  class="nav nav-pills" id="mytabs">
 		  <li class="active">
-		    <!-- <a id="testui" href="#tests">Reports</a> -->
-		    <button type='button' id="testui" ng-click="addRefresh()" class='btn btn-primary'>Refresh</button>
+		    <a id="testui" href="#tests">Reports</a>
 		  </li>
 		</ul>
 	</div>
@@ -65,7 +80,7 @@ box-shadow: 5px 5px 3px #888888;
 			<span>{{cycle.cid || "New"}}</span>
 			<span>{{cycle.livecount}}</span>
 			<span>{{cycle.devicecount}}</span>
-			<span>{{mtbf[cycle.cid] || "-"}}</span>
+			<span><img ng-hide="loading[{{$index}}] == true" src="img/loading_icon.gif">{{mtbf[cycle.cid] || "NA"}}</span>
 			<span>{{cycle.livecount == 0 | status}}</span>
 		<span><img ng-click='report(cycle.cid,cycle.product)' src="img/summary_s.png" width="20" height="20" style="cursor:pointer"></span>
 <table class='table table-hover table-bordered' style="width:1150px;margin-left:25px;display:none;background:white">
@@ -76,11 +91,11 @@ box-shadow: 5px 5px 3px #888888;
 		<th>Endtime</th>
 		<th>Device ID </th>
 		<th>Tester</th>
-        <th>Detail</th>
+        	<th>Detail</th>
 		<th>Edit</th>
 	</tr></thead>
 	<tbody>
-	<tr ng-repeat="session in cycle.sessions | orderBy : '-status'" ng-switch on='cycle.cid'>
+	<tr ng-repeat="session in cycle.sessions | orderBy : ['cid','-status','-starttime']" ng-switch on='cycle.cid'>
 		<td ng-switch on = "session.status">
 		    <div ng-switch-default style="height:14px;width:14px">
 			<img src='img/arrow_up.png'>

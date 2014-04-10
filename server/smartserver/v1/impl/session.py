@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from util import resultWrapper, cache, convertTime
+from util import resultWrapper, convertTime
 from mongoengine import OperationError
 from ..config import TIME_FORMAT
 from filedealer import saveFile
@@ -38,9 +38,6 @@ def sessionUpdate(data, gid, sid, uid):
     sess = Sessions.objects(sid=sid).first()
     if sess:
         if 'endtime' in data:
-            #Clear the cached image for screen monitor
-            cache.clearCache(str('sid:' + sid + ':snap'))
-            cache.clearCache(str('sid:' + sid + ':snaptime'))
             endtime = convertTime(data.get('endtime'))
             try:
                 sess.update(set__endtime=endtime)
@@ -49,12 +46,13 @@ def sessionUpdate(data, gid, sid, uid):
                 sess.update(set__endtime=endtime)
                 sess.reload()
         if 'status' in data:
-            if data['status'] >= 0.0 and data['status'] <= 1.0:
+            status = float(data['status'])
+            if status >= 0.0 and status <= 1.0:
                 try:
-                    sess.update(set__status=data['status'])
+                    sess.update(set__status=status)
                     sess.reload()
                 except OperationError:
-                    sess.update(set__status=data['status'])
+                    sess.update(set__status=status)
                     sess.reload()                    
             else:
                 return resultWrapper('error', {}, 'Invalid status data!')

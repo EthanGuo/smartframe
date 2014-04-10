@@ -3,5 +3,4 @@
 
 from .v1.config import *
 
-__all__ = ["MONGODB_URI", "MONGODB_REPLICASET", "MONGODB_PORT", "REDIS_URI", "REDIS_HOST",
-           "REDIS_PORT", "MEMCACHED_URI", "WEB_HOST", "WEB_PORT"]
+__all__ = ["MONGODB_URI", "MONGODB_REPLICASET", "MONGODB_PORT", "WEB_HOST", "WEB_PORT"]

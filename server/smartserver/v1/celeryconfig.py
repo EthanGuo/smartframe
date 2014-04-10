@@ -7,9 +7,15 @@ from celery.schedules import crontab
 # Included Taskes
 CELERY_INCLUDE = ['smartserver.v1.tasks']
 # Task Broker
-BROKER_URL = config.REDIS_URI
+# BROKER_URL = config.REDIS_URI
 # Task Result backend
-CELERY_RESULT_BACKEND = config.REDIS_URI
+# CELERY_RESULT_BACKEND = config.REDIS_URI
+BROKER_URL = config.CELERY_BRK_URI
+CELERY_RESULT_BACKEND = "mongodb"
+CELERY_MONGODB_BACKEND_SETTINGS = {
+    "host": config.MONGODB_HOST,
+    "port": config.MONGODB_PORT
+}
 CELERY_TASK_RESULT_EXPIRES = 3600
 
 # Scheduled tasks

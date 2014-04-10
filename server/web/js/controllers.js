@@ -12,6 +12,7 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
     if(!$.cookie('ticket')){
       window.location = '#/smartserver/login';
     }
+    $scope.username = '';
     $scope.activeProduct = {}; 
     $("#mytabs a").click(function(e){
         e.preventDefault();
@@ -55,6 +56,8 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
         $scope.username = ret.data.userinfo.username;
         $scope.isadmin = ret.data.userinfo.admin;
 	$.cookie('isadmin', ret.data.userinfo.admin, { expires: 7 });
+	$.cookie('user', ret.data.userinfo.username, { expires: 7 });
+    	$scope.username = $.cookie('user');
         if(ret.data.userinfo.avatar.url != undefined){
           $scope.avatar = apiBaseURL + ret.data.userinfo.avatar.url+"?subc=fetchavatar";
         }
@@ -66,10 +69,14 @@ smartControllers.controller('IndexCtrl', ['$scope', '$http','$routeParams',
       }
     });
 
+    $scope.goHome = function(){
+	window.location = '#/smartserver/';
+    }
+
     $scope.showProduct = function(index){
 	$scope.activeProduct[index] = !$scope.activeProduct[index];
     }
-
+  
     $scope.productDetail = function(gid, product){
 	window.location = '#/smartserver/group/'+gid+'/product/'+product;
     }
@@ -192,7 +199,7 @@ smartControllers.controller('LoginCtrl', ['$scope', '$http',
         .success(function(ret){
             if(ret.result == 'ok'){
               $.cookie('ticket', ret.data.token, { expires: 7 });
-              window.location = '#/smartserver/index/';
+	      window.location = '#/smartserver/index/';
             }else{
               alert(ret.msg);
               return;
@@ -367,7 +374,7 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
     if(!$.cookie('ticket')){
       window.location = '#/smartserver/login';
     }
-    
+    $scope.username = $.cookie('user');    
     $scope.isadmin = $.cookie('isadmin');
     $scope.signout = function(){
       $http.post(apiBaseURL+'/account',{'subc':'logout','data':{},'token':$.cookie('ticket')})
@@ -378,6 +385,7 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
       });
     }
         $scope.mtbf = {};
+	$scope.loading = [];
     $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
         .success(function(ret){
             if(ret.result == "ok"){
@@ -386,30 +394,41 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
                 var flag = true;
                 for(var i = 0;i<cycleLen; i++){
                     if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
-                        continue;
+                        $scope.loading[i] = true;
+			continue;
                     }
                     var cyclecid = $scope.cycledata[i].cid;
-                $scope.mtbf[cyclecid] = "获取中...";
+                //$scope.mtbf[cyclecid] = "Fetching...";
                 $.ajax({
                     type:'get',
                     async:false,
                     url:apiBaseURL+'/group/'+groupid+'?subc=report&method=mtbfonly&cid='+cyclecid+'&token='+$.cookie('ticket'),
                     success:function(ret){
                         $scope.mtbf[cyclecid] = setruntime(ret.data.mtbf);
-                    }
+                    },
+		    error:function(xhr,msg,exp){
+			console.log(msg);
+		    },
+		    complete:function(){
+			$scope.loading[i] = true;
+		    }
                 });
                 }
             }
         });
 
-    $scope.addRefresh = function(){
-        $http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
-        .success(function(ret){
+
+    $("#mytabs a").click(function(e){
+        e.preventDefault();
+        $(this).tab('show');
+        if(e.target.id == 'testui'){
+	$http.get(apiBaseURL+"/group/"+groupid+"?subc=sessions&product="+product+"&appid=02&token="+$.cookie("ticket"))
+          .success(function(ret){
             if(ret.result == "ok"){
                 $scope.cycledata = ret.data;
                 var cycleLen = $scope.cycledata.length;
                 var flag = true;
-                for(var i = 0;i<cycleLen; i++){
+		for(var i = 0;i<cycleLen; i++){
                     if($scope.cycledata[i].cid == "" || $scope.cycledata[i].cid == undefined){
                         continue;
                     }
@@ -426,12 +445,6 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
                 }
             }
         });
-    }
-
-    $("#mytabs a").click(function(e){
-        e.preventDefault();
-        $(this).tab('show');
-        if(e.target.id == 'testui'){
 	}
     });
 
@@ -497,6 +510,10 @@ smartControllers.controller('GroupCtrl', ['dialogService','$scope', '$http', '$r
           });
         }
     }
+    $scope.goHome = function(){
+	window.location = '#/smartserver/';
+    }
+
     $scope.delMember = function(username){
       var r = window.confirm("Are you sure to delete?");
       if(r){   
@@ -621,6 +638,8 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       $scope.casetype = 'total';
       $scope.product = product;
       $scope.groupid = groupid;  
+      $scope.sessionid = sessionid;
+      $scope.username = $.cookie('user');    
       if(groupid == undefined || sessionid == undefined){
         return;
       } 
@@ -630,6 +649,9 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       $scope.deviceinfo = ret.data.deviceinfo;
       $scope.session.runtime = setruntime($scope.session.runtime);
     });
+      $scope.refresh = function(){
+	 window.location.reload(); 
+      }
       $scope.getCases = function(casetype){
 	$scope.casetype  = casetype;
       	$http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket')+'&casetype='+casetype)
@@ -676,30 +698,15 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
          }
        }
     });  
-    
-    $scope.caseRefresh = function(){
-      $http.get(apiBaseURL+'/group/'+groupid+'/session/'+sessionid+'?subc=history&appid=02&token='+$.cookie('ticket'))
-      .success(function(ret){
-       $scope.cases = ret.data.cases; 
-       total = ret.data.totalpage;
-        if(total % maxsize == 0){
-              $scope.numOfPage = total/maxsize;
-        }else{
-              $scope.numOfPage = parseInt(total/maxsize+1);
-        }
-       $scope.totalpage=[];
-       if(total <= maxsize){
-         for(var i=1;i<=total;i++){
-          $scope.totalpage.push({'pagenumber':i});
-         }      
-       }else{
-         for(var j=1;j<=maxsize;j++){
-          $scope.totalpage.push({'pagenumber':j});
-         }
-       }
-    }); 
+
+    $scope.goHome = function(){
+	window.location = '#/smartserver/';
     }
-  
+
+ $scope.logLength = function(log){
+    if($.isEmptyObject(log)){  return true; }
+    else return false;
+} 
      $scope.collapse = {};
      $scope.setCollapse = function(caseid){
 	$timeout(function(){
@@ -812,14 +819,15 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
 
  
     var selectedCases = []; 
-    $scope.getTids = function(){
-	selectedCases = $.grep($scope.cases, function(cas){
-	   return $scope.selected[cas.tid];
-	});
-       tids = [];
-       $.each(selectedCases, function(i, o){
-	  tids.push(o.tid);
-       });
+    $scope.getTids = function(tid){
+	    $scope.selected[tid] = true;
+	    tids = [];
+	    selectedCases = $.grep($scope.cases, function(cas){
+	      return $scope.selected[cas.tid];
+	    });
+            $.each(selectedCases, function(i, o){
+	      tids.push(o.tid);
+            });
       var modalInstance = $modal.open({
 	 templateUrl : 'comments.html',
  	 controller : CommentCtrl,
@@ -940,14 +948,14 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
           });
         }
     }
-	var currentPop = "";
+      /* var currentPop = "";
 	$(document).click(function(e){
 	   if(e.target.id !== currentPop){
 		$("#"+currentPop).popover("hide");
 	   }
 	});
 	
-      /*$scope.getLog = function(Case){
+      $scope.getLog = function(Case){
 	$http.get(apiBaseURL+Case.log.url+"?subc=listlogs").success(function(ret){
 		currentPop = "log_"+Case.tid;
 	    if(ret.result == 'ok'){
@@ -998,9 +1006,16 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       }*/
 
       $scope.getLog = function(Case){
+	 if(!Case.log.url){
+	    return;
+	 }
 	 $http.get(apiBaseURL+Case.log.url+"?subc=listlogs").success(function(ret){
-	     console.log(ret);
 	     var logs = ret.data;
+	     var len = logs.length;
+	     if(len == 0){
+		alert('No Logs');
+		return;
+	     }
 	     var modalInstance = $modal.open({
                  templateUrl : 'partials/logs.html',
                  controller : LogCtrl,
@@ -1025,7 +1040,6 @@ smartControllers.controller('SessionCtrl', ['dialogService', '$modal', '$scope',
       var deviceW = parseInt($scope.deviceinfo.width);
       var deviceH = parseInt($scope.deviceinfo.heigth);
       if(selectedCase.log.url == undefined){
-	alert("No Snapshots");
 	return;
       }
       $http.get(apiBaseURL+selectedCase.log.url+"?subc=listimages")
@@ -1118,6 +1132,7 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
      if(!$.cookie('ticket')){
       window.location = '#/smartserver/login';
     }
+    $scope.username = $.cookie('user');    
     $scope.groupid = $routeParams.groupid;
     $scope.cid = $routeParams.cid;
     $scope.product = $routeParams.product;
@@ -1204,6 +1219,10 @@ smartControllers.controller('ReportCtrl', ['$scope', '$http', '$routeParams',
           });
         }
     }
+    $scope.goHome = function(){
+	window.location = '#/smartserver/';
+    }
+
 
     $scope.toggleInfo = function(){
 	$("#article").toggle();
@@ -1268,18 +1287,24 @@ var ImageCtrl = function($scope, $modalInstance,selectedcase, deviceinfo){
 var LogCtrl = function($scope, $modalInstance, $http, logs, caseurl){
 	$scope.logs = logs;
 	$scope.selectedlog = logs[0];
-	$http.get(apiBaseURL+caseurl+"?subc=fetchlog&filename="+$scope.selectedlog)
-	    .success(function(ret){
-		//$scope.logContent = ret.replace(/\r\n/g, "<br/>");
-	//replace(/<(br|p|div)[^>]*>/g, "\n").replace(/<\/?\w+[^>]*>/g, ""); 
+	
+	$.ajax({
+	    type:'GET',
+	    url:apiBaseURL+caseurl+"?subc=fetchlog&filename="+$scope.selectedlog,
+	    success:function(ret){
 		$("#logcontent").html(ret.replace(/\r\n/g, "<p></p>"));
-	    });
-	    
+            }
+	});
+	
         $scope.showLogContent = function(log){
-	    $http.get(apiBaseURL+caseurl+"?subc=fetchlog&filename="+log)
-		.success(function(ret){
-		    $scope.logContent = ret;
-		});
+	$scope.selectedlog = log;	
+	$.ajax({
+	    type:'GET',
+	    url:apiBaseURL+caseurl+"?subc=fetchlog&filename="+log,
+	    success:function(ret){
+		$("#logcontent").html(ret.replace(/\r\n/g, "<p></p>"));
+            }
+	});	
 	}
 	$scope.close = function(){
 	    $modalInstance.dismiss("cancle");
